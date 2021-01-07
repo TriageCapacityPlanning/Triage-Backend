@@ -25,6 +25,19 @@ CREATE TABLE TriageData.TriageClasses (
         FOREIGN KEY(clinic_id)
             REFERENCES TriageData.Clinic(id)
 );
+CREATE TABLE TriageData.HistoricData (
+    id              SERIAL PRIMARY KEY,
+    clinic_id       integer,
+    severity        integer,
+    date_received   DATE,
+    date_seen       DATE,
+    CONSTRAINT fk_clinic
+        FOREIGN KEY(clinic_id)
+            REFERENCES TriageData.Clinic(id),
+    CONSTRAINT fk_triage_classes
+        FOREIGN KEY(clinic_id, severity)
+            REFERENCES TriageData.TriageClasses(clinic_id, severity)
+);
 CREATE TABLE TriageData.Models (
     id          SERIAL PRIMARY KEY,
     data        bytea,
