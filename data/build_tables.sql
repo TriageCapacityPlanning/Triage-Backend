@@ -20,7 +20,7 @@ CREATE TABLE TriageData.TriageClasses (
     name        varchar(255),
     duration    integer,
     proportion  float,
-    PRIMARY KEY (clinic_id, severity)
+    PRIMARY KEY (clinic_id, severity),
     CONSTRAINT fk_clinic
         FOREIGN KEY(clinic_id)
             REFERENCES TriageData.Clinic(id)
