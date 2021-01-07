@@ -3,3 +3,4 @@ keras
 tensorflow
 Flask
 Flask-RESTful
+psycopg2
