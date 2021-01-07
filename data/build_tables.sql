@@ -27,7 +27,7 @@ CREATE TABLE TriageData.TriageClasses (
 );
 CREATE TABLE TriageData.Models (
     id          SERIAL PRIMARY KEY,
-    data        varchar,
+    data        bytea,
     clinic_id   integer,
     accuracy    float,
     created     DATE NOT NULL DEFAULT CURRENT_DATE,
