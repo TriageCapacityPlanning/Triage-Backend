@@ -102,3 +102,14 @@ CREATE USER modelHandler WITH
     NOREPLICATION
     CONNECTION LIMIT -1;
 GRANT SELECT, UPDATE ON TriageData.Models TO modelHandler;
+
+DROP USER IF EXISTS predictHandler;
+CREATE USER predictHandler WITH
+    LOGIN PASSWORD 'password'
+    NOSUPERUSER
+    NOCREATEDB
+    NOCREATEROLE
+    INHERIT
+    NOREPLICATION
+    CONNECTION LIMIT -1;
+GRANT SELECT ON TriageData.TriageClasses TO predictHandler;
