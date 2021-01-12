@@ -4,6 +4,7 @@ from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
 
+
 class Models(Resource):
     DATABASE_DATA = {
         'database': 'triage',
