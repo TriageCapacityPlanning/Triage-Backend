@@ -40,7 +40,9 @@ class Models(Resource):
         return {'status': 200}
 
     def set_active_model(self, clinic_id, model_id):
+        # Establish database connection
         db = DataBase(self.DATABASE_DATA)
+        # Update database data
         db.update(f"UPDATE triagedata.models \
                     SET in_use = (CASE WHEN id={model_id} THEN true \
                                        ELSE false \
