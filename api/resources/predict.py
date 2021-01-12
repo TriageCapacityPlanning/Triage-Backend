@@ -1,16 +1,16 @@
 from flask_restful import Resource
 from flask import request
-import psycopg2
 from webargs.flaskparser import parser
-from webargs import fields, validate
-from common.controller.TriageController import TriageController
+from webargs import fields
+from api.common.controller.TriageController import TriageController
+from api.common.database_interaction import DataBase
 
 
 class Predict(Resource):
     # Database connection information
-    DATA = {
+    DATABASE_DATA = {
         'database': 'triage',
-        'user': 'admin',
+        'user': 'predictHandler',
         'password': 'password',
         'host': 'localhost',
         'port': '5432'
@@ -29,15 +29,13 @@ class Predict(Resource):
 
     def get(self):
         # Validate input arguments.
-        args = parser.parse(self.arg_schema_get, request, location='querystring')
-
+        args = parser.parse(self.arg_schema_get, request,
+                            location='querystring')
         # Retrieve clinic settings
         args['clinic-settings'] = self.get_clinic_settings(args['clinic-id'])
-
         # Instantiate TriageController
         triage_controller = TriageController(args)
         predictions = triage_controller.predict()
-
         # API response
         return {
             'url': request.url,
@@ -46,31 +44,14 @@ class Predict(Resource):
             'slot_predictions': predictions['total']
         }
 
-
     def get_clinic_settings(self, clinic_id):
         # Keys for response
-        keys = ['clinic_id', 'severity',
-                'name', 'duration', 'proportion']
-
+        keys = ['clinic_id', 'severity', 'name', 'duration', 'proportion']
         # Establish database connection
-        db = psycopg2.connect(
-            database=self.DATA['database'],
-            user=self.DATA['user'],
-            password=self.DATA['password'],
-            host=self.DATA['host'],
-            port=self.DATA['port']
-        )
-
+        db = DataBase(self.DATABASE_DATA)
         # Query for data
-        cur = db.cursor()
-        cur.execute(f"SELECT clinic_id, severity, name, duration, proportion \
-                      FROM triagedata.triageclasses \
-                      WHERE clinic_id=%(clinic_id)s",
-                    {
-                        'clinic_id': clinic_id
-                    })
-        rows = cur.fetchall()
-        db.close()
-
+        rows = db.select(f"SELECT clinic_id, severity, name, duration, proportion \
+                           FROM triagedata.triageclasses \
+                           WHERE clinic_id={clinic_id}")
         # Return data
         return [dict(zip(keys, values)) for values in rows]
