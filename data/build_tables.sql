@@ -92,8 +92,8 @@ CREATE USER triageClassHandler WITH
     CONNECTION LIMIT -1;
 GRANT INSERT, SELECT, UPDATE ON TriageData.TriageClasses TO triageClassHandler;
 
-DROP USER IF EXISTS triageClassHandler;
-CREATE USER triageClassHandler WITH
+DROP USER IF EXISTS modelHandler;
+CREATE USER modelHandler WITH
     LOGIN PASSWORD 'password'
     NOSUPERUSER
     NOCREATEDB
@@ -101,4 +101,4 @@ CREATE USER triageClassHandler WITH
     INHERIT
     NOREPLICATION
     CONNECTION LIMIT -1;
-GRANT INSERT, SELECT, UPDATE ON TriageData.TriageClasses TO triageClassHandler;
+GRANT SELECT, UPDATE ON TriageData.Models TO modelHandler;
