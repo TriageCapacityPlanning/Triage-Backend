@@ -4,7 +4,7 @@ import psycopg2
 class DataBase:
     def __init__(self, connection_data):
         self.connection_data = connection_data
-    
+
     def _connect_to_db(self):
         '''
         Returns a database connection
@@ -40,7 +40,7 @@ class DataBase:
         # Close the database connection
         db.close()
         return results
-    
+
     def insert(self, insert_string):
         '''
         Insert data into the database
@@ -49,7 +49,7 @@ class DataBase:
                         insert_string (str): A string representing the data to insert
         '''
         self._modify_data(insert_string)
-    
+
     def update(self, update_string):
         '''
         Update data in the database
@@ -74,4 +74,3 @@ class DataBase:
         db.commit()
         # Close the database connectionz
         db.close()
-    

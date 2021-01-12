@@ -14,6 +14,7 @@ predict_args = {
     "waitlist": fields.Raw(missing=[])
 }
 
+
 class Predict(Resource):
     def get(self):
         # Validate input arguments.

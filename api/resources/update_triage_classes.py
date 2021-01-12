@@ -24,7 +24,8 @@ class UpdateTriageClasses(Resource):
 
     def get(self):
         # Validate input arguments.
-        args = parser.parse(self.arg_schema_get, request, location='querystring')
+        args = parser.parse(self.arg_schema_get, request,
+                            location='querystring')
         # Retrieve triage classes from database
         triage_classes = self.get_triage_classes(args['clinic-id'])
         # API Response
@@ -63,10 +64,10 @@ class UpdateTriageClasses(Resource):
                         SET name = %(name)s, \
                             duration = %(duration)s, \
                             proportion = %(proportion)s",
-                    {
-                        'clinic_id': triage_class['clinic-id'],
-                        'severity': triage_class['severity'],
-                        'name': triage_class['name'],
-                        'duration': triage_class['duration'],
-                        'proportion': triage_class['proportion']
-                    })
+                  {
+                      'clinic_id': triage_class['clinic-id'],
+                      'severity': triage_class['severity'],
+                      'name': triage_class['name'],
+                      'duration': triage_class['duration'],
+                      'proportion': triage_class['proportion']
+                  })

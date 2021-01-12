@@ -1,13 +1,15 @@
-""" The Triage API to serve to the front end """
+""" 
+The Triage API to serve to the front end 
 
-''' Read the documentation from Flask: https://flask-restful.readthedocs.io/en/latest/'''
+Read the documentation from Flask: https://flask-restful.readthedocs.io/en/latest/
+"""
+
 from flask import Flask
 from flask_restful import Api
 from resources.predict import Predict
 from resources.update_triage_classes import UpdateTriageClasses
 from resources.models import Models, Use
 import resources.upload as Upload
-
 app = Flask(__name__)
 api = Api(app)
 
