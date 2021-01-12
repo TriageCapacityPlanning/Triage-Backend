@@ -2,8 +2,8 @@ from flask_restful import Resource
 from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
-from api.common.controller.TriageController import TriageController
-from api.common.database_interaction import DataBase
+from common.controller.TriageController import TriageController
+from common.database_interaction import DataBase
 
 
 class Predict(Resource):
