@@ -1,5 +1,15 @@
+-------------------------------------------------------------------------------
+--  Schema creation
+-------------------------------------------------------------------------------
+
 DROP SCHEMA IF EXISTS TriageData CASCADE;
 CREATE SCHEMA IF NOT EXISTS TriageData;
+
+-------------------------------------------------------------------------------
+--  Create all necessary tables
+-------------------------------------------------------------------------------
+
+
 CREATE TABLE TriageData.Clinic (
     id          SERIAL PRIMARY KEY,
     name        varchar(255) NOT NULL
@@ -57,7 +67,38 @@ CREATE TABLE TriageData.Schedules (
         FOREIGN KEY(clinic_id)
             REFERENCES TriageData.Clinic(id)
 );
+
+-------------------------------------------------------------------------------
+--  Create required indexes on various attributes
+-------------------------------------------------------------------------------
+
 CREATE INDEX username_idx ON TriageData.Users (username);
 CREATE INDEX clinic_schedule_idx ON TriageData.Schedules (clinic_id);
 CREATE INDEX clinic_models_idx ON TriageData.Models (clinic_id);
 CREATE INDEX clinic_triage_classes_idx ON TriageData.TriageClasses (clinic_id);
+
+-------------------------------------------------------------------------------
+--  User Roles to limit API access for various endpoints.
+-------------------------------------------------------------------------------
+
+DROP USER IF EXISTS triageClassHandler;
+CREATE USER triageClassHandler WITH
+    LOGIN PASSWORD 'password'
+    NOSUPERUSER
+    NOCREATEDB
+    NOCREATEROLE
+    INHERIT
+    NOREPLICATION
+    CONNECTION LIMIT -1;
+GRANT INSERT, SELECT, UPDATE ON TriageData.TriageClasses TO triageClassHandler;
+
+DROP USER IF EXISTS triageClassHandler;
+CREATE USER triageClassHandler WITH
+    LOGIN PASSWORD 'password'
+    NOSUPERUSER
+    NOCREATEDB
+    NOCREATEROLE
+    INHERIT
+    NOREPLICATION
+    CONNECTION LIMIT -1;
+GRANT INSERT, SELECT, UPDATE ON TriageData.TriageClasses TO triageClassHandler;
