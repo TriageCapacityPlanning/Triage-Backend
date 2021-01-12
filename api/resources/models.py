@@ -25,18 +25,18 @@ class Models(Resource):
 
     def get(self):
         # Validate input arguments.
-        args = parser.parse(self.arg_schema_get, request,
-                            location='querystring')
-        # Retrieve triage classes from database
+        args = parser.parse(self.arg_schema_get, request, location='querystring')
+        # Retrieve clinic models from database
         models = self.get_clinic_models(args['clinic-id'])
         # API Response
         return {'status': 200, 'models': models}
 
     def patch(self):
         # Validate input arguments.
-        args = parser.parse(self.arg_schema_patch, request,
-                            location='querystring')
-        self.get_clinic_models(args['clinic-id'], args['model-id'])
+        args = parser.parse(self.arg_schema_patch, request, location='querystring')
+        # Update current active model for clinic-id to model-id 
+        self.set_active_model(args['clinic-id'], args['model-id'])
+        # API Response
         return {'status': 200}
 
     def set_active_model(self, clinic_id, model_id):
