@@ -5,6 +5,7 @@ from webargs.flaskparser import parser
 from webargs import fields, validate
 from common.controller.TriageController import TriageController
 
+
 class Predict(Resource):
     # Database connection information
     DATA = {
