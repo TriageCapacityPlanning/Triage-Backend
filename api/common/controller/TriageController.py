@@ -1,6 +1,6 @@
 import datetime
-from common.controller.DataFrame import DataFrame
-from common.database_interaction import DataBase
+from api.common.controller.DataFrame import DataFrame
+from api.common.database_interaction import DataBase
 
 
 class TriageController:

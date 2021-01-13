@@ -1,4 +1,4 @@
-from common.database_interaction import DataBase
+from api.common.database_interaction import DataBase
 from flask_restful import Resource
 from flask import request
 from webargs.flaskparser import parser
