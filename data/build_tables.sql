@@ -81,35 +81,50 @@ CREATE INDEX clinic_triage_classes_idx ON TriageData.TriageClasses (clinic_id);
 --  User Roles to limit API access for various endpoints.
 -------------------------------------------------------------------------------
 
-DROP USER IF EXISTS triageClassHandler;
-CREATE USER triageClassHandler WITH
-    LOGIN PASSWORD 'password'
+DROP USER IF EXISTS triage_class_handler;
+CREATE USER triage_class_handler WITH
+    PASSWORD 'password'
     NOSUPERUSER
     NOCREATEDB
     NOCREATEROLE
     INHERIT
     NOREPLICATION
     CONNECTION LIMIT -1;
-GRANT INSERT, SELECT, UPDATE ON TriageData.TriageClasses TO triageClassHandler;
+GRANT INSERT, SELECT, UPDATE ON TriageData.TriageClasses TO triage_class_handler;
 
-DROP USER IF EXISTS modelHandler;
-CREATE USER modelHandler WITH
-    LOGIN PASSWORD 'password'
+DROP USER IF EXISTS model_handler;
+CREATE USER model_handler WITH
+    PASSWORD 'password'
     NOSUPERUSER
     NOCREATEDB
     NOCREATEROLE
     INHERIT
     NOREPLICATION
     CONNECTION LIMIT -1;
-GRANT SELECT, UPDATE ON TriageData.Models TO modelHandler;
+GRANT SELECT, UPDATE ON TriageData.Models TO model_handler;
 
-DROP USER IF EXISTS predictHandler;
-CREATE USER predictHandler WITH
-    LOGIN PASSWORD 'password'
+DROP USER IF EXISTS predict_handler;
+CREATE USER predict_handler WITH
+    PASSWORD 'password'
     NOSUPERUSER
     NOCREATEDB
     NOCREATEROLE
     INHERIT
     NOREPLICATION
     CONNECTION LIMIT -1;
-GRANT SELECT ON TriageData.TriageClasses TO predictHandler;
+GRANT SELECT ON TriageData.TriageClasses TO predict_handler;
+
+DROP USER IF EXISTS triage_controller;
+CREATE USER triage_controller WITH
+    PASSWORD 'password'
+    NOSUPERUSER
+    NOCREATEDB
+    NOCREATEROLE
+    INHERIT
+    NOREPLICATION
+    CONNECTION LIMIT -1;
+GRANT SELECT ON TriageData.HistoricData TO triage_controller;
+
+CREATE GROUP api_handlers;
+ALTER GROUP api_handlers ADD USER triage_class_handler, model_handler, predict_handler, triage_controller;
+GRANT USAGE ON SCHEMA TriageData TO GROUP api_handlers;

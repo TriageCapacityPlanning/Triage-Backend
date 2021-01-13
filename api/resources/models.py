@@ -8,7 +8,7 @@ from webargs import fields
 class Models(Resource):
     DATABASE_DATA = {
         'database': 'triage',
-        'user': 'modelHandler',
+        'user': 'model_handler',
         'password': 'password',
         'host': 'localhost',
         'port': '5432'

@@ -8,7 +8,7 @@ from webargs import fields
 class UpdateTriageClasses(Resource):
     DATABASE_DATA = {
         'database': 'triage',
-        'user': 'triageClassHandler',
+        'user': 'triage_class_handler',
         'password': 'password',
         'host': 'localhost',
         'port': '5432'

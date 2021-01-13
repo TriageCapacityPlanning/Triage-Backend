@@ -6,7 +6,7 @@ class TriageController:
     # Database connection information
     DATA = {
         'database': 'triage',
-        'user': 'admin',
+        'user': 'triage_controller',
         'password': 'password',
         'host': 'localhost',
         'port': '5432'

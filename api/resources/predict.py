@@ -10,7 +10,7 @@ class Predict(Resource):
     # Database connection information
     DATABASE_DATA = {
         'database': 'triage',
-        'user': 'predictHandler',
+        'user': 'predict_handler',
         'password': 'password',
         'host': 'localhost',
         'port': '5432'
