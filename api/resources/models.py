@@ -39,25 +39,32 @@ class Models(Resource):
         # Update current active model for clinic-id to model-id
         self.set_active_model(args['clinic-id'], args['model-id'])
         # API Response
-        return {'status': 200}
+        return {'status': 200, 'model-id': args['model-id']}
 
     def set_active_model(self, clinic_id, model_id):
         # Establish database connection
         db = DataBase(self.DATABASE_DATA)
         # Update database data
-        db.update(f"UPDATE triagedata.models \
-                    SET in_use = (CASE WHEN id={model_id} THEN true \
+        db.update("UPDATE triagedata.models \
+                    SET in_use = (CASE WHEN id=%(model-id)s THEN true \
                                        ELSE false \
                                   END) \
-                    WHERE clinic_id={clinic_id}")
+                    WHERE clinic_id=%(clinic-id)s AND \
+                          EXISTS ( \
+                                SELECT id \
+                                FROM triagedata.models \
+                                WHERE clinic_id=%(clinic-id)s AND \
+                                        id=%(model-id)s \
+                                )", 
+                    {'model-id': model_id, 'clinic-id': clinic_id})
 
     def get_clinic_models(self, clinic_id):
         # Keys for response
         keys = ['id', 'accuracy', 'created', 'in_use']
         # Establish database connection and get the data
         db = DataBase(self.DATABASE_DATA)
-        rows = db.select(f"SELECT id, accuracy, to_char(created,'DD-MM-YYYY'), in_use \
+        rows = db.select("SELECT id, accuracy, to_char(created,'DD-MM-YYYY'), in_use \
                            FROM triagedata.models \
-                           WHERE clinic_id={clinic_id}")
+                           WHERE clinic_id=%s", (clinic_id))
         # Return data
         return [dict(zip(keys, values)) for values in rows]

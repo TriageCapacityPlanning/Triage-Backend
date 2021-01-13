@@ -44,9 +44,9 @@ class UpdateTriageClasses(Resource):
         keys = ['clinic_id', 'severity', 'name', 'duration', 'proportion']
         # Establish database connection and get the data
         db = DataBase(self.DATABASE_DATA)
-        rows = db.select(f"SELECT clinic_id, severity, name, duration, proportion \
-                           FROM triagedata.triageclasses \
-                           WHERE clinic_id={clinic_id}")
+        rows = db.select("SELECT clinic_id, severity, name, duration, proportion \
+                          FROM triagedata.triageclasses \
+                          WHERE clinic_id=%s",(clinic_id))
         # Return data
         return [dict(zip(keys, values)) for values in rows]
 
