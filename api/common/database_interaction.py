@@ -1,7 +1,30 @@
+"""
+database_interaction is aimed to limit code redundancy for PostgreSQL interaction.
+"""
+
+# External dependencies
 import psycopg2
 
 
 class DataBase:
+    """
+    DataBase is a class to simplify connections with the PostgreSQL database.
+
+    Usage:
+        To create a new data base connection, create it with `DataBase(connection_data)` where
+        connection_data is a dictionary containing the following keys:
+
+    ```
+    {
+        'database' (str) The name of the database to connect to,
+        'user'     (str) The username used to connect to the database
+        'password' (str) The password for the respective user
+        'host'     (str) The host IP of the data base
+        'port'     (str) The connection port for the database
+    }
+    ```
+    """
+
     def __init__(self, connection_data):
         self.connection_data = connection_data
 
@@ -9,8 +32,8 @@ class DataBase:
         '''
         Returns a database connection
 
-                Returns:
-                        A database connection
+        Returns:
+            A database connection
         '''
         return psycopg2.connect(
             database=self.connection_data['database'],
@@ -24,12 +47,11 @@ class DataBase:
         '''
         Returns the query results from the database for the select_string.
 
-                Parameters:
-                        select_string (str): A string representing the database query
+        Parameters:
+            `select_string` (str): A string representing the database query
 
-                Returns:
-                        query_results ([(str, str, ...) ...]): A list of tuples of query results 
-                                                               from the database
+        Returns:
+            list: A list of tuples of query results from the database
         '''
         # Establish database connection
         db = self._connect_to_db()
@@ -45,8 +67,8 @@ class DataBase:
         '''
         Insert data into the database
 
-                Parameters:
-                        insert_string (str): A string representing the data to insert
+        Parameters:
+            `insert_string` (str): A string representing the data to insert
         '''
         self._modify_data(insert_string)
 
@@ -54,8 +76,8 @@ class DataBase:
         '''
         Update data in the database
 
-                Parameters:
-                        update_string (str): A string representing the data to update
+        Parameters:
+            `update_string` (str): A string representing the data to update
         '''
         self._modify_data(update_string)
 
@@ -63,8 +85,8 @@ class DataBase:
         '''
         Modify data in the database
 
-                Parameters:
-                        query_string (str): A string representing the data to modify
+        Parameters:
+            `query_string` (str): A string representing the data to modify
         '''
         # Establish database connection
         db = self._connect_to_db()
