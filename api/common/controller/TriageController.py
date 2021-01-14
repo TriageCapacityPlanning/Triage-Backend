@@ -33,6 +33,10 @@ class TriageController:
         'host': 'localhost',
         'port': '5432'
     }
+    """
+    This is the database connection information used by Models to connect to the database. 
+    See `api.common.database_interaction.DataBase` for configuration details and required arguments.
+    """
 
     # Constructor
     def __init__(self, params):
