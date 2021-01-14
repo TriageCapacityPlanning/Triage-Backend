@@ -13,6 +13,10 @@ import api.resources.upload as Upload
 app = Flask(__name__)
 api = Api(app)
 
+@app.route('/')
+def index():
+    return { 'status': 200, 'api': "Triage API", 'version': 1 }
+
 api.add_resource(Predict, '/predict')
 api.add_resource(Models, *['/models', '/models/use'])
 api.add_resource(UpdateTriageClasses, '/classes')
