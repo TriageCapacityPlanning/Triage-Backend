@@ -26,12 +26,12 @@ class DataBase:
         self.connection_data = connection_data
 
     def _connect_to_db(self):
-        '''
+        """
         Returns a database connection
 
         Returns:
             A database connection
-        '''
+        """
         return psycopg2.connect(
             database=self.connection_data['database'],
             user=self.connection_data['user'],
@@ -41,7 +41,7 @@ class DataBase:
         )
 
     def select(self, select_string):
-        '''
+        """
         Returns the query results from the database for the select_string.
 
         Args:
@@ -49,7 +49,7 @@ class DataBase:
 
         Returns:
             list: A list of tuples of query results from the database
-        '''
+        """
         # Establish database connection
         db = self._connect_to_db()
         # Query for restults based on the query string (select_string) and store the results
@@ -61,30 +61,30 @@ class DataBase:
         return results
 
     def insert(self, insert_string):
-        '''
+        """
         Insert data into the database
 
         Args:
             insert_string (str): A string representing the data to insert
-        '''
+        """
         self._modify_data(insert_string)
 
     def update(self, update_string):
-        '''
+        """
         Update data in the database
 
         Args:
             update_string (str): A string representing the data to update
-        '''
+        """
         self._modify_data(update_string)
 
     def _modify_data(self, query_string):
-        '''
+        """
         Modify data in the database
 
         Args:
             query_string (str): A string representing the data to modify
-        '''
+        """
         # Establish database connection
         db = self._connect_to_db()
         # Insert the desired data into the db
