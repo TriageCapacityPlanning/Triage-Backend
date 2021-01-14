@@ -1,5 +1,9 @@
 # Triage Backend
 
+## Documentation
+
+You can view the documentation for the various portions of the api by opening the docs in `docs/api/index.html`
+
 ## Data Bases w/ Docker
 To run the docker container that is already prepared, navigate to this cloned repository and run the following:
 
@@ -25,3 +29,29 @@ psql -h localhost -U ${TRIAGE_DB_USERNAME} -d ${TRIAGE_DB}
 Then entering the password in the table above.
 
 The db is nor running on port 5432 with empty tables.
+
+This satisfies the following from the Design Specification:
+- [Database Module](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#database-module)
+
+## Triage API
+### Usage
+To run the API begin by installing the required python dependencies by navigating to the `api` folder and running:
+
+```bash
+pip install -r requirements.txt
+```
+
+Then run the API locally by running:
+```bash
+python ./triage_api.py
+```
+
+The API will run on localhost (port 5000) by default.
+
+### Endpoints
+Currently the following endpoints are implemented:
+- [GET /predict](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#get-v1predict)
+- [GET /classes](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#get-v1classes)
+- [PUT /classes](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#put-v1classes)
+- [GET /models](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#get-v1models)
+- [PATCH /models/use](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#patch-v1modelsuse)
