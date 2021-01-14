@@ -55,3 +55,9 @@ Currently the following endpoints are implemented:
 - [PUT /classes](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#put-v1classes)
 - [GET /models](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#get-v1models)
 - [PATCH /models/use](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#patch-v1modelsuse)
+
+### Unit Testing
+The template code for unit testing is currently in the `api/tests/` directory. Unit testing is done through pytest and can be run by simply running the command:
+```bash
+pytest
+```
