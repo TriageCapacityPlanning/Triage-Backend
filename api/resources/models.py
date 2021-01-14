@@ -91,7 +91,7 @@ class Models(Resource):
         # Update current active model for clinic-id to model-id
         self.set_active_model(args['clinic-id'], args['model-id'])
         # API Response
-        return {'status': 200, args['model-id']}
+        return {'status': 200, 'active_model': args['model-id']}
 
     def set_active_model(self, clinic_id, model_id):
         """
@@ -131,7 +131,8 @@ class Models(Resource):
         # Keys for response
         keys = ['id', 'accuracy', 'created', 'in_use']
         # Establish database connection and get the data
-        db = DataBase(self.DATABASE_DATA)rows = db.select("SELECT id, accuracy, to_char(created,'DD-MM-YYYY'), in_use \
+        db = DataBase(self.DATABASE_DATA)
+        rows = db.select("SELECT id, accuracy, to_char(created,'DD-MM-YYYY'), in_use \
                            FROM triagedata.models \
                            WHERE clinic_id=%s", (clinic_id))
         # Return data
