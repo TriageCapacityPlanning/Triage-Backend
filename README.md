@@ -1,5 +1,9 @@
 # Triage Backend
 
+## Documentation
+
+You can view the documentation for the various portions of the api by opening the docs in `docs/api/index.html`
+
 ## Data Bases w/ Docker
 To run the docker container that is already prepared, navigate to this cloned repository and run the following:
 
