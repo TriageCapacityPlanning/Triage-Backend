@@ -26,6 +26,9 @@ Then entering the password in the table above.
 
 The db is nor running on port 5432 with empty tables.
 
+This satisfies the following from the Design Specification:
+- [Database Module](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#database-module)
+
 ## Triage API
 ### Usage
 To run the API begin by installing the required python dependencies by navigating to the `api` folder and running:
