@@ -93,7 +93,6 @@ class UpdateTriageClasses(Resource):
             `status` (int) The status of the request
             `updated` (dict): The created or updated class.
         """
-        print(request.json)
         # Validate input arguments
         args = parser.parse(self.arg_schema_put, request, location='json')
         
