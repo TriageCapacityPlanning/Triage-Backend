@@ -93,11 +93,12 @@ class UpdateTriageClasses(Resource):
             `status` (int) The status of the request
             `updated` (dict): The created or updated class.
         """
-
+        print(request.json)
         # Validate input arguments
-        args = parser.parse(self.arg_schema_put, request)
+        args = parser.parse(self.arg_schema_put, request, location='json')
+        
         # Update triage class in database
-        self.update_triage_class(args['triage-class'])
+        #self.update_triage_class(args['triage-class'])
         # API Response
         return {'status': 200, 'updated': args['triage-class']}
 
@@ -113,11 +114,16 @@ class UpdateTriageClasses(Resource):
         """
         # Keys for response
         keys = ['clinic_id', 'severity', 'name', 'duration', 'proportion']
+
         # Establish database connection and get the data
         db = DataBase(self.DATABASE_DATA)
         rows = db.select("SELECT clinic_id, severity, name, duration, proportion \
-                          FROM triagedata.triageclasses \
-                          WHERE clinic_id=%s",(clinic_id))
+                        FROM triagedata.triageclasses \
+                        WHERE clinic_id=%s",(clinic_id))
+        
+        if len(rows) == 0:
+            raise RuntimeError('Could not retrieve clinic settings for clinic-id: %s', clinic_id)
+        
         # Return data
         return [dict(zip(keys, values)) for values in rows]
 
@@ -128,23 +134,24 @@ class UpdateTriageClasses(Resource):
         Args:
             triage_class (dict): The desired new or updated triage class.
         """
-        # Establish database connection
+
+            # Establish database connection
         db = DataBase(self.DATABASE_DATA)
         # Insert or update information
         db.insert(f"INSERT INTO triagedata.triageclasses (clinic_id, severity, name, duration, proportion) \
                     VALUES(%(clinic_id)s, \
-                           %(severity)s, \
-                           %(name)s, \
-                           %(duration)s, \
-                           %(proportion)s) \
+                        %(severity)s, \
+                        %(name)s, \
+                        %(duration)s, \
+                        %(proportion)s) \
                     ON CONFLICT ON CONSTRAINT pk DO UPDATE \
                         SET name = %(name)s, \
                             duration = %(duration)s, \
                             proportion = %(proportion)s",
-                  {
-                      'clinic_id': triage_class['clinic-id'],
-                      'severity': triage_class['severity'],
-                      'name': triage_class['name'],
-                      'duration': triage_class['duration'],
-                      'proportion': triage_class['proportion']
-                  })
+                {
+                    'clinic_id': triage_class['clinic-id'],
+                    'severity': triage_class['severity'],
+                    'name': triage_class['name'],
+                    'duration': triage_class['duration'],
+                    'proportion': triage_class['proportion']
+                })
