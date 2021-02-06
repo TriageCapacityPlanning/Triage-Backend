@@ -114,8 +114,15 @@ class Predict(Resource):
         # Establish database connection
         db = DataBase(self.DATABASE_DATA)
         # Query for data
-        rows = db.select("SELECT clinic_id, severity, name, duration, proportion \
+        rows = db.select(f"SELECT clinic_id, severity, name, duration, proportion \
                           FROM triagedata.triageclasses \
-                          WHERE clinic_id=%s", (clinic_id))
+                          WHERE clinic_id=%(clinic_id)s" %
+                          {
+                              'clinic_id': clinic_id
+                          })
+        
+        if len(rows) == 0:
+            raise RuntimeError('Could not retrieve clinic settings for clinic-id: %s', clinic_id)
+        
         # Return data
         return [dict(zip(keys, values)) for values in rows]
