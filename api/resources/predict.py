@@ -78,9 +78,9 @@ class Predict(Resource):
         args = parser.parse(self.arg_schema_get, request,
                             location='querystring')
         # Retrieve clinic settings
-        args['clinic-settings'] = self.get_clinic_settings(args['clinic-id'])
+        clinic_settings = self.get_clinic_settings(args['clinic-id'])
         # Instantiate TriageController
-        triage_controller = TriageController(args)
+        triage_controller = TriageController(args['intervals'], clinic_settings, 7)
         predictions = triage_controller.predict()
         # API response
         return {
