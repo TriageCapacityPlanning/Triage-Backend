@@ -78,9 +78,9 @@ class Predict(Resource):
         args = parser.parse(self.arg_schema_get, request,
                             location='querystring')
         # Retrieve clinic settings
-        args['clinic-settings'] = self.get_clinic_settings(args['clinic-id'])
+        clinic_settings = self.get_clinic_settings(args['clinic-id'])
         # Instantiate TriageController
-        triage_controller = TriageController(args)
+        triage_controller = TriageController(args['intervals'], clinic_settings, 7)
         predictions = triage_controller.predict()
         # API response
         return {
@@ -114,8 +114,15 @@ class Predict(Resource):
         # Establish database connection
         db = DataBase(self.DATABASE_DATA)
         # Query for data
-        rows = db.select("SELECT clinic_id, severity, name, duration, proportion \
+        rows = db.select(f"SELECT clinic_id, severity, name, duration, proportion \
                           FROM triagedata.triageclasses \
-                          WHERE clinic_id=%s", (clinic_id))
+                          WHERE clinic_id=%(clinic_id)s" %
+                          {
+                              'clinic_id': clinic_id
+                          })
+        
+        if len(rows) == 0:
+            raise RuntimeError('Could not retrieve clinic settings for clinic-id: %s', clinic_id)
+        
         # Return data
         return [dict(zip(keys, values)) for values in rows]
