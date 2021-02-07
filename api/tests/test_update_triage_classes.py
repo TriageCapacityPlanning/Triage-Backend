@@ -202,5 +202,5 @@ class TestUpdateTriageClassesUnit:
 
         try:
             self.update_triage_classes.update_triage_class(triage_class_input)
-        except exception:
-            raise pytest.fail('Did raise %s', exception)
+        except:
+            raise pytest.fail('Did raise exception')
