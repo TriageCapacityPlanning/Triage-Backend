@@ -135,5 +135,8 @@ class Models(Resource):
         rows = db.select("SELECT id, accuracy, to_char(created,'DD-MM-YYYY'), in_use \
                            FROM triagedata.models \
                            WHERE clinic_id=%s", (clinic_id))
+        if not rows:
+            raise RuntimeError('Could not retrieve clinic settings for clinic-id: %s', clinic_id)
+
         # Return data
         return [dict(zip(keys, values)) for values in rows]
