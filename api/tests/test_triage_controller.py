@@ -1,10 +1,21 @@
-import pytest
-from api.common.controller.TriageController import TriageController
-from datetime import datetime
+"""
+This module handles testing for the TriageController.
+"""
 
+import pytest
+from datetime import datetime
+from api.common.controller.TriageController import TriageController
 
 class TestTriageController:
+    """
+    The `TestTriageController` class contains tests for the TriageController.
+    """
+
     def setup_class(self):
+        """
+        Test setup that occurs once before all tests are run.
+        """
+
         self.intervals_empty_mock = []
         self.intervals_singleton_mock = [('2020-01-01', '2020-02-01')]
         self.intervals_multiple_mock = [('2020-01-01', '2020-02-01'),
@@ -39,6 +50,11 @@ class TestTriageController:
         self.padding_length_large_mock = 30
 
     def test_get_desired_historic_data_year_error(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that an error occurs when no historic data is found.
+        """
+
         test_triage_controller = TriageController(self.intervals_multiple_mock,
                                                   self.clinic_settings_mock,
                                                   self.padding_length_large_mock)
@@ -51,6 +67,11 @@ class TestTriageController:
                 self.intervals_multiple_mock[0][0])
 
     def test_get_desired_historic_data_year_success(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that a historic data year can be successfully found.
+        """
+
         test_triage_controller = TriageController(self.intervals_multiple_mock,
                                                   self.clinic_settings_mock,
                                                   self.padding_length_large_mock)
@@ -61,7 +82,11 @@ class TestTriageController:
             self.intervals_multiple_mock[0][0]) == 2019
 
     def test_get_historic_data_referrals(self, mocker):
-        # , start_date, historic_data_year, length):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that historic referal data is properly retrieved.
+        """
+
         test_triage_controller = TriageController(self.intervals_multiple_mock,
                                                   self.clinic_settings_mock,
                                                   self.padding_length_large_mock)
@@ -88,6 +113,11 @@ class TestTriageController:
         assert actual_response == expected_response_mock
 
     def test_sort_referral_data_empty(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that empty historic data can be sorted by triage class.
+        """
+
         test_triage_controller = TriageController(self.intervals_multiple_mock,
                                                   self.clinic_settings_mock,
                                                   self.padding_length_large_mock)
@@ -103,6 +133,11 @@ class TestTriageController:
         assert actual_response == expected_response
 
     def test_sort_referral_data_singleton(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that singleton historic data can be sorted by triage class.
+        """
+
         test_triage_controller = TriageController(self.intervals_multiple_mock,
                                                   self.clinic_settings_mock,
                                                   self.padding_length_large_mock)
@@ -123,6 +158,11 @@ class TestTriageController:
         assert actual_response == expected_response
 
     def test_sort_referral_data_multiple_same_class(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that multiple historic data can be sorted into a single triage class.
+        """
+
         test_triage_controller = TriageController(self.intervals_multiple_mock,
                                                   self.clinic_settings_mock,
                                                   self.padding_length_large_mock)
@@ -155,6 +195,11 @@ class TestTriageController:
         assert actual_response == expected_response
 
     def test_sort_referral_data_multiple_all_classes(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that multiple historic data can be sorted into multiple triage classes.
+        """
+
         test_triage_controller = TriageController(self.intervals_multiple_mock,
                                                   self.clinic_settings_mock,
                                                   self.padding_length_large_mock)
@@ -187,7 +232,17 @@ class TestTriageController:
         assert actual_response == expected_response
 
     def test_get_predictions(self):
+        """
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-6 / MOD-7
+        """
+
         assert False
 
     def test_run_simulation(self):
+        """
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-6 / SIM-1
+        """
+        
         assert False

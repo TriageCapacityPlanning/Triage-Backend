@@ -1,20 +1,41 @@
+"""
+This module handles testing for the Predict class.
+"""
+
 import pytest
+import json
 from api.resources.predict import Predict
 from api.triage_api import create_app
-import json
-
 
 class TestPredictAPI:
+    """
+    The `TestPredictAPI` class contains acceptance tests for predict API functions.
+    """
+
     def setup_class(self):
+        """
+        Test setup that occurs once before all tests are run.
+        """
+
         self.test_client = create_app().test_client()
 
     def test_get_missing_inputs(self):
+        """
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-6
+        """
+
         input_mock = {}
         response = self.test_client.get('/predict', query_string=input_mock)
 
         assert response.status_code == 422
 
     def test_get_incorrect_input_type(self):
+        """
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-6
+        """
+
         input_mock = {
             "clinic-id": '"2"',
             "start-date": '2020-01-01',
@@ -28,7 +49,12 @@ class TestPredictAPI:
 
         assert response.status_code == 422
 
-    def test_get_clinic_settings_success(self, mocker):
+    def test_get_success(self, mocker):
+        """
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-6
+        """
+
         input_mock = {
             "clinic-id": 3,
             "start-date": '2020-01-01',
@@ -70,10 +96,23 @@ class TestPredictAPI:
 
 
 class TestPredictUnit:
+    """
+    The `TestPredictUnit` class contains unit tests for predict functions.
+    """
+
     def setup_class(self):
+        """
+        Test setup that occurs once before all tests are run.
+        """
+
         self.predict = Predict()
 
     def test_get_clinic_settings_database_error(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Test that database errors will be caught.
+        """
+
         mocker.patch('api.common.database_interaction.DataBase.select',
                      side_effect=RuntimeError('Database error'))
 
@@ -81,6 +120,11 @@ class TestPredictUnit:
             self.predict.get_clinic_settings(3)
 
     def test_get_clinic_settings_empty_data_error(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Test that retrieving no clinic settings causes an error.
+        """
+
         mocker.patch('api.common.database_interaction.DataBase.select',
                      return_value=[])
 
@@ -88,6 +132,11 @@ class TestPredictUnit:
             self.predict.get_clinic_settings(3)
 
     def test_get_clinic_settings_success_singleton(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Test that getting a single clinic setting succeeds.
+        """
+
         database_response_mock = [[3, 1, 'Urgent', 2, 0.8]]
         result_expected = [
             {
@@ -106,6 +155,11 @@ class TestPredictUnit:
             3) == result_expected
 
     def test_get_clinic_settings_success_multiple(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Test that getting multiple clinic settings succeeds.
+        """
+
         database_response_mock = [
             [3, 1, 'Urgent', 2, 0.8],
             [3, 2, 'Semi-Urgent', 4, 0.7],

@@ -15,6 +15,7 @@ class TestTriageAPI:
         """
         Test setup that occurs once before all tests are run.
         """
+        
         self.test_client = create_app().test_client()
 
     def test_base_route(self):

@@ -1,9 +1,21 @@
+"""
+This module handles testing for the DataFrame.
+"""
+
 import pytest
 from api.common.controller.DataFrame import DataFrame
 
 
 class TestDataFrame:
+    """
+    The `TestDataFRame` class contains acceptance and unit tests for the DataFrame.
+    """
+
     def setup_class(self):
+        """
+        Test setup that occurs once before all tests are run.
+        """
+
         self.intervals_empty_mock = []
         self.intervals_singleton_mock = [('2020-01-01', '2020-02-01')]
         self.intervals_multiple_mock = [('2020-01-01', '2020-02-01'),
@@ -23,6 +35,11 @@ class TestDataFrame:
         }
 
     def test_get_interval_dates_empty_padding(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests if intervals are generated properly with no padding.
+        """
+
         empty_interval_data_frame = DataFrame(self.intervals_empty_mock,
                                               self.padding_empty_mock,
                                               self.predictions_multiple_mock)
@@ -39,6 +56,11 @@ class TestDataFrame:
             (0, 31), (32, 74), (75, 91)]
 
     def test_get_interval_dates_singleton_padding(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests if intervals are generated properly with one padding value.
+        """
+
         empty_interval_data_frame = DataFrame(self.intervals_empty_mock,
                                               self.padding_singleton_mock,
                                               self.predictions_multiple_mock)
@@ -55,6 +77,11 @@ class TestDataFrame:
             (1, 32), (33, 75), (76, 92)]
 
     def test_get_interval_dates_multiple_padding(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests if intervals are generated properly with multiple padding values.
+        """
+
         empty_interval_data_frame = DataFrame(self.intervals_empty_mock,
                                               self.padding_multiple_mock,
                                               self.predictions_multiple_mock)
@@ -71,6 +98,11 @@ class TestDataFrame:
             (3, 34), (35, 77), (78, 94)]
 
     def test_get_sample_invalid_triage_class(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests if generating a sample for an invalid triage class fails.
+        """
+
         test_data_frame = DataFrame(self.intervals_empty_mock,
                                     self.padding_multiple_mock,
                                     self.predictions_multiple_mock)
@@ -81,6 +113,11 @@ class TestDataFrame:
             test_data_frame.get_sample(4)
 
     def test_get_sample_empty_predictions(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests getting a sample with no predictions provided.
+        """
+
         empty_padding_data_frame = DataFrame(self.intervals_multiple_mock,
                                              self.padding_empty_mock,
                                              self.predictions_empty_mock)
@@ -96,6 +133,11 @@ class TestDataFrame:
         assert len(multiple_padding_data_frame.get_sample(1)) == len(self.padding_multiple_mock[1])
 
     def test_get_sample_singleton_predictions(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests getting a sample with a single prediction provided.
+        """
+
         empty_padding_data_frame = DataFrame(self.intervals_multiple_mock,
                                              self.padding_empty_mock,
                                              self.predictions_singleton_mock)
@@ -116,6 +158,11 @@ class TestDataFrame:
                len(self.padding_multiple_mock[1]) + len(self.predictions_singleton_mock[1])
 
     def test_get_sample_multiple_predictions(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests getting a sample with multiple predictions provided.
+        """
+        
         empty_padding_data_frame = DataFrame(self.intervals_multiple_mock,
                                              self.padding_empty_mock,
                                              self.predictions_multiple_mock)
@@ -136,6 +183,11 @@ class TestDataFrame:
                len(self.padding_multiple_mock[1]) + len(self.predictions_multiple_mock[1])
 
     def test_generate_sample_value(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests if a generated sample value is within the proper range.
+        """
+        
         test_data_frame = DataFrame(self.intervals_multiple_mock,
                                     self.padding_multiple_mock,
                                     self.predictions_multiple_mock)
