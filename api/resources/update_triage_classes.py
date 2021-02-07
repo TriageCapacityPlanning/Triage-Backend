@@ -147,7 +147,7 @@ class UpdateTriageClasses(Resource):
                     ON CONFLICT ON CONSTRAINT pk DO UPDATE \
                         SET name = %(name)s, \
                             duration = %(duration)s, \
-                            proportion = %(proportion)s",
+                            proportion = %(proportion)s" %
                 {
                     'clinic_id': triage_class['clinic-id'],
                     'severity': triage_class['severity'],
