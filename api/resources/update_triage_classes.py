@@ -116,9 +116,10 @@ class UpdateTriageClasses(Resource):
 
         # Establish database connection and get the data
         db = DataBase(self.DATABASE_DATA)
-        rows = db.select("SELECT clinic_id, severity, name, duration, proportion \
+        rows = db.select(("SELECT clinic_id, severity, name, duration, proportion \
                         FROM triagedata.triageclasses \
-                        WHERE clinic_id=%s",(clinic_id))
+                        WHERE clinic_id=%(clinic_id)s" % 
+                        { 'clinic_id': clinic_id }))
         
         if len(rows) == 0:
             raise RuntimeError('Could not retrieve clinic settings for clinic-id: %s', clinic_id)
@@ -146,7 +147,7 @@ class UpdateTriageClasses(Resource):
                     ON CONFLICT ON CONSTRAINT pk DO UPDATE \
                         SET name = %(name)s, \
                             duration = %(duration)s, \
-                            proportion = %(proportion)s",
+                            proportion = %(proportion)s" %
                 {
                     'clinic_id': triage_class['clinic-id'],
                     'severity': triage_class['severity'],
