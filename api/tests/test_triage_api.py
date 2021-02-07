@@ -2,9 +2,7 @@
 This module handles acceptance testing for the TriageAPI.
 """
 
-from api.resources.predict import Predict
 from api.triage_api import create_app
-import pytest
 import json
 
 
@@ -18,7 +16,6 @@ class TestTriageAPI:
         Test setup that occurs once before all tests are run.
         """
         self.test_client = create_app().test_client()
-        
 
     def test_base_route(self):
         """
