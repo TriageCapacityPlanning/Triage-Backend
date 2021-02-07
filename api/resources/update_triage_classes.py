@@ -25,7 +25,7 @@ class UpdateTriageClasses(Resource):
         'port': '5432'
     }
     """
-    This is the database connection information used by Models to connect to the database. 
+    This is the database connection information used by Models to connect to the database.
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     """
 
@@ -60,12 +60,12 @@ class UpdateTriageClasses(Resource):
 
     def get(self):
         """
-        Handles a get request for the classes endpoints. 
+        Handles a get request for the classes endpoints.
         Returns a dictionary with a list of triage classes for an associated clinic.
 
         Args:
             Requires api query string arguments, see `UpdateTriageClasses.arg_schema_get`, in the get request
-        
+
         Returns:
             A dictionary with
             `status` (int) The status of the request
@@ -82,12 +82,12 @@ class UpdateTriageClasses(Resource):
 
     def put(self):
         """
-        Handles a put request for the classes endpoints. 
+        Handles a put request for the classes endpoints.
         Updates or creates a triage class in the database.
 
         Args:
             Requires api query string arguments, see `UpdateTriageClasses.arg_schema_put`, in the put request
-        
+
         Returns:
             A dictionary with
             `status` (int) The status of the request
@@ -95,9 +95,9 @@ class UpdateTriageClasses(Resource):
         """
         # Validate input arguments
         args = parser.parse(self.arg_schema_put, request, location='json')
-        
+
         # Update triage class in database
-        #self.update_triage_class(args['triage-class'])
+        # self.update_triage_class(args['triage-class'])
         # API Response
         return {'status': 200, 'updated': args['triage-class']}
 
@@ -107,7 +107,7 @@ class UpdateTriageClasses(Resource):
 
         Args:
             clinic_id (int): The id of the clinic being referenced.
-        
+
         Returns:
             A list of dictionaries representing the triage classes for the clinic.
         """
@@ -118,12 +118,11 @@ class UpdateTriageClasses(Resource):
         db = DataBase(self.DATABASE_DATA)
         rows = db.select(("SELECT clinic_id, severity, name, duration, proportion \
                         FROM triagedata.triageclasses \
-                        WHERE clinic_id=%(clinic_id)s" % 
-                        { 'clinic_id': clinic_id }))
-        
+                        WHERE clinic_id=%(clinic_id)s" % {'clinic_id': clinic_id}))
+
         if len(rows) == 0:
             raise RuntimeError('Could not retrieve clinic settings for clinic-id: %s', clinic_id)
-        
+
         # Return data
         return [dict(zip(keys, values)) for values in rows]
 
@@ -135,10 +134,10 @@ class UpdateTriageClasses(Resource):
             triage_class (dict): The desired new or updated triage class.
         """
 
-            # Establish database connection
+        # Establish database connection
         db = DataBase(self.DATABASE_DATA)
         # Insert or update information
-        db.insert(f"INSERT INTO triagedata.triageclasses (clinic_id, severity, name, duration, proportion) \
+        db.insert("INSERT INTO triagedata.triageclasses (clinic_id, severity, name, duration, proportion) \
                     VALUES(%(clinic_id)s, \
                         %(severity)s, \
                         %(name)s, \
@@ -148,10 +147,10 @@ class UpdateTriageClasses(Resource):
                         SET name = %(name)s, \
                             duration = %(duration)s, \
                             proportion = %(proportion)s" %
-                {
-                    'clinic_id': triage_class['clinic-id'],
-                    'severity': triage_class['severity'],
-                    'name': triage_class['name'],
-                    'duration': triage_class['duration'],
-                    'proportion': triage_class['proportion']
-                })
+                  {
+                      'clinic_id': triage_class['clinic-id'],
+                      'severity': triage_class['severity'],
+                      'name': triage_class['name'],
+                      'duration': triage_class['duration'],
+                      'proportion': triage_class['proportion']
+                  })

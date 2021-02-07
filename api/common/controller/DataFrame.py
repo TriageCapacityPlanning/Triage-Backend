@@ -1,4 +1,4 @@
-""" 
+"""
 The DataFrame is used to generate varying sets of referal predictions for the purposes of simulation.
 """
 
@@ -69,25 +69,28 @@ class DataFrame:
         return int(prediction[0] + variance)
 
     def __format_dates_to_indexes(self, intervals, paddings):
-        """Converts intervals from date format (start and end date for an interval) to relative indexes in the list of predictions.
+        """
+        Converts intervals from date format (start and end date for an interval) to relative
+        indexes in the list of predictions.
 
         Parameters:
             `intervals` (list): List of date string tuples with the start and end dates of the interval.
             `paddings` (list): List of padding predictions.
 
         Returns:
-            Returns the intervals as a list of tuples with start and end indexes relative to the predictions given to the DataFrame.
+            Returns the intervals as a list of tuples with start and end indexes relative to the
+            predictions given to the DataFrame.
         """
 
         padding_length = [len(p) for p in paddings.values()][0] if len(paddings) > 0 else 0
 
         date_offsets = [(datetime.strptime(end, '%Y-%m-%d') - datetime.strptime(start, '%Y-%m-%d')).days
                         for (start, end) in intervals]
-        
+
         interval_start_index = padding_length
         interval_indexes = []
         for offset in date_offsets:
             interval_indexes.append((interval_start_index, interval_start_index + offset))
             interval_start_index += offset + 1
-        
+
         return interval_indexes

@@ -1,10 +1,9 @@
-""" 
+"""
 The TriageController is used to initiate prediction and simulation upon API requests.
 """
 
 # External dependencies.
 from datetime import datetime, timedelta
-from api.common.controller.DataFrame import DataFrame
 from api.common.database_interaction import DataBase
 
 
@@ -32,7 +31,7 @@ class TriageController:
         'port': '5432'
     }
     """
-    This is the database connection information used by Models to connect to the database. 
+    This is the database connection information used by Models to connect to the database.
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     """
 
@@ -64,7 +63,7 @@ class TriageController:
 
         # Retrieve previous years referral data from database
         padding = max(self.PADDING_LENGTH_MIN, self.padding_length)
-        historic_data = self.get_historic_data(self.start_date, desired_historic_data_year, padding_length)
+        historic_data = self.get_historic_data(self.start_date, desired_historic_data_year, padding)
 
         # Sort referral_data by triage class.
         sorted_referral_data = self.sort_referral_data(historic_data, self.clinic_settings)
@@ -80,11 +79,10 @@ class TriageController:
 
         return {'interval': sorted_referral_data, 'total': sorted_referral_data}
 
-
     def get_historic_data_year(self, start_date):
         db = DataBase(self.DATABASE_DATA)
 
-        year = db.select(f"SELECT EXTRACT(YEAR FROM historicdata.date_received) \
+        year = db.select("SELECT EXTRACT(YEAR FROM historicdata.date_received) \
                          FROM triagedata.historicdata \
                          WHERE EXTRACT(MONTH FROM historicdata.date_received)= %(month)s AND \
                                EXTRACT(DAY FROM historicdata.date_received) >= %(day)s \
@@ -119,7 +117,7 @@ class TriageController:
         db = DataBase(self.DATABASE_DATA)
 
         # Query for referral data from previous year
-        rows = db.select(f"SELECT historicdata.date_received, historicdata.date_seen \
+        rows = db.select("SELECT historicdata.date_received, historicdata.date_seen \
                            FROM triagedata.historicdata \
                            WHERE historicdata.date_received >= '%(start_date)s'::date \
                                  AND historicdata.date_received < '%(end_date)s'::date" %
@@ -129,8 +127,7 @@ class TriageController:
                          })
 
         # Return results
-        referral_data = [{'date_recieved': referral_data[0], 'date_seen': referral_data[1]}
-                        for referral_data in rows]
+        referral_data = [{'date_recieved': referral_data[0], 'date_seen': referral_data[1]} for referral_data in rows]
         return referral_data
 
     def sort_referral_data(self, referral_data, clinic_settings):
@@ -143,9 +140,8 @@ class TriageController:
             Returns a dictionary with a count of patient arrivals per day for each triage class.
         """
 
-        sorted_referral_data = {triage_class['severity']: []
-                               for triage_class in clinic_settings}
-        
+        sorted_referral_data = {triage_class['severity']: [] for triage_class in clinic_settings}
+
         for referral in referral_data:
             wait_time = (referral['date_seen'] - referral['date_recieved']).days / 7
 
@@ -154,9 +150,9 @@ class TriageController:
                 if triage_class['duration'] >= wait_time:
                     possible_classes.append(triage_class['severity'])
             sorted_class = min(possible_classes) if len(possible_classes) > 0 else 1
-            
+
             sorted_referral_data[sorted_class].append(referral['date_recieved'].strftime('%Y-%m-%d'))
-        
+
         return sorted_referral_data
 
     def get_predictions(self, intervals, initial_prediction_data):
