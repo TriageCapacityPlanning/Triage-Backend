@@ -17,7 +17,11 @@ def create_app():
 
     @app.route('/')
     def index():
-        return { 'status': 200, 'api': "Triage API", 'version': 1 }
+        return { 'status': 200, 'api': "Triage API"}
+    
+    @app.route('/v1')
+    def version():
+        return { 'status': 200, 'version': 1}
 
     api.add_resource(Predict, '/predict')
     api.add_resource(Models, *['/models', '/models/use'])
