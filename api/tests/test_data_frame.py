@@ -106,9 +106,14 @@ class TestDataFrame:
                                                 self.padding_multiple_mock,
                                                 self.predictions_singleton_mock)
 
-        assert len(empty_padding_data_frame.get_sample(1)) == len(self.padding_empty_mock[1]) + len(self.predictions_singleton_mock[1])
-        assert len(single_padding_data_frame.get_sample(1)) == len(self.padding_singleton_mock[1]) + len(self.predictions_singleton_mock[1])
-        assert len(multiple_padding_data_frame.get_sample(1)) == len(self.padding_multiple_mock[1]) + len(self.predictions_singleton_mock[1])
+        assert len(empty_padding_data_frame.get_sample(1)) == \
+               len(self.padding_empty_mock[1]) + len(self.predictions_singleton_mock[1])
+
+        assert len(single_padding_data_frame.get_sample(1)) == \
+               len(self.padding_singleton_mock[1]) + len(self.predictions_singleton_mock[1])
+
+        assert len(multiple_padding_data_frame.get_sample(1)) == \
+               len(self.padding_multiple_mock[1]) + len(self.predictions_singleton_mock[1])
 
     def test_get_sample_multiple_predictions(self):
         empty_padding_data_frame = DataFrame(self.intervals_multiple_mock,
@@ -121,14 +126,19 @@ class TestDataFrame:
                                                 self.padding_multiple_mock,
                                                 self.predictions_multiple_mock)
 
-        assert len(empty_padding_data_frame.get_sample(1)) == len(self.padding_empty_mock[1]) + len(self.predictions_multiple_mock[1])
-        assert len(single_padding_data_frame.get_sample(1)) == len(self.padding_singleton_mock[1]) + len(self.predictions_multiple_mock[1])
-        assert len(multiple_padding_data_frame.get_sample(1)) == len(self.padding_multiple_mock[1]) + len(self.predictions_multiple_mock[1])
-    
+        assert len(empty_padding_data_frame.get_sample(1)) == \
+               len(self.padding_empty_mock[1]) + len(self.predictions_multiple_mock[1])
+
+        assert len(single_padding_data_frame.get_sample(1)) == \
+               len(self.padding_singleton_mock[1]) + len(self.predictions_multiple_mock[1])
+
+        assert len(multiple_padding_data_frame.get_sample(1)) == \
+               len(self.padding_multiple_mock[1]) + len(self.predictions_multiple_mock[1])
+
     def test_generate_sample_value(self):
         test_data_frame = DataFrame(self.intervals_multiple_mock,
-                                                self.padding_multiple_mock,
-                                                self.predictions_multiple_mock)
+                                    self.padding_multiple_mock,
+                                    self.predictions_multiple_mock)
 
         prediction_mock = (5, 2)
 

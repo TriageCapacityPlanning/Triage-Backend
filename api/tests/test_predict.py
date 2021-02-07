@@ -62,7 +62,7 @@ class TestPredictAPI:
         response = self.test_client.get('/predict', query_string=input_mock)
 
         assert response.status_code == 200
-        
+
         response_data = json.loads(response.data)
         assert response_data['intervaled_slot_predictions'] == response_expected['intervaled_slot_predictions']
         assert response_data['number_intervals'] == response_expected['number_intervals']

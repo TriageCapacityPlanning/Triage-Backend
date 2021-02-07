@@ -2,6 +2,7 @@ import pytest
 from api.common.controller.TriageController import TriageController
 from datetime import datetime
 
+
 class TestTriageController:
     def setup_class(self):
         self.intervals_empty_mock = []
@@ -107,7 +108,7 @@ class TestTriageController:
                                                   self.padding_length_large_mock)
         referral_data_mock = [
             {
-                'date_recieved': datetime.strptime('2019-01-01', '%Y-%m-%d'), 
+                'date_recieved': datetime.strptime('2019-01-01', '%Y-%m-%d'),
                 'date_seen': datetime.strptime('2019-01-02', '%Y-%m-%d')
             }
         ]
@@ -120,26 +121,26 @@ class TestTriageController:
         actual_response = test_triage_controller.sort_referral_data(referral_data_mock, self.clinic_settings_mock)
 
         assert actual_response == expected_response
-    
+
     def test_sort_referral_data_multiple_same_class(self):
         test_triage_controller = TriageController(self.intervals_multiple_mock,
                                                   self.clinic_settings_mock,
                                                   self.padding_length_large_mock)
         referral_data_mock = [
             {
-                'date_recieved': datetime.strptime('2019-01-01', '%Y-%m-%d'), 
+                'date_recieved': datetime.strptime('2019-01-01', '%Y-%m-%d'),
                 'date_seen': datetime.strptime('2019-01-01', '%Y-%m-%d')
             },
             {
-                'date_recieved': datetime.strptime('2019-01-02', '%Y-%m-%d'), 
+                'date_recieved': datetime.strptime('2019-01-02', '%Y-%m-%d'),
                 'date_seen': datetime.strptime('2019-01-04', '%Y-%m-%d')
             },
             {
-                'date_recieved': datetime.strptime('2019-01-03', '%Y-%m-%d'), 
+                'date_recieved': datetime.strptime('2019-01-03', '%Y-%m-%d'),
                 'date_seen': datetime.strptime('2019-01-17', '%Y-%m-%d')
             },
             {
-                'date_recieved': datetime.strptime('2019-01-10', '%Y-%m-%d'), 
+                'date_recieved': datetime.strptime('2019-01-10', '%Y-%m-%d'),
                 'date_seen': datetime.strptime('2019-12-31', '%Y-%m-%d')
             }
         ]
@@ -159,19 +160,19 @@ class TestTriageController:
                                                   self.padding_length_large_mock)
         referral_data_mock = [
             {
-                'date_recieved': datetime.strptime('2019-01-01', '%Y-%m-%d'), 
+                'date_recieved': datetime.strptime('2019-01-01', '%Y-%m-%d'),
                 'date_seen': datetime.strptime('2019-01-01', '%Y-%m-%d')
             },
             {
-                'date_recieved': datetime.strptime('2019-01-15', '%Y-%m-%d'), 
+                'date_recieved': datetime.strptime('2019-01-15', '%Y-%m-%d'),
                 'date_seen': datetime.strptime('2019-01-23', '%Y-%m-%d')
             },
             {
-                'date_recieved': datetime.strptime('2019-01-02', '%Y-%m-%d'), 
+                'date_recieved': datetime.strptime('2019-01-02', '%Y-%m-%d'),
                 'date_seen': datetime.strptime('2019-01-26', '%Y-%m-%d')
             },
             {
-                'date_recieved': datetime.strptime('2019-01-03', '%Y-%m-%d'), 
+                'date_recieved': datetime.strptime('2019-01-03', '%Y-%m-%d'),
                 'date_seen': datetime.strptime('2019-03-17', '%Y-%m-%d')
             }
         ]
@@ -187,6 +188,6 @@ class TestTriageController:
 
     def test_get_predictions(self):
         assert False
-    
+
     def test_run_simulation(self):
         assert False
