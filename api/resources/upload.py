@@ -12,3 +12,4 @@ class Waitlist(Resource):
 class PastAppointments(Resource):
     def put(self):
         args = request.args.to_dict()
+        print(args)
