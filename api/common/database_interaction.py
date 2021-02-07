@@ -1,5 +1,5 @@
 """
-database_interaction is aimed to limit code redundancy for PostgreSQL interaction.
+database_interaction is aimed to limit code redundancy for PostgreSQL.
 """
 
 # External dependencies
@@ -11,8 +11,9 @@ class DataBase:
     DataBase is a class to simplify connections with the PostgreSQL database.
 
     Usage:
-        To create a new data base connection, create it with `DataBase(connection_data)` where
-        connection_data is a dictionary containing the following keys:
+        To create a new data base connection, create it with
+        `DataBase(connection_data)` where connection_data is a dictionary
+        containing the following keys:
 
     Args:
         database (str): The name of the database to connect to,
@@ -25,21 +26,6 @@ class DataBase:
     def __init__(self, connection_data):
         self.connection_data = connection_data
 
-    def _connect_to_db(self):
-        """
-        Returns a database connection
-
-        Returns:
-            A database connection
-        """
-        return psycopg2.connect(
-            database=self.connection_data['database'],
-            user=self.connection_data['user'],
-            password=self.connection_data['password'],
-            host=self.connection_data['host'],
-            port=self.connection_data['port']
-        )
-
     def select(self, select_string):
         """
         Returns the query results from the database for the select_string.
@@ -51,11 +37,13 @@ class DataBase:
             list: A list of tuples of query results from the database
         """
         # Establish database connection
-        db = self._connect_to_db()
-        # Query for restults based on the query string (select_string) and store the results
-        cur = db.cursor()
-        cur.execute(select_string)
-        results = cur.fetchall()
+        with psycopg2.connect(**self.connection_data) as db:
+            # Establish a cursor to interact with the database
+            with db.cursor() as cur:
+                # Query for restults based on the query string (select_string)
+                cur.execute(select_string)
+                # Store the results
+                results = cur.fetchall()
         # Close the database connection
         db.close()
         return results
@@ -86,10 +74,11 @@ class DataBase:
             query_string (str): A string representing the data to modify
         """
         # Establish database connection
-        db = self._connect_to_db()
-        # Insert the desired data into the db
-        cur = db.cursor()
-        cur.execute(query_string)
-        db.commit()
-        # Close the database connectionz
+        with psycopg2.connect(**self.connection_data) as db:
+            # Establish a cursor to interact with the database
+            with db.cursor() as cur:
+                # Insert the desired data into the db
+                cur.execute(query_string)
+                db.commit()
+        # Close the database connection
         db.close()
