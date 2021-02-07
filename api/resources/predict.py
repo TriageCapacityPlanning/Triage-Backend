@@ -26,7 +26,7 @@ class Predict(Resource):
         'port': '5432'
     }
     """
-    This is the database connection information used by Predict to connect to the database. 
+    This is the database connection information used by Predict to connect to the database.
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     """
 
@@ -55,7 +55,7 @@ class Predict(Resource):
 
     def get(self):
         """
-        Handles a get request for the predict endpoints. 
+        Handles a get request for the predict endpoints.
         Returns a dictionary with a list of predictions based on the ML model predictions and simulation runs.
 
         Args:
@@ -72,7 +72,7 @@ class Predict(Resource):
                 models (list): A list of dictionaries representing each model
             }
             ```
-            
+
         """
         # Validate input arguments.
         args = parser.parse(self.arg_schema_get, request,
@@ -105,7 +105,7 @@ class Predict(Resource):
                 severity (int) Severity of the triage class
                 name (str) Name of the triage class.
                 duration (int) Time in weeks within which a patient should be seen.
-                proportion (float) % of patients within the triage class that should be seen within the appropriate time.
+                proportion (float) % of patients within the triage class that should be seen within the duration.
             }
             ```
         """
@@ -114,15 +114,12 @@ class Predict(Resource):
         # Establish database connection
         db = DataBase(self.DATABASE_DATA)
         # Query for data
-        rows = db.select(f"SELECT clinic_id, severity, name, duration, proportion \
+        rows = db.select("SELECT clinic_id, severity, name, duration, proportion \
                           FROM triagedata.triageclasses \
-                          WHERE clinic_id=%(clinic_id)s" %
-                          {
-                              'clinic_id': clinic_id
-                          })
-        
+                          WHERE clinic_id=%(clinic_id)s" % {'clinic_id': clinic_id})
+
         if len(rows) == 0:
             raise RuntimeError('Could not retrieve clinic settings for clinic-id: %s', clinic_id)
-        
+
         # Return data
         return [dict(zip(keys, values)) for values in rows]
