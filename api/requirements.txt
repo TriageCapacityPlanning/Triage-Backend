@@ -4,4 +4,4 @@ Flask-RESTful
 psycopg2
 webargs
 pytest
-mocker
+pytest-mock
