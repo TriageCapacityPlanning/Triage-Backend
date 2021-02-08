@@ -82,3 +82,14 @@ class DataBase:
                 db.commit()
         # Close the database connection
         db.close()
+
+    def insert_data_stream_of_tuples(self, table, data_attributes, data_stream):
+        """
+        Insert a large amount of data into the database
+
+        Args:
+            table (str): The table to insert the data into
+            data_attributes (tuple, str): A tuple representing which data attributes the data_stream tuples have
+            data_stream (list, tuples, str): A list of tuples that represent the data that will be inserted
+        """
+        raise NotImplementedError()

@@ -4,12 +4,9 @@ from flask import request
 
 class Waitlist(Resource):
     def put(self):
-        args = request.args.to_dict()
-        print(request.files)
-        return args
+        raise NotImplementedError()
 
 
 class PastAppointments(Resource):
     def put(self):
-        args = request.args.to_dict()
-        print(args)
+        raise NotImplementedError()
