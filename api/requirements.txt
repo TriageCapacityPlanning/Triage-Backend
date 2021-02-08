@@ -3,5 +3,3 @@ Flask
 Flask-RESTful
 psycopg2
 webargs
-pytest
-pytest-mock
