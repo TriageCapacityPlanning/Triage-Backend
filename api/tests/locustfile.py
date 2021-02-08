@@ -1,18 +1,18 @@
 from locust import HttpUser, between, task
 import random
-import json
+
 
 class User(HttpUser):
     wait_time = between(0.5, 1)
-    
+
     def on_start(self):
         # TODO: Login user
         pass
-    
+
     @task
     def base(self):
         self.client.get("/", name='/')
-        
+
     @task
     def version(self):
         self.client.get("/v1", name='/v1')
