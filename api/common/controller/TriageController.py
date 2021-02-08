@@ -43,6 +43,7 @@ class TriageController:
     # Constructor
     def __init__(self, intervals, clinic_settings, padding_length):
         self.start_date = intervals[0][0]
+        self.intervals = intervals
         self.clinic_settings = clinic_settings
         self.padding_length = padding_length
 
@@ -59,11 +60,11 @@ class TriageController:
             ```
 
         """
-        desired_historic_data_year = self.get_desired_historic_data_year(self.start_date)
+        desired_historic_data_year = self.get_historic_data_year(self.intervals[0][0])
 
         # Retrieve previous years referral data from database
         padding = max(self.PADDING_LENGTH_MIN, self.padding_length)
-        historic_data = self.get_historic_data(self.start_date, desired_historic_data_year, padding)
+        historic_data = self.get_historic_data_referrals(self.start_date, desired_historic_data_year, padding)
 
         # Sort referral_data by triage class.
         sorted_referral_data = self.sort_referral_data(historic_data, self.clinic_settings)

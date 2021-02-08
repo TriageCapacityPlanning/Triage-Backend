@@ -7,6 +7,7 @@ from flask_restful import Resource
 from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
+import ast
 
 # Internal dependencies
 from api.common.controller.TriageController import TriageController
@@ -35,7 +36,7 @@ class Predict(Resource):
         "clinic-id": fields.Int(required=True),
         "start-date": fields.String(required=True),
         "end-date": fields.String(required=True),
-        "intervals": fields.List(fields.Raw(), missing=[]),
+        "intervals": fields.String(missing="[]"),
         "confidence": fields.Float(missing=0.95),
         "num-sim-runs": fields.Int(missing=1000),
         "waitlist": fields.Raw(missing=[])
@@ -77,6 +78,8 @@ class Predict(Resource):
         # Validate input arguments.
         args = parser.parse(self.arg_schema_get, request,
                             location='querystring')
+        args['intervals'] = ast.literal_eval(args['intervals'])
+
         # Retrieve clinic settings
         clinic_settings = self.get_clinic_settings(args['clinic-id'])
         # Instantiate TriageController
