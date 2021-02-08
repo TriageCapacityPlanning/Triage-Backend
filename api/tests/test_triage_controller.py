@@ -49,7 +49,7 @@ class TestTriageController:
         self.padding_length_small_mock = 7
         self.padding_length_large_mock = 30
 
-    def test_get_desired_historic_data_year_error(self, mocker):
+    def test_get_historic_data_year_error(self, mocker):
         """
         Test Type: Unit
         Test Purpose: Tests that an error occurs when no historic data is found.
@@ -66,7 +66,7 @@ class TestTriageController:
             test_triage_controller.get_historic_data_year(
                 self.intervals_multiple_mock[0][0])
 
-    def test_get_desired_historic_data_year_success(self, mocker):
+    def test_get_historic_data_year_success(self, mocker):
         """
         Test Type: Unit
         Test Purpose: Tests that a historic data year can be successfully found.
