@@ -141,9 +141,9 @@ class Models(Resource):
         db = DataBase(self.DATABASE_DATA)
         rows = db.select("SELECT id, accuracy, to_char(created,'DD-MM-YYYY'), in_use \
                            FROM triagedata.models \
-                           WHERE clinic_id=%s", (clinic_id))
+                           WHERE clinic_id=%s" % (clinic_id))
         if not rows:
-            msg = f'Could not retrieve models for clinic-id: %{clinic_id}'
+            msg = f'Could not retrieve models for clinic-id: {clinic_id}'
             raise RuntimeError(msg)
 
         # Return data
