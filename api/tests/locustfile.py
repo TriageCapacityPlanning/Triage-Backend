@@ -42,3 +42,32 @@ class User(HttpUser):
             'intervals': "[['2020-02-01', '2020-02-14']]"
         }
         self.client.get("/predict", params=input_mock, name='GET/predict')
+
+    @task
+    def get_models(self):
+        input_mock = {
+            'clinic-id': 1
+        }
+        self.client.get("/models", params=input_mock, name='GET/predict')
+
+    @task
+    def set_models(self):
+        input_mock = {
+            'clinic-id': 1,
+            'model-id': 1
+        }
+        self.client.patch("/models", params=input_mock, name='GET/predict')
+
+    @task
+    def upload_waitlist(self):
+        input_mock = {
+            'clinic-id': 1
+        }
+        self.client.put("/upload/waitlist", params=input_mock, name='GET/predict')
+
+    @task
+    def upload_historic_data(self):
+        input_mock = {
+            'clinic-id': 1
+        }
+        self.client.put("/upload/past-appointments", params=input_mock, name='GET/predict')
