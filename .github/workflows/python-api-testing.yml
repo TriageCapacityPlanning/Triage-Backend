@@ -32,6 +32,8 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
         if [ -f api/requirements.txt ]; then pip install -r api/requirements.txt; fi
+        if [ -f api/test-requirements.txt ]; then pip install -r api/test-requirements.txt; fi
+
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
