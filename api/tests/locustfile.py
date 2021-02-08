@@ -56,18 +56,18 @@ class User(HttpUser):
             'clinic-id': 1,
             'model-id': 1
         }
-        self.client.patch("/models", params=input_mock, name='GET/predict')
+        self.client.patch("/models", params=input_mock, name='PATCH/models')
 
     @task
     def upload_waitlist(self):
         input_mock = {
             'clinic-id': 1
         }
-        self.client.put("/upload/waitlist", params=input_mock, name='GET/predict')
+        self.client.put("/upload/waitlist", params=input_mock, name='PUT/upload/waitlist')
 
     @task
     def upload_historic_data(self):
         input_mock = {
             'clinic-id': 1
         }
-        self.client.put("/upload/past-appointments", params=input_mock, name='GET/predict')
+        self.client.put("/upload/past-appointments", params=input_mock, name='PUT/upload/past-appointments')
