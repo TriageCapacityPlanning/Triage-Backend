@@ -61,3 +61,25 @@ The template code for unit testing is currently in the `api/tests/` directory. U
 ```bash
 pytest
 ```
+
+## Simulation Module
+
+A module that given a series of arrivals, generates a schedule or analyzes a schedule via simulation.
+
+See the module's [README](./sim/README.md) for more developer detail, and [docs/sim](./docs/sim) for design specs.
+
+### Interface
+
+#### sim.gen_min_interval_slots()
+
+Get the minimized schedule in which all interval slots are equal.
+
+See [design details](./docs/sim/minintervalschedule.md) for more info.
+
+See implementation and interface in the [source code](./sim/resources/minintervalschedule.py)
+
+#### sim.simulate_allocations()
+
+Simulate the proposed schedule and return the processing results of each arrival.
+
+See implementation and interface in the [source code](./sim/resources/simulateallocations.py)
