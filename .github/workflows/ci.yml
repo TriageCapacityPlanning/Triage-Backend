@@ -4,13 +4,13 @@ on:
   push:
     branches: [ main ]
       paths:
-        - api/** # make sure dependencies in api don't break this repo
-        - sim/**
+        - 'api/**' # make sure dependencies in api don't break this repo
+        - 'sim/**'
   pull_request:
     branches: [ main ]
       paths:
-        - api/** # make sure dependencies in api don't break this repo
-        - sim/**
+        - 'api/**' # make sure dependencies in api don't break this repo
+        - 'sim/**'
 
 jobs:
   sim_ci:
