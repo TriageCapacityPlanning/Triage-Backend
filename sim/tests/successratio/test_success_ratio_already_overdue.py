@@ -1,5 +1,5 @@
-from resources.success_ratio import success_ratio_already_overdue
-from resources import types
+from sim.resources.success_ratio import success_ratio_already_overdue
+from sim.resources import types
 from collections import deque
 import numpy as np
 

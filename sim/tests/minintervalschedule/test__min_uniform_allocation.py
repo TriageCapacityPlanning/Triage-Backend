@@ -1,4 +1,4 @@
-from resources import minintervalschedule as gas
+from sim.resources import minintervalschedule as gas
 from collections import deque
 
 

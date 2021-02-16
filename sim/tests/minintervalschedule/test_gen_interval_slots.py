@@ -1,4 +1,4 @@
-from resources.minintervalschedule import gen_min_interval_slots, DataFrame
+from sim.resources.minintervalschedule import gen_min_interval_slots, DataFrame
 from collections import deque
 import pytest
 

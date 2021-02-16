@@ -1,5 +1,5 @@
-from resources.success_ratio import success_ratio
-from resources import types
+from sim.resources.success_ratio import success_ratio
+from sim.resources import types
 import numpy as np
 from collections import deque
 
