@@ -1,4 +1,4 @@
-from resources import types as t
+from sim.resources import types as t
 
 
 def test_time_unit_breakdown_add():

@@ -28,6 +28,11 @@ To run **stress** tests run
 pytest --cov=./resources --cov-report term-missing -m "(stress)"
 ```
 
+To run just sim tests from project root:
+```shell
+pytest sim --cov=./sim/resources --cov-report term-missing -m "not (stress)"
+```
+
 #### Example
 
 `pytest --cov=./resources --cov-report term-missing -m "not (stress)"`
