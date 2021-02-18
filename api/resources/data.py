@@ -66,7 +66,4 @@ class Data(Resource):
 
         clinic_data = ClinicData(args['clinic-id'])
 
-        print(clinic_data.get_referal_data(args['triage-class'], args['interval']))
-        return {
-            'response': clinic_data.get_referal_data(args['triage-class'], args['interval'])
-        }
+        return clinic_data.get_referral_data(args['triage-class'], args['interval'])

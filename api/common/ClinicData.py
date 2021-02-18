@@ -40,7 +40,7 @@ class ClinicData:
         self.clinic_id = clinic_id
         self.clinic_settings = self.get_clinic_settings()
         
-    def get_referal_data(self, triage_class, interval):
+    def get_referral_data(self, triage_class, interval):
         """Returns historic referral data to use as a start for running ML predictions.
 
         Parameters:
@@ -57,7 +57,8 @@ class ClinicData:
         db = DataBase(self.DATABASE_DATA)
 
         # Query for referral data from previous year
-        rows = db.select("SELECT historicdata.date_received, historicdata.date_seen \
+        rows = db.select("SELECT CAST(historicdata.date_received AS VARCHAR), \
+                                 CAST(historicdata.date_seen AS VARCHAR) \
                            FROM triagedata.historicdata \
                            WHERE historicdata.date_received >= '%(start_date)s'::date \
                                  AND historicdata.date_received < '%(end_date)s'::date \
@@ -72,8 +73,7 @@ class ClinicData:
                          })
 
         # Return results
-        referral_data = [{'date_recieved': str(referral_data[0]), 'date_seen': str(referral_data[1])} for referral_data in rows]
-        return referral_data
+        return [(self.clinic_id, triage_class) + row for row in rows]
 
     def get_clinic_settings(self):
         """
