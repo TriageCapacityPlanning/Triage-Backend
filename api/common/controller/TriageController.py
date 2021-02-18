@@ -1,10 +1,9 @@
-""" 
+"""
 The TriageController is used to initiate prediction and simulation upon API requests.
 """
 
 # External dependencies.
-import datetime
-from api.common.controller.DataFrame import DataFrame
+from datetime import datetime, timedelta
 from api.common.database_interaction import DataBase
 
 
@@ -13,14 +12,12 @@ class TriageController:
     TriageController is a class to handle API requests to run predictions and simulations.
 
     Usage:
-        To create a new triage controller, create it with `TriageController(params)` where
-        params is a dictionary with the following keys:
+        To create a new triage controller, create it with `TriageController(intervals, clinic_settings)` where
+        those values are:
         ```
         {
-            'start-date' (str) Start date for the predictions,
-            'end-date'     (str) End date for the predictions,
-            'intervals'    (list(tuples(str))) Date intervals that predictions are made for,
-            'clinic-id' (int) The ID of the clinic.
+            'intervals' (list(tuples(str))) List of start and end date strings for each interval.
+            'clinic_settings' (dict) List of triage classes for the clinic.
         }
         ```
     """
@@ -34,120 +31,137 @@ class TriageController:
         'port': '5432'
     }
     """
-    This is the database connection information used by Models to connect to the database. 
+    This is the database connection information used by Models to connect to the database.
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     """
 
+    PADDING_LENGTH_MIN = 30
+    """
+    Minimum padding length required by ML module.
+    """
+
     # Constructor
-    def __init__(self, params):
-        self.params = params
+    def __init__(self, intervals, clinic_settings, padding_length):
+        self.start_date = intervals[0][0]
+        self.intervals = intervals
+        self.clinic_settings = clinic_settings
+        self.padding_length = padding_length
 
     def predict(self):
-        """Returns the start and end date for a given interval.
+        """Returns the prediction / simulation results.
 
         Returns:
             Simulation results as a dictionary with the following key-value pairs:
             ```
             {
-                interval (list(dict(str, int))): The referal count predictions for each interval per triage class.
-                total (int): The referal count predictions in total per triage class.
+                interval (list(dict(str, int))): The referral count predictions for each interval per triage class.
+                total (int): The referral count predictions in total per triage class.
             }
             ```
 
         """
-        # Retrieve previous years referal data from database
-        initial_referal_data = self.get_initial_referal_data(
-            self.params['start-date'])
+        desired_historic_data_year = self.get_historic_data_year(self.intervals[0][0])
 
-        # Format and feed historic referal data into ML model to predict future referals
-        initial_prediction_data = self.format_referal_data(
-            initial_referal_data)
-        predictions = self.get_predictions(
-            self.params['intervals'], initial_prediction_data)
+        # Retrieve previous years referral data from database
+        padding = max(self.PADDING_LENGTH_MIN, self.padding_length)
+        historic_data = self.get_historic_data_referrals(self.start_date, desired_historic_data_year, padding)
 
-        # Retrieve a distribution prediction of patients by triage class
-        distribution = self.get_triage_class_distribution(
-            self.params['clinic-settings'])
+        # Sort referral_data by triage class.
+        sorted_referral_data = self.sort_referral_data(historic_data, self.clinic_settings)
 
-        # Create the dataframe and run simulation
-        data_frame = DataFrame(
-            self.params['intervals'], predictions, distribution)
-        # Note: Currently returns just the predictions variable
-        # but will return simulation results connected to the simulation module
-        simulation_results = {
-            'interval': predictions,
-            'total': predictions
-        }
+        # Run predictions
+        pass
 
-        return simulation_results
+        # Create DataFrame
+        pass
 
-    def get_initial_referal_data(self, start_date):
-        """Returns historic referal data to use as a start for running ML predictions.
+        # Run Simulations
+        pass
+
+        return {'interval': sorted_referral_data, 'total': sorted_referral_data}
+
+    def get_historic_data_year(self, start_date):
+        db = DataBase(self.DATABASE_DATA)
+
+        year = db.select("SELECT EXTRACT(YEAR FROM historicdata.date_received) \
+                         FROM triagedata.historicdata \
+                         WHERE EXTRACT(MONTH FROM historicdata.date_received)= %(month)s AND \
+                               EXTRACT(DAY FROM historicdata.date_received) >= %(day)s \
+                         ORDER BY historicdata.date_received DESC \
+                         FETCH FIRST 1 ROWS ONLY" %
+                         {
+                             'month': datetime.strptime(start_date, '%Y-%m-%d').month,
+                             'day': datetime.strptime(start_date, '%Y-%m-%d').day
+                         })
+
+        if len(year) != 1:
+            raise RuntimeError('Could not find historic data year for start date: %s', start_date)
+
+        return int(year[0][0])
+
+    def get_historic_data_referrals(self, start_date, historic_data_year, length):
+        """Returns historic referral data to use as a start for running ML predictions.
 
         Parameters:
-            `start-date` (str): The start date for predictions.
+            `start_date` (str): The start date for predictions.
+            `historic_data_year` (str): The year of historic data to query data from.
+            `length` (int): The number of days to retrieve historic data for.
         Returns:
-            A list of historic referal datapoints.
+            A list of historic referral datapoints.
         """
-        # Calculate the (start date - a year) to search the database for relevant historic data
-        previous_year_date = datetime.datetime.strptime(
-            start_date, '%Y-%m-%d') - datetime.timedelta(days=365)
+
+        # Calculate the start and end dates for data retrieval.
+        end_date = datetime.strptime(start_date, '%Y-%m-%d').replace(year=historic_data_year)
+        start_date = (end_date - timedelta(days=length))
 
         # Establish database connection
         db = DataBase(self.DATABASE_DATA)
 
-        # Query for referal data from previous year
-        rows = db.select(f"SELECT date_received \
+        # Query for referral data from previous year
+        rows = db.select("SELECT historicdata.date_received, historicdata.date_seen \
                            FROM triagedata.historicdata \
-                           WHERE date_received < %(previous_year_date)s::date \
-                           ORDER BY date_received DESC \
-                           FETCH FIRST 31 ROWS ONLY",
+                           WHERE historicdata.date_received >= '%(start_date)s'::date \
+                                 AND historicdata.date_received < '%(end_date)s'::date" %
                          {
-                             'previous_year_date': previous_year_date
+                             'start_date': start_date,
+                             'end_date': end_date
                          })
 
         # Return results
-        return [date_seen[0] for date_seen in rows]
+        referral_data = [{'date_recieved': referral_data[0], 'date_seen': referral_data[1]} for referral_data in rows]
+        return referral_data
 
-    def format_referal_data(self, referal_data):
-        """Formats historic referal data to be provided to the ML model.
+    def sort_referral_data(self, referral_data, clinic_settings):
+        """Sorts historic referral data by triage class.
 
         Parameters:
-            `referal-data` (list(str)): List of historic referal dates.
+            `referral_data` (list(str)): List of historic referral dates.
+            `clinic_settings` (list): List of clinic triage classes.
         Returns:
-            Returns a list of differences in time (days) between historic referal dates.
+            Returns a dictionary with a count of patient arrivals per day for each triage class.
         """
-        # Find the difference in days between historic referal datapoints
-        return [(next_referal - previous_referal).days
-                for previous_referal, next_referal
-                in zip(referal_data[:-1], referal_data[1:])]
+
+        sorted_referral_data = {triage_class['severity']: [] for triage_class in clinic_settings}
+
+        for referral in referral_data:
+            wait_time = (referral['date_seen'] - referral['date_recieved']).days / 7
+
+            possible_classes = []
+            for triage_class in clinic_settings:
+                if triage_class['duration'] >= wait_time:
+                    possible_classes.append(triage_class['severity'])
+            sorted_class = min(possible_classes) if len(possible_classes) > 0 else 1
+
+            sorted_referral_data[sorted_class].append(referral['date_recieved'].strftime('%Y-%m-%d'))
+
+        return sorted_referral_data
 
     def get_predictions(self, intervals, initial_prediction_data):
         """Runs ML model predictions and returns results.
-
-        Parameters:
-            `intervals` (list(tuple(str))): The list of date intervals to make predictions for.
-            `initial_prediction_data` (list(int)): List of historic referal date differences.
-        Returns:
-            A list of predictions for each interval of time including a predicted referal count and variability.
         """
-        # Return a list of predictions
-        # Note: Currently hardcoded but will change when connected to the ML module
-        return [(1, 1) for x in range(len(intervals))]
+        assert NotImplementedError
 
-    def get_triage_class_distribution(self, clinic_settings):
-        """Returns the distribution of patients for a given clinic by triage class.
-
-        Parameters:
-            `clinic_settings` (dict(string, any)): Set of clinic specific settings including triage classes and their expected distributions.
-        Returns:
-            A dictionary with keys being triage class severity and values being their expected % distirbution relative to total patients for the clinic.
+    def run_simulation(self):
+        """Runs simulation module.
         """
-        # Return a distribution of patient referals by triage class
-        # Note: Currently hard coded but will be calculated once more data is provided by the client
-        return {
-            1: 0.5,
-            2: 0.2,
-            3: 0.2,
-            4: 0.1
-        }
+        assert NotImplementedError

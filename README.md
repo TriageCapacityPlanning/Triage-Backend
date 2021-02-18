@@ -57,10 +57,18 @@ Currently the following endpoints are implemented:
 - [PATCH /models/use](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#patch-v1modelsuse)
 
 ### Unit Testing
+To install the requirements for testing by navigating to the `api` folder and running:
+
+```bash
+pip install -r requirements.txt
+pip install -r test-requirements.txt 
+```
+
 The template code for unit testing is currently in the `api/tests/` directory. Unit testing is done through pytest and can be run by simply running the command:
 ```bash
 pytest
 ```
+
 
 ## Simulation Module
 
