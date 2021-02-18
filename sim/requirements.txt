@@ -1,0 +1,4 @@
+pytest
+setuptools
+numpy
+pytest-cov
