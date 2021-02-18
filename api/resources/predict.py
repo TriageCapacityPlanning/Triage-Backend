@@ -7,6 +7,7 @@ from flask_restful import Resource
 from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
+import ast
 
 # Internal dependencies
 from api.common.controller.TriageController import TriageController
@@ -26,7 +27,7 @@ class Predict(Resource):
         'port': '5432'
     }
     """
-    This is the database connection information used by Predict to connect to the database. 
+    This is the database connection information used by Predict to connect to the database.
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     """
 
@@ -35,7 +36,7 @@ class Predict(Resource):
         "clinic-id": fields.Int(required=True),
         "start-date": fields.String(required=True),
         "end-date": fields.String(required=True),
-        "intervals": fields.List(fields.Raw(), missing=[]),
+        "intervals": fields.String(missing="[]"),
         "confidence": fields.Float(missing=0.95),
         "num-sim-runs": fields.Int(missing=1000),
         "waitlist": fields.Raw(missing=[])
@@ -55,7 +56,7 @@ class Predict(Resource):
 
     def get(self):
         """
-        Handles a get request for the predict endpoints. 
+        Handles a get request for the predict endpoints.
         Returns a dictionary with a list of predictions based on the ML model predictions and simulation runs.
 
         Args:
@@ -72,15 +73,17 @@ class Predict(Resource):
                 models (list): A list of dictionaries representing each model
             }
             ```
-            
+
         """
         # Validate input arguments.
         args = parser.parse(self.arg_schema_get, request,
                             location='querystring')
+        args['intervals'] = ast.literal_eval(args['intervals'])
+
         # Retrieve clinic settings
-        args['clinic-settings'] = self.get_clinic_settings(args['clinic-id'])
+        clinic_settings = self.get_clinic_settings(args['clinic-id'])
         # Instantiate TriageController
-        triage_controller = TriageController(args)
+        triage_controller = TriageController(args['intervals'], clinic_settings, 7)
         predictions = triage_controller.predict()
         # API response
         return {
@@ -105,7 +108,7 @@ class Predict(Resource):
                 severity (int) Severity of the triage class
                 name (str) Name of the triage class.
                 duration (int) Time in weeks within which a patient should be seen.
-                proportion (float) % of patients within the triage class that should be seen within the appropriate time.
+                proportion (float) % of patients within the triage class that should be seen within the duration.
             }
             ```
         """
@@ -116,6 +119,10 @@ class Predict(Resource):
         # Query for data
         rows = db.select("SELECT clinic_id, severity, name, duration, proportion \
                           FROM triagedata.triageclasses \
-                          WHERE clinic_id=%s", (clinic_id))
+                          WHERE clinic_id=%(clinic_id)s" % {'clinic_id': clinic_id})
+
+        if len(rows) == 0:
+            raise RuntimeError('Could not retrieve clinic settings for clinic-id: %s', clinic_id)
+
         # Return data
         return [dict(zip(keys, values)) for values in rows]

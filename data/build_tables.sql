@@ -38,6 +38,7 @@ CREATE TABLE TriageData.TriageClasses (
 CREATE TABLE TriageData.HistoricData (
     id              SERIAL PRIMARY KEY,
     clinic_id       integer,
+    severity        integer
     date_received   DATE,
     date_seen       DATE,
     CONSTRAINT fk_clinic
