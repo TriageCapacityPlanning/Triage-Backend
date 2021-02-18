@@ -24,7 +24,7 @@ class Waitlist(Resource):
 
 class PastAppointments(Resource):
     """
-    The `PastAppointments` class handles all of the requests relative to historic 
+    The `PastAppointments` class handles all of the requests relative to historic
     triage data for the API.
     """
     DATABASE_DATA = {
@@ -35,13 +35,13 @@ class PastAppointments(Resource):
         'port': '5432'
     }
     """
-    This is the database connection information used by PastAppointments to connect to the database. 
+    This is the database connection information used by PastAppointments to connect to the database.
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     """
 
     arg_schema_put = {
         'clinic_id': fields.Int(required=True),
-        'upload_data': fields.__file__
+        'upload_data': fields.Raw(required=True)
     }
     """
     The required schema to handle a put request
@@ -51,4 +51,12 @@ class PastAppointments(Resource):
     """
 
     def put(self):
-        print(request.files.get('upload_data').mimetype)
+        # Figure out how to validate inputs
+        mime_type = request.files.get('upload_data').mimetype
+        if mime_type == 'text/csv':
+            return self.upload_csv_data(request.files.get('upload_data'))
+        else:
+            raise TypeError('Unsupported file type uploaded')
+
+    def upload_csv_data(self, upload_file):
+        print(upload_file)
