@@ -29,6 +29,7 @@ def create_app():
     api.add_resource(UpdateTriageClasses, '/classes')
     api.add_resource(Upload.Waitlist, '/upload/waitlist')
     api.add_resource(Upload.PastAppointments, '/upload/past-appointments')
+    api.add_resource(Upload.Model, '/upload/model')
 
     return app
 

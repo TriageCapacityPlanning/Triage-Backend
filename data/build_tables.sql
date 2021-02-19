@@ -102,7 +102,7 @@ CREATE USER model_handler WITH
     INHERIT
     NOREPLICATION
     CONNECTION LIMIT -1;
-GRANT SELECT, UPDATE ON TriageData.Models TO model_handler;
+GRANT SELECT, UPDATE, INSERT ON TriageData.Models TO model_handler;
 
 DROP USER IF EXISTS predict_handler;
 CREATE USER predict_handler WITH

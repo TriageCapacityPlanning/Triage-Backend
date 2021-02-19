@@ -3,7 +3,7 @@ This module handles all required interaction with the `/upload` endpoints
 """
 from flask_restful import Resource
 from flask import request
-# from webargs.flaskparser import parser
+from webargs.flaskparser import parser
 from webargs import fields
 
 
@@ -63,6 +63,21 @@ class PastAppointments(Resource):
 
 
 class Model(Resource):
+    """
+    The `Model` class handles all of the requests relative to new model data uploads for the API.
+    """
+    DATABASE_DATA = {
+        'database': 'triage',
+        'user': 'model_handler',
+        'password': 'password',
+        'host': 'localhost',
+        'port': '5432'
+    }
+    """
+    This is the database connection information used by PastAppointments to connect to the database.
+    See `api.common.database_interaction.DataBase` for configuration details and required arguments.
+    """
+
     arg_schema_post = {
         'clinic_id': fields.Int(required=True),
         'model_weights': fields.Raw(required=True),
@@ -78,5 +93,15 @@ class Model(Resource):
         accuracy (float): The accuracy for the given model
         make_in_use (bool): (Optional) Make the model in use for the clinic
     """
+
     def post(self):
-        raise NotImplementedError()
+        args = parser.parse(self.arg_schema_post, request, location='json')
+        if 'make_in_use' in request.json and request.json['make_in_use']:
+            # Mark all other models not in use
+            make_in_use = True
+        else:
+            make_in_use = False
+        db = DataBase(self.DATABASE_DATA)
+        db.insert("INSERT INTO triagedata.models (data, clinic_id, severity, accuracy, in_use) \
+                   VALUES (%s, %s, %s, %s, %s)" % (args['model_weights'], args['clinic_id'], args['accuracy'],
+                                                   args['model_weights'], make_in_use))
