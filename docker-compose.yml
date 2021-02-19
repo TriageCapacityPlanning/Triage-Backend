@@ -1,0 +1,21 @@
+version: "3.4"  # optional since v1.27.0
+
+services:
+  api:
+    container_name: api
+    build: ./api/
+    ports:
+      - "5000:5000"
+    restart: always
+    depends_on: 
+      - db
+  db:
+    container_name: database
+    build: ./data/
+    environment:
+      POSTGRES_PASSWORD: docker
+      POSTGRES_USER: admin
+      POSTGRES_DB: triage
+    ports:
+        - 5432:5432
+    restart: always
