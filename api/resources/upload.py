@@ -60,3 +60,23 @@ class PastAppointments(Resource):
                 upload_file,
                 ','
             )
+
+
+class Model(Resource):
+    arg_schema_post = {
+        'clinic_id': fields.Int(required=True),
+        'model_weights': fields.Raw(required=True),
+        'accuracy': fields.Float(required=True),
+        'make_in_use': fields.Boolean(),
+    }
+    """
+    The required schema to handle a post request
+
+    Args:
+        clinic_id (int): The id of the clinic uploading data
+        model_weights (byte array): The model weights data
+        accuracy (float): The accuracy for the given model
+        make_in_use (bool): (Optional) Make the model in use for the clinic
+    """
+    def post(self):
+        raise NotImplementedError()
