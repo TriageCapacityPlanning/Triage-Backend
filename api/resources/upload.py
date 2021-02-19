@@ -1,13 +1,9 @@
 """
 This module handles all required interaction with the `/upload` endpoints
 """
-
-import csv
-from typing import ClassVar
-
 from flask_restful import Resource
 from flask import request
-from webargs.flaskparser import parser
+# from webargs.flaskparser import parser
 from webargs import fields
 
 
@@ -57,4 +53,10 @@ class PastAppointments(Resource):
             raise TypeError('Unsupported file type uploaded')
 
     def upload_csv_data(self, upload_file):
-        print(upload_file)
+        db = DataBase(self.DATABASE_DATA)
+        db.insert_data_from_file(
+                'triagedata.historicdata',
+                ('clinic_id', 'date_received', 'date_seen'),
+                upload_file,
+                ','
+            )
