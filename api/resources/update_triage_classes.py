@@ -30,13 +30,13 @@ class UpdateTriageClasses(Resource):
     """
 
     arg_schema_get = {
-        'clinic-id': fields.Int(required=True)
+        'clinic_id': fields.Int(required=True)
     }
     """
     The required schema to handle a get request
 
     Args:
-        clinic-id (int): The id of the clinic being referenced
+        clinic_id (int): The id of the clinic being referenced
     """
 
     arg_schema_put = {
@@ -76,7 +76,7 @@ class UpdateTriageClasses(Resource):
         args = parser.parse(self.arg_schema_get, request,
                             location='querystring')
         # Retrieve triage classes from database
-        triage_classes = self.get_triage_classes(args['clinic-id'])
+        triage_classes = self.get_triage_classes(args['clinic_id'])
         # API Response
         return {'status': 200, 'classes': triage_classes}
 
@@ -94,10 +94,12 @@ class UpdateTriageClasses(Resource):
             `updated` (dict): The created or updated class.
         """
         # Validate input arguments
+        print(request.json)
         args = parser.parse(self.arg_schema_put, request, location='json')
 
         # Update triage class in database
-        # self.update_triage_class(args['triage-class'])
+        self.update_triage_class(args['triage-class'])
+
         # API Response
         return {'status': 200, 'updated': args['triage-class']}
 
@@ -121,7 +123,7 @@ class UpdateTriageClasses(Resource):
                         WHERE clinic_id=%(clinic_id)s" % {'clinic_id': clinic_id}))
 
         if len(rows) == 0:
-            raise RuntimeError('Could not retrieve clinic settings for clinic-id: %s', clinic_id)
+            raise RuntimeError('Could not retrieve clinic settings for clinic_id: %s', clinic_id)
 
         # Return data
         return [dict(zip(keys, values)) for values in rows]
@@ -133,22 +135,22 @@ class UpdateTriageClasses(Resource):
         Args:
             triage_class (dict): The desired new or updated triage class.
         """
-
+        
         # Establish database connection
         db = DataBase(self.DATABASE_DATA)
         # Insert or update information
         db.insert("INSERT INTO triagedata.triageclasses (clinic_id, severity, name, duration, proportion) \
                     VALUES(%(clinic_id)s, \
                         %(severity)s, \
-                        %(name)s, \
+                        '%(name)s', \
                         %(duration)s, \
                         %(proportion)s) \
                     ON CONFLICT ON CONSTRAINT pk DO UPDATE \
-                        SET name = %(name)s, \
+                        SET name = '%(name)s', \
                             duration = %(duration)s, \
                             proportion = %(proportion)s" %
                   {
-                      'clinic_id': triage_class['clinic-id'],
+                      'clinic_id': triage_class['clinic_id'],
                       'severity': triage_class['severity'],
                       'name': triage_class['name'],
                       'duration': triage_class['duration'],
