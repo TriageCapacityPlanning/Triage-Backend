@@ -10,6 +10,7 @@ from api.resources.predict import Predict
 from api.resources.update_triage_classes import UpdateTriageClasses
 from api.resources.models import Models
 import api.resources.upload as Upload
+from api.resources.data import Data
 
 
 def create_app():
@@ -30,6 +31,7 @@ def create_app():
     api.add_resource(Upload.Waitlist, '/upload/waitlist')
     api.add_resource(Upload.PastAppointments, '/upload/past-appointments')
     api.add_resource(Upload.Model, '/upload/model')
+    api.add_resource(Data, '/data/<clinic_id>/<triage_class>')
 
     return app
 

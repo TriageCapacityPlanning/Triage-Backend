@@ -6,7 +6,6 @@ The DataFrame is used to generate varying sets of referal predictions for the pu
 import random
 from datetime import datetime
 
-
 class DataFrame:
     """
     DataFrame is a class to generate data for simulating patient referals.
@@ -16,44 +15,53 @@ class DataFrame:
 
     Args:
         intervals (list): List of interval start and end dates.
+        paddings (tuple): 2-ary tuple containing start and end padding.
         predictions (list): List of predictions for each interval.
         distribution (dict): Distribution of patients by triage class.
     """
 
-    def __init__(self, intervals, paddings, predictions):
+    def __init__(self, intervals, predictions, padding_lengths):
         self.intervals = self.__format_dates_to_indexes(
-            intervals, paddings)
+            intervals, padding_lengths)
         self.predictions = predictions
-        self.paddings = paddings
 
-    def get_intervals(self):
-        '''Returns the intervals.
+    def get_interval_size(self, interval):
+        '''Returns the size of a given interval.
 
+        Parameters:
+            `interval` (int): The index of an interval
         Returns:
-            A list containing an entry for each interval defining the start and end index of predictions in the list.
-            Ex. (0, 2)
+            Returns the size of the given interval
 
         '''
 
-        # Return the dates of a given interval
-        return self.intervals
+        # Check validity of input interval index.
+        if interval not in range(0, len(self.intervals)):
+            raise ValueError("Invalid interval %s.", interval)
 
-    def get_sample(self, triage_class: int):
-        """Returns a sample prediction for referal count of patients within a triage class.
+        # Return the length of a given interval
+        return self.intervals[interval][1] - self.intervals[interval][0] + 1
+    
+    def get_interval_sample(self, interval):
+        '''Returns a sample for a given interval
 
         Parameters:
-            `triage_class` (int): The severity of the desired triage class.
-
+            `interval` (int): The index of an interval
         Returns:
-            Returns a list of integer predictions for the number of referals.
-        """
+            Returns a sample list of patient arrivals for the interval.
 
-        if triage_class not in self.predictions.keys() or triage_class not in self.paddings.keys():
-            raise ValueError("Invalid triage class %s.", triage_class)
+        '''
 
-        sample = [self.generate_sample_value(p) for p in self.predictions[triage_class]]
+        # Check validity of input interval index.
+        if interval not in range(0, len(self.intervals)):
+            raise ValueError("Invalid interval %s.", interval)
+        
+        # Get start and end of interval
+        start = self.intervals[interval][0]
+        end = self.intervals[interval][1]+1
 
-        return self.paddings[triage_class] + sample
+        # Generate and return sample
+        return [self.generate_sample_value(p) for p in self.predictions[start:end]]
 
     def generate_sample_value(self, prediction):
         """Generates a random arrival count value given a prediction containing a base arrival count and variance value.
@@ -68,29 +76,26 @@ class DataFrame:
         variance = random.uniform(-prediction[1], prediction[1])
         return int(prediction[0] + variance)
 
-    def __format_dates_to_indexes(self, intervals, paddings):
+    def __format_dates_to_indexes(self, intervals, padding_lengths):
         """
         Converts intervals from date format (start and end date for an interval) to relative
         indexes in the list of predictions.
 
         Parameters:
             `intervals` (list): List of date string tuples with the start and end dates of the interval.
-            `paddings` (list): List of padding predictions.
+            `paddings` (tuple): 2-ary tuple containing start and end padding.
 
         Returns:
             Returns the intervals as a list of tuples with start and end indexes relative to the
             predictions given to the DataFrame.
         """
+        date_offsets = [(datetime.strptime(interval[1], '%Y-%m-%d') - datetime.strptime(interval[0], '%Y-%m-%d')).days
+                        for interval in intervals]
 
-        padding_length = [len(p) for p in paddings.values()][0] if len(paddings) > 0 else 0
-
-        date_offsets = [(datetime.strptime(end, '%Y-%m-%d') - datetime.strptime(start, '%Y-%m-%d')).days
-                        for (start, end) in intervals]
-
-        interval_start_index = padding_length
-        interval_indexes = []
+        interval_start_index = padding_lengths[0]
+        interval_indexes = [(0, padding_lengths[0]-1)]
         for offset in date_offsets:
             interval_indexes.append((interval_start_index, interval_start_index + offset))
             interval_start_index += offset + 1
 
-        return interval_indexes
+        return interval_indexes + [(interval_start_index, interval_start_index + padding_lengths[1])]

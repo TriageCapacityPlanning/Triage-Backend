@@ -34,11 +34,9 @@ class Predict(Resource):
     # API input schema
     arg_schema_get = {
         "clinic-id": fields.Int(required=True),
-        "start-date": fields.String(required=True),
-        "end-date": fields.String(required=True),
         "intervals": fields.String(missing="[]"),
         "confidence": fields.Float(missing=0.95),
-        "num-sim-runs": fields.Int(missing=1000),
+        "num-sim-runs": fields.Int(missing=100),
         "waitlist": fields.Raw(missing=[])
     }
     """
@@ -80,20 +78,19 @@ class Predict(Resource):
                             location='querystring')
         args['intervals'] = ast.literal_eval(args['intervals'])
 
-        # Retrieve clinic settings
-        clinic_settings = self.get_clinic_settings(args['clinic-id'])
-        # Instantiate TriageController
-        triage_controller = TriageController(args['intervals'], clinic_settings, 7)
+        triage_controller = TriageController(args['clinic-id'], 
+                                             args['intervals'],
+                                             args['confidence'],
+                                             args['num-sim-runs'])
         predictions = triage_controller.predict()
+
         # API response
         return {
             'url': request.url,
-            'intervaled_slot_predictions': predictions['interval'],
-            'number_intervals': len(args['intervals']),
-            'slot_predictions': predictions['total']
+            'predictions': predictions
         }
 
-    def get_clinic_settings(self, clinic_id):
+    def get_clinic_settings(self):
         """
         Retrieves clinic triage class settings for a given clinic id.
 
