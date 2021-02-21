@@ -32,7 +32,7 @@ class PastAppointments(Resource):
         'database': 'triage',
         'user': 'historic_data_handler',
         'password': 'password',
-        'host': 'localhost',
+        'host': 'db',
         'port': '5432'
     }
     """
@@ -77,7 +77,7 @@ class Model(Resource):
         'database': 'triage',
         'user': 'model_handler',
         'password': 'password',
-        'host': 'localhost',
+        'host': 'db',
         'port': '5432'
     }
     """
