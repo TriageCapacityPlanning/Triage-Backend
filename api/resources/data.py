@@ -20,9 +20,12 @@ class Data(Resource):
     """
 
     # API input schema
-    arg_schema_get = {
-        "clinic-id": fields.Int(required=True),
-        "triage-class": fields.Int(required=True),
+    path_arg_schema_get = {
+        "clinic_id": fields.Int(required=True),
+        "triage_class": fields.Int(required=True)
+    }
+
+    url_arg_schema_get = {
         "interval": fields.Raw(required=True)
     }
     """
@@ -38,7 +41,7 @@ class Data(Resource):
         waitlist (file): Current wait list of patients for the clinic.
     """
 
-    def get(self):
+    def get(self, clinic_id, triage_class):
         """
         Handles a get request for the predict endpoints.
         Returns a dictionary with a list of predictions based on the ML model predictions and simulation runs.
@@ -60,10 +63,11 @@ class Data(Resource):
 
         """
         # Validate input arguments.
-        args = parser.parse(self.arg_schema_get, request,
+        path_args = parser.parse(self.path_arg_schema_get, request, location="path")
+        url_args = parser.parse(self.url_arg_schema_get, request,
                             location='querystring')
-        args['interval'] = ast.literal_eval(args['interval'])
+        url_args['interval'] = ast.literal_eval(url_args['interval'])
 
-        clinic_data = ClinicData(args['clinic-id'])
+        clinic_data = ClinicData(path_args['clinic_id'])
 
-        return clinic_data.get_referral_data(args['triage-class'], args['interval'])
+        return clinic_data.get_referral_data(path_args['triage_class'], url_args['interval'])

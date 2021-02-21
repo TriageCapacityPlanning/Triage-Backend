@@ -38,7 +38,7 @@ class ClinicData:
     # Constructor
     def __init__(self, clinic_id):
         self.clinic_id = clinic_id
-        self.clinic_settings = self.get_clinic_settings()
+        self.clinic_settings = self._get_clinic_settings_from_database()
         
     def get_referral_data(self, triage_class, interval):
         """Returns historic referral data to use as a start for running ML predictions.
@@ -51,6 +51,9 @@ class ClinicData:
             A list of historic referral datapoints.
         """
 
+        triage_class_data = list(filter(lambda c: c['severity'] == triage_class, self.clinic_settings))[0]
+        triage_class_duration_days = triage_class_data['duration'] * 7
+        
         # Calculate the start and end dates for data retrieval.
 
         # Establish database connection
@@ -69,13 +72,16 @@ class ClinicData:
                              'start_date': interval[0],
                              'end_date': interval[1],
                              'triage_class': triage_class,
-                             'duration': self.clinic_settings[triage_class]['duration'] * 7
+                             'duration': triage_class_duration_days
                          })
 
         # Return results
         return [(self.clinic_id, triage_class) + row for row in rows]
-
+    
     def get_clinic_settings(self):
+        return self.clinic_settings
+
+    def _get_clinic_settings_from_database(self):
         """
         Retrieves clinic triage class settings for a given clinic id.
 
