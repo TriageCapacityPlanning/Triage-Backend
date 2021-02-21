@@ -22,7 +22,7 @@ class Models(Resource):
         'database': 'triage',
         'user': 'model_handler',
         'password': 'password',
-        'host': 'localhost',
+        'host': 'db',
         'port': '5432'
     }
     """

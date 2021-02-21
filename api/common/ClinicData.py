@@ -26,7 +26,7 @@ class ClinicData:
         'database': 'triage',
         'user': 'admin',
         'password': 'password',
-        'host': 'localhost',
+        'host': 'db',
         'port': '5432'
     }
     """

@@ -32,7 +32,7 @@ class TriageController:
         'database': 'triage',
         'user': 'triage_controller',
         'password': 'password',
-        'host': 'localhost',
+        'host': 'db',
         'port': '5432'
     }
     """

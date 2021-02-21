@@ -21,7 +21,7 @@ class UpdateTriageClasses(Resource):
         'database': 'triage',
         'user': 'triage_class_handler',
         'password': 'password',
-        'host': 'localhost',
+        'host': 'db',
         'port': '5432'
     }
     """

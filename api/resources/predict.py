@@ -23,7 +23,7 @@ class Predict(Resource):
         'database': 'triage',
         'user': 'predict_handler',
         'password': 'password',
-        'host': 'localhost',
+        'host': 'db',
         'port': '5432'
     }
     """
