@@ -4,8 +4,13 @@ The TriageController is used to initiate prediction and simulation upon API requ
 
 # External dependencies.
 from datetime import datetime, timedelta
-from api.common.database_interaction import DataBase
+from collections import Counter, deque
 
+# Internal dependencies
+from api.common.database_interaction import DataBase
+from api.common.ClinicData import ClinicData
+from api.common.controller.DataFrame import DataFrame
+from sim.resources.minintervalschedule import gen_min_interval_slots, SimulationResults
 
 class TriageController:
     """
@@ -35,17 +40,18 @@ class TriageController:
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     """
 
-    PADDING_LENGTH_MIN = 30
+    ML_PADDING_LENGTH = 30
+    SIM_PADDING_LENGTH = 7
     """
     Minimum padding length required by ML module.
     """
 
     # Constructor
-    def __init__(self, intervals, clinic_settings, padding_length):
-        self.start_date = intervals[0][0]
+    def __init__(self, clinic_id, intervals, confidence, num_sim_runs):
+        self.clinic_id = clinic_id
         self.intervals = intervals
-        self.clinic_settings = clinic_settings
-        self.padding_length = padding_length
+        self.confidence = confidence
+        self.num_sim_runs = num_sim_runs
 
     def predict(self):
         """Returns the prediction / simulation results.
@@ -60,25 +66,48 @@ class TriageController:
             ```
 
         """
+        # Find the year of the most recent historic data.
+        historic_data_interval_length = max(self.ML_PADDING_LENGTH, self.SIM_PADDING_LENGTH)
         desired_historic_data_year = self.get_historic_data_year(self.intervals[0][0])
+        historic_data_end_date = datetime.strptime(self.intervals[0][0], '%Y-%m-%d').replace(year=desired_historic_data_year)
+        historic_data_interval = (historic_data_end_date - timedelta(days=historic_data_interval_length), 
+                                  historic_data_end_date)
 
-        # Retrieve previous years referral data from database
-        padding = max(self.PADDING_LENGTH_MIN, self.padding_length)
-        historic_data = self.get_historic_data_referrals(self.start_date, desired_historic_data_year, padding)
+        # Retrieve historic referral data
+        clinic_data = ClinicData(self.clinic_id)
+        
+        response = {}
+        for triage_class in clinic_data.clinic_settings:
+            historic_data = clinic_data.get_referral_data(triage_class['severity'], historic_data_interval)
+            sorted_referral_data = self.sort_referral_data(historic_data, 
+                                                           historic_data_interval[0],
+                                                           historic_data_interval_length)
+            
 
-        # Sort referral_data by triage class.
-        sorted_referral_data = self.sort_referral_data(historic_data, self.clinic_settings)
+            # PASS SORTED_REFERAL_DATA TO MODEL
+            predictions = [(5,1)] * 50
+            
+            # Create DataFrame
+            data_frame = DataFrame(self.intervals, predictions, (self.SIM_PADDING_LENGTH, self.SIM_PADDING_LENGTH))
 
-        # Run predictions
-        pass
-
-        # Create DataFrame
-        pass
-
-        # Run Simulations
-        pass
-
-        return {'interval': sorted_referral_data, 'total': sorted_referral_data}
+            # Run Simulation
+            sim_results = gen_min_interval_slots(data_frame=data_frame, 
+                                                 window=triage_class['duration'] * 7, 
+                                                 min_ratio=triage_class['proportion'],
+                                                 final_window=triage_class['duration'] * 14,
+                                                 confidence=self.confidence,
+                                                 start=0,
+                                                 end=len(self.intervals),
+                                                 num_sim_runs=self.num_sim_runs,
+                                                 queue=deque()
+                                                 )
+            sim_result_formatted = [{'slots': sim_result[0].expected_slots,
+                                  'start_date': sim_result[1][0],
+                                  'end_date': sim_result[1][0]
+                                  } for sim_result in zip(sim_results, self.intervals)]
+            
+            response[triage_class['name']] = sim_result_formatted
+        return response
 
     def get_historic_data_year(self, start_date):
         db = DataBase(self.DATABASE_DATA)
@@ -99,62 +128,36 @@ class TriageController:
 
         return int(year[0][0])
 
-    def get_historic_data_referrals(self, start_date, historic_data_year, length):
-        """Returns historic referral data to use as a start for running ML predictions.
-
-        Parameters:
-            `start_date` (str): The start date for predictions.
-            `historic_data_year` (str): The year of historic data to query data from.
-            `length` (int): The number of days to retrieve historic data for.
-        Returns:
-            A list of historic referral datapoints.
-        """
-
-        # Calculate the start and end dates for data retrieval.
-        end_date = datetime.strptime(start_date, '%Y-%m-%d').replace(year=historic_data_year)
-        start_date = (end_date - timedelta(days=length))
-
-        # Establish database connection
-        db = DataBase(self.DATABASE_DATA)
-
-        # Query for referral data from previous year
-        rows = db.select("SELECT historicdata.date_received, historicdata.date_seen \
-                           FROM triagedata.historicdata \
-                           WHERE historicdata.date_received >= '%(start_date)s'::date \
-                                 AND historicdata.date_received < '%(end_date)s'::date" %
-                         {
-                             'start_date': start_date,
-                             'end_date': end_date
-                         })
-
-        # Return results
-        referral_data = [{'date_recieved': referral_data[0], 'date_seen': referral_data[1]} for referral_data in rows]
-        return referral_data
-
-    def sort_referral_data(self, referral_data, clinic_settings):
+    def sort_referral_data(self, referral_data, start_date, interval_length):
         """Sorts historic referral data by triage class.
 
         Parameters:
             `referral_data` (list(str)): List of historic referral dates.
-            `clinic_settings` (list): List of clinic triage classes.
         Returns:
             Returns a dictionary with a count of patient arrivals per day for each triage class.
         """
+        date_list = [(start_date + timedelta(days=offset)).strftime('%Y-%m-%d')
+                      for offset in range(interval_length)]
+        counted_data = Counter(referral[2] for referral in referral_data)
+        
+        return [counted_data[date] if date in counted_data else 0 for date in date_list]
 
-        sorted_referral_data = {triage_class['severity']: [] for triage_class in clinic_settings}
+    def get_model(self, clinic_id, triage_class):
+        # Establish database connection
+        db = DataBase(self.DATABASE_DATA)
 
-        for referral in referral_data:
-            wait_time = (referral['date_seen'] - referral['date_recieved']).days / 7
+        # Query for referral data from previous year
+        rows = db.select("SELECT data \
+                           FROM triagedata.models \
+                           WHERE clinic_id = %(clinic_id)s \
+                               AND severity = %(severity)s \
+                                AND in_use = TRUE" %
+                         {
+                             'clinic_id': clinic_id,
+                             'severity': triage_class
+                         })
 
-            possible_classes = []
-            for triage_class in clinic_settings:
-                if triage_class['duration'] >= wait_time:
-                    possible_classes.append(triage_class['severity'])
-            sorted_class = min(possible_classes) if len(possible_classes) > 0 else 1
-
-            sorted_referral_data[sorted_class].append(referral['date_recieved'].strftime('%Y-%m-%d'))
-
-        return sorted_referral_data
+        return rows[0]
 
     def get_predictions(self, intervals, initial_prediction_data):
         """Runs ML model predictions and returns results.

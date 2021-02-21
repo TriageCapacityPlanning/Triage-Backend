@@ -5,11 +5,11 @@ import numpy as np
 from typing import List, Tuple, Union
 import math
 from .success_ratio import success_ratio, success_ratio_already_overdue
-#from api.common.controller.DataFrame import DataFrame
+from api.common.controller.DataFrame import DataFrame
 
 
 # temp mock up datatype
-class DataFrame:
+'''class DataFrame:
     def __init__(self, data: List[int], intervals: List[Tuple[int, int]]):
         self.data = data
         self.intervals = intervals
@@ -20,7 +20,7 @@ class DataFrame:
 
     def get_interval_size(self, i: int):
         start, end = self.intervals[i]
-        return end - start
+        return end - start'''
 
 
 class SimulationResults:
