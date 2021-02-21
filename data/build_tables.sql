@@ -38,7 +38,7 @@ CREATE TABLE TriageData.TriageClasses (
 CREATE TABLE TriageData.HistoricData (
     id              SERIAL PRIMARY KEY,
     clinic_id       integer,
-    severity        integer
+    severity        integer,
     date_received   DATE,
     date_seen       DATE,
     CONSTRAINT fk_clinic
@@ -47,14 +47,18 @@ CREATE TABLE TriageData.HistoricData (
 );
 CREATE TABLE TriageData.Models (
     id          SERIAL PRIMARY KEY,
-    data        bytea,
+    file_path   varchar,
     clinic_id   integer,
+    severity    integer,
     accuracy    float,
     created     DATE NOT NULL DEFAULT CURRENT_DATE,
     in_use      boolean,
     CONSTRAINT fk_clinic
         FOREIGN KEY(clinic_id)
-            REFERENCES TriageData.Clinic(id)
+            REFERENCES TriageData.Clinic(id),
+    CONSTRAINT fk_triage_class
+        FOREIGN KEY(clinic_id, severity)
+            REFERENCES TriageData.TriageClasses(clinic_id, severity)
 );
 CREATE TABLE TriageData.Schedules (
     id          SERIAL PRIMARY KEY,
@@ -98,7 +102,8 @@ CREATE USER model_handler WITH
     INHERIT
     NOREPLICATION
     CONNECTION LIMIT -1;
-GRANT SELECT, UPDATE ON TriageData.Models TO model_handler;
+GRANT INSERT, SELECT, UPDATE ON TriageData.Models TO model_handler;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA TriageData TO model_handler;
 
 DROP USER IF EXISTS predict_handler;
 CREATE USER predict_handler WITH
@@ -121,6 +126,7 @@ CREATE USER historic_data_handler WITH
     NOREPLICATION
     CONNECTION LIMIT -1;
 GRANT INSERT, DELETE ON TriageData.HistoricData TO historic_data_handler;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA TriageData TO historic_data_handler;
 
 DROP USER IF EXISTS triage_controller;
 CREATE USER triage_controller WITH
