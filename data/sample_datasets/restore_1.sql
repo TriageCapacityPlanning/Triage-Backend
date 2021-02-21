@@ -38,14 +38,6 @@ INSERT INTO triagedata.triageclasses (clinic_id, severity, name, duration, propo
 
 
 --
--- Data for Name: models; Type: TABLE DATA; Schema: triagedata; Owner: admin
---
-
-INSERT INTO triagedata.models (id, data, clinic_id, accuracy, created, in_use) VALUES (1, '\x736f6d65206d6f64656c', 1, 0.95, '2021-01-07', true);
-INSERT INTO triagedata.models (id, data, clinic_id, accuracy, created, in_use) VALUES (2, '\x736f6d65206d6f64656c2032', 1, 0.92, '2021-01-07', false);
-INSERT INTO triagedata.models (id, data, clinic_id, accuracy, created, in_use) VALUES (3, '\x736f6d65206d6f64656c2030', 1, 0.6, '2021-01-07', false);
-
---
 -- Data for Name: historicdata; Type: TABLE DATA; Schema: triagedata; Owner: admin
 --
 

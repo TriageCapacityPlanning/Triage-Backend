@@ -47,7 +47,7 @@ CREATE TABLE TriageData.HistoricData (
 );
 CREATE TABLE TriageData.Models (
     id          SERIAL PRIMARY KEY,
-    data        bytea,
+    file_path   varchar,
     clinic_id   integer,
     severity    integer,
     accuracy    float,
@@ -102,7 +102,8 @@ CREATE USER model_handler WITH
     INHERIT
     NOREPLICATION
     CONNECTION LIMIT -1;
-GRANT SELECT, UPDATE, INSERT ON TriageData.Models TO model_handler;
+GRANT INSERT, SELECT, UPDATE ON TriageData.Models TO model_handler;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA TriageData TO model_handler;
 
 DROP USER IF EXISTS predict_handler;
 CREATE USER predict_handler WITH
@@ -125,6 +126,7 @@ CREATE USER historic_data_handler WITH
     NOREPLICATION
     CONNECTION LIMIT -1;
 GRANT INSERT, DELETE ON TriageData.HistoricData TO historic_data_handler;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA TriageData TO historic_data_handler;
 
 DROP USER IF EXISTS triage_controller;
 CREATE USER triage_controller WITH
