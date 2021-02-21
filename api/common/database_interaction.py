@@ -48,25 +48,25 @@ class DataBase:
         db.close()
         return results
 
-    def insert(self, insert_string):
+    def insert(self, insert_string, returning=False):
         """
         Insert data into the database
 
         Args:
             insert_string (str): A string representing the data to insert
         """
-        self._modify_data(insert_string)
+        return self._modify_data(insert_string, returning)
 
-    def update(self, update_string):
+    def update(self, update_string, returning=False):
         """
         Update data in the database
 
         Args:
             update_string (str): A string representing the data to update
         """
-        self._modify_data(update_string)
+        return self._modify_data(update_string, returning)
 
-    def _modify_data(self, query_string):
+    def _modify_data(self, query_string, returning=False):
         """
         Modify data in the database
 
@@ -80,16 +80,26 @@ class DataBase:
                 # Insert the desired data into the db
                 cur.execute(query_string)
                 db.commit()
+                if returning:
+                    val = cur.fetchone()[0]
         # Close the database connection
         db.close()
+        if returning:
+            return val
 
-    def insert_data_stream_of_tuples(self, table, data_attributes, data_stream):
+    def insert_data_from_file(self, table, data_column_order, data_file, seperator):
         """
-        Insert a large amount of data into the database
+        Insert a large amount of data into the database from a file
 
         Args:
             table (str): The table to insert the data into
-            data_attributes (tuple, str): A tuple representing which data attributes the data_stream tuples have
-            data_stream (list, tuples, str): A list of tuples that represent the data that will be inserted
+            data_header_order (tuple, str): A tuple representing which data attributes the data_file tuples have
+            data_file (file): A file with the data to upload to the database
+            seperator (str): the file character seperators
         """
-        raise NotImplementedError()
+        # Establish database connection
+        with psycopg2.connect(**self.connection_data) as db:
+            # Establish a cursor to interact with the database
+            with db.cursor() as cur:
+                cur.copy_from(data_file, table, sep=seperator, columns=data_column_order)
+        db.close()
