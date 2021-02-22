@@ -109,20 +109,11 @@ class Models(Resource):
         # Establish database connection
         db = DataBase(self.DATABASE_DATA)
         # Update database data
-        db.update("UPDATE triagedata.models \
-                    SET in_use = (CASE WHEN id=%(model-id)s THEN true \
-                                       ELSE false \
-                                  END) \
-                    WHERE clinic_id=%(clinic-id)s AND \
-                          EXISTS ( \
-                                SELECT id \
-                                FROM triagedata.models \
-                                WHERE clinic_id=%(clinic-id)s AND \
-                                        id=%(model-id)s \
-                                )" % {
-                                    'model-id': model_id,
-                                    'clinic-id': clinic_id
-                                })
+        query = "UPDATE triagedata.models SET in_use = (CASE WHEN id=%s THEN true ELSE false END)" % model_id
+        query += "WHERE (SELECT COUNT(*) FROM triagedata.models WHERE id=%s)=1" % model_id
+        query += " AND severity=(SELECT severity FROM triagedata.models WHERE id=%s)" % model_id
+        query += " AND clinic_id=%s" % clinic_id
+        db.update(query)
 
     def get_clinic_models(self, clinic_id):
         """
