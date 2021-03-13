@@ -6,3 +6,4 @@ flask_cors
 psycopg2
 webargs
 tensorflow
+pyjwt

@@ -11,6 +11,7 @@ from api.resources.update_triage_classes import UpdateTriageClasses
 from api.resources.models import Models
 import api.resources.upload as Upload
 from api.resources.data import Data
+from api.resources.auth import Auth
 
 
 def create_app():
@@ -32,6 +33,7 @@ def create_app():
     api.add_resource(Upload.PastAppointments, '/upload/past-appointments')
     api.add_resource(Upload.Model, '/upload/model')
     api.add_resource(Data, '/data/<clinic_id>/<triage_class>')
+    api.add_resource(Auth, '/auth/login')
     CORS(app)
     return app
 
