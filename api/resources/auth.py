@@ -12,11 +12,26 @@ import json
 import jwt
 import datetime
 
+# Internal dependencies
+from api.common.database_interaction import DataBase
+
 SECRET_KEY = 'thisisthesecretkey'
 
 class Auth(Resource):
     """
     The `Predict` class handles all of the requests relative to Prediction for the API.
+    """
+
+    DATABASE_DATA = {
+        'database': 'triage',
+        'user': 'admin',
+        'password': 'docker',
+        'host': 'db',
+        'port': '5432'
+    }
+    """
+    This is the database connection information used by PastAppointments to connect to the database.
+    See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     """
 
     # API input schema
@@ -64,16 +79,24 @@ class Auth(Resource):
         # Validate input arguments.
         args = parser.parse(self.arg_schema_get, request, location='querystring')
         
-        valid_user, user_clinic = self.__validate_user(args['username'], args['password'])
+        user_clinic = self.__validate_user(args['username'], args['password'])
 
-        if(valid_user):
-            return json.dumps({ 'token': self.__generate_token(args['username'], user_clinic).decode('UTF-8') })
+        return json.dumps({ 'token': self.__generate_token(args['username'], user_clinic).decode('UTF-8') })
+            
 
+    def __validate_user(self, username, password):
+        db = DataBase(self.DATABASE_DATA)
+        query = "SELECT clinic_id FROM triagedata.users "
+        query += "WHERE username='%s' " % username
+        query += "AND password='%s'" % password
+        
+        result = db.select(query)
+
+        if len(result) > 0:
+            return  result[0][0]
         else:
             raise RuntimeError('Invalid User Credentials')
 
-    def __validate_user(self, username, password):
-        return True, 1
     
     def __generate_token(self, username, user_clinic):
         return jwt.encode({
