@@ -163,6 +163,11 @@ INSERT INTO triagedata.triageclasses (clinic_id, severity, name, duration, propo
 INSERT INTO triagedata.triageclasses (clinic_id, severity, name, duration, proportion) VALUES (1, 3, 'Standard', 23, 0.6);
 INSERT INTO triagedata.triageclasses (clinic_id, severity, name, duration, proportion) VALUES (1, 4, 'Low-Urgency', 52, 0.5);
 
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: triagedata; Owner: admin
+--
+
+INSERT INTO triagedata.users (username, password, salt, clinic_id, admin) VALUES ('admin', 'password', 'E1F53135E559C253', 1, TRUE);
 
 --
 -- Data for Name: historicdata; Type: TABLE DATA; Schema: triagedata; Owner: admin

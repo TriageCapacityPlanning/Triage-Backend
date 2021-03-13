@@ -64,21 +64,21 @@ class Auth(Resource):
         # Validate input arguments.
         args = parser.parse(self.arg_schema_get, request, location='querystring')
         
-        valid_user, user_clinics = self.__validate_user(args['username'], args['password'])
+        valid_user, user_clinic = self.__validate_user(args['username'], args['password'])
 
         if(valid_user):
-            return json.dumps({ 'token': self.__generate_token(args['username'], user_clinics).decode('UTF-8') })
+            return json.dumps({ 'token': self.__generate_token(args['username'], user_clinic).decode('UTF-8') })
 
         else:
             raise RuntimeError('Invalid User Credentials')
 
     def __validate_user(self, username, password):
-        return True, [1,2]
+        return True, 1
     
-    def __generate_token(self, username, user_clinics):
+    def __generate_token(self, username, user_clinic):
         return jwt.encode({
                 'user': username,
-                'clinics': user_clinics,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
+                'clinic': user_clinic,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=12)
             },
             SECRET_KEY)

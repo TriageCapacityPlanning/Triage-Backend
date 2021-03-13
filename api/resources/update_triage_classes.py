@@ -3,7 +3,7 @@ This module handles all required interaction with the `/classes` endpoint
 """
 
 # External dependencies
-from flask_restful import Resource
+from api.resources.AuthResource import AuthResource, authenticate
 from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
@@ -12,7 +12,7 @@ from webargs import fields
 from api.common.database_interaction import DataBase
 
 
-class UpdateTriageClasses(Resource):
+class UpdateTriageClasses(AuthResource):
     """
     The `UpdateTriageClasses` class handles all of the requests relative to updating triage class data for the API.
     """
