@@ -1,11 +1,11 @@
 """
 The Triage API to serve to the front end
-
 Read the documentation from Flask: https://flask-restful.readthedocs.io/en/latest/
 """
 
 from flask import Flask
 from flask_restful import Api
+from flask_cors import CORS
 from api.resources.predict import Predict
 from api.resources.update_triage_classes import UpdateTriageClasses
 from api.resources.models import Models
@@ -32,7 +32,7 @@ def create_app():
     api.add_resource(Upload.PastAppointments, '/upload/past-appointments')
     api.add_resource(Upload.Model, '/upload/model')
     api.add_resource(Data, '/data/<clinic_id>/<triage_class>')
-
+    CORS(app)
     return app
 
 

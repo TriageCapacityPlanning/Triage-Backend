@@ -5,6 +5,8 @@ The TriageController is used to initiate prediction and simulation upon API requ
 # External dependencies.
 from datetime import datetime, timedelta
 from collections import Counter, deque
+import tensorflow as tf
+import numpy as np
 
 # Internal dependencies
 from api.common.database_interaction import DataBase
@@ -15,7 +17,6 @@ from sim.resources.minintervalschedule import gen_min_interval_slots, Simulation
 class TriageController:
     """
     TriageController is a class to handle API requests to run predictions and simulations.
-
     Usage:
         To create a new triage controller, create it with `TriageController(intervals, clinic_settings)` where
         those values are:
@@ -30,8 +31,8 @@ class TriageController:
     # Database connection information
     DATABASE_DATA = {
         'database': 'triage',
-        'user': 'triage_controller',
-        'password': 'password',
+        'user': 'admin',
+        'password': 'docker',
         'host': 'db',
         'port': '5432'
     }
@@ -55,7 +56,6 @@ class TriageController:
 
     def predict(self):
         """Returns the prediction / simulation results.
-
         Returns:
             Simulation results as a dictionary with the following key-value pairs:
             ```
@@ -64,8 +64,11 @@ class TriageController:
                 total (int): The referral count predictions in total per triage class.
             }
             ```
-
         """
+        prediction_start_date = datetime.strptime(self.intervals[0][0], '%Y-%m-%d')
+        prediction_end_date = datetime.strptime(self.intervals[-1][1], '%Y-%m-%d')
+        prediction_interval_length = (prediction_end_date - prediction_start_date).days + 1
+
         # Find the year of the most recent historic data.
         historic_data_interval_length = max(self.ML_PADDING_LENGTH, self.SIM_PADDING_LENGTH)
         desired_historic_data_year = self.get_historic_data_year(self.intervals[0][0])
@@ -84,11 +87,16 @@ class TriageController:
                                                            historic_data_interval_length)
             
 
-            # PASS SORTED_REFERAL_DATA TO MODEL
-            predictions = [(5,1)] * 50
-            
+            model = self.get_model(self.clinic_id, triage_class)
+            predictions = self.get_predictions(model,
+                                               sorted_referral_data[-self.ML_PADDING_LENGTH:],
+                                               prediction_start_date,
+                                               prediction_interval_length
+                          )
             # Create DataFrame
-            data_frame = DataFrame(self.intervals, predictions, (self.SIM_PADDING_LENGTH, self.SIM_PADDING_LENGTH))
+            padding = [[arrivals, 0] for arrivals in sorted_referral_data[-self.SIM_PADDING_LENGTH:]]
+            data_frame_data = padding + predictions + [[0, 0]]
+            data_frame = DataFrame(self.intervals, data_frame_data, (self.SIM_PADDING_LENGTH, 0))
 
             # Run Simulation
             sim_results = gen_min_interval_slots(data_frame=data_frame, 
@@ -97,16 +105,17 @@ class TriageController:
                                                  final_window=triage_class['duration'] * 14,
                                                  confidence=self.confidence,
                                                  start=0,
-                                                 end=len(self.intervals),
+                                                 end=len(self.intervals)-1,
                                                  num_sim_runs=self.num_sim_runs,
                                                  queue=deque()
                                                  )
             sim_result_formatted = [{'slots': sim_result[0].expected_slots,
                                   'start_date': sim_result[1][0],
-                                  'end_date': sim_result[1][0]
+                                  'end_date': sim_result[1][1]
                                   } for sim_result in zip(sim_results, self.intervals)]
             
             response[triage_class['name']] = sim_result_formatted
+            print(response)
         return response
 
     def get_historic_data_year(self, start_date):
@@ -130,7 +139,6 @@ class TriageController:
 
     def sort_referral_data(self, referral_data, start_date, interval_length):
         """Sorts historic referral data by triage class.
-
         Parameters:
             `referral_data` (list(str)): List of historic referral dates.
         Returns:
@@ -147,24 +155,34 @@ class TriageController:
         db = DataBase(self.DATABASE_DATA)
 
         # Query for referral data from previous year
-        rows = db.select("SELECT data \
-                           FROM triagedata.models \
+        rows = db.select("SELECT file_path \
+                           FROM triagedata.models  \
                            WHERE clinic_id = %(clinic_id)s \
-                               AND severity = %(severity)s \
-                                AND in_use = TRUE" %
-                         {
-                             'clinic_id': clinic_id,
-                             'severity': triage_class
-                         })
+                           AND severity = %(severity)s \
+                           AND in_use = %(in_use)s" %
+                           {
+                                'clinic_id': clinic_id,
+                                'severity': triage_class['severity'],
+                                'in_use': True
+                        })
 
-        return rows[0]
+        if len(rows) == 0:
+            raise RuntimeError('Could not find model for clinic %s, triage class %s', clinic_id, triage_class)
+        
+        return tf.keras.models.load_model(rows[0][0], custom_objects=None, compile=True, options=None)
 
-    def get_predictions(self, intervals, initial_prediction_data):
+    def get_predictions(self, model, data, start_date, prediction_length):
         """Runs ML model predictions and returns results.
         """
-        assert NotImplementedError
+        predictions = []
+        for offset in range(0, prediction_length):
+            date = start_date + timedelta(days=offset)
+            one_hot_date = np.zeros(12 + 31)
+            one_hot_date[date.month] = 1
+            one_hot_date[12 + date.day] = 1
+            
+            prediction = model.predict([np.array(data)[np.newaxis, :], one_hot_date[np.newaxis, :]])
+            predictions.append(prediction[0])
 
-    def run_simulation(self):
-        """Runs simulation module.
-        """
-        assert NotImplementedError
+            data = data[1:] + [int(prediction[0][0])]
+        return predictions
