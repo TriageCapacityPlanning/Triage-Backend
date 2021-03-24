@@ -65,14 +65,14 @@ class TriageController:
             }
             ```
         """
-        prediction_start_date = datetime.strptime(self.intervals[0][0], '%Y-%m-%d')
-        prediction_end_date = datetime.strptime(self.intervals[-1][1], '%Y-%m-%d')
+        prediction_start_date = datetime.strptime(self.intervals[0]['start'], '%Y-%m-%d')
+        prediction_end_date = datetime.strptime(self.intervals[-1]['end'], '%Y-%m-%d')
         prediction_interval_length = (prediction_end_date - prediction_start_date).days + 1
 
         # Find the year of the most recent historic data.
         historic_data_interval_length = max(self.ML_PADDING_LENGTH, self.SIM_PADDING_LENGTH)
-        desired_historic_data_year = self.get_historic_data_year(self.intervals[0][0])
-        historic_data_end_date = datetime.strptime(self.intervals[0][0], '%Y-%m-%d').replace(year=desired_historic_data_year)
+        desired_historic_data_year = self.get_historic_data_year(self.intervals[0]['start'])
+        historic_data_end_date = datetime.strptime(self.intervals[0]['start'], '%Y-%m-%d').replace(year=desired_historic_data_year)
         historic_data_interval = (historic_data_end_date - timedelta(days=historic_data_interval_length), 
                                   historic_data_end_date)
 
@@ -110,8 +110,8 @@ class TriageController:
                                                  queue=deque()
                                                  )
             sim_result_formatted = [{'slots': sim_result[0].expected_slots,
-                                  'start_date': sim_result[1][0],
-                                  'end_date': sim_result[1][1]
+                                  'start': sim_result[1]['start'],
+                                  'end': sim_result[1]['end']
                                   } for sim_result in zip(sim_results, self.intervals)]
             
             response[triage_class['name']] = sim_result_formatted
@@ -179,7 +179,7 @@ class TriageController:
             date = start_date + timedelta(days=offset)
             one_hot_date = np.zeros(12 + 31)
             one_hot_date[date.month] = 1
-            one_hot_date[12 + date.day] = 1
+            one_hot_date[11 + date.day] = 1
             
             prediction = model.predict([np.array(data)[np.newaxis, :], one_hot_date[np.newaxis, :]])
             predictions.append(prediction[0])
