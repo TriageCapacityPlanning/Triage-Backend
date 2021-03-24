@@ -18,11 +18,6 @@ from api.resources.models import Models
 FILE_STORAGE_PATH = 'uploads/'
 
 
-class Waitlist(Resource):
-    def put(self):
-        raise NotImplementedError()
-
-
 class PastAppointments(Resource):
     """
     The `PastAppointments` class handles all of the requests relative to historic
