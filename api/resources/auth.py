@@ -26,7 +26,7 @@ class Auth(Resource):
         'database': 'triage',
         'user': 'admin',
         'password': 'docker',
-        'host': 'localhost',
+        'host': 'db',
         'port': '5432'
     }
     """
@@ -81,7 +81,7 @@ class Auth(Resource):
         
         user_clinic = self.__validate_user(args['username'], args['password'])
 
-        return json.dumps({ 'token': self.__generate_token(args['username'], user_clinic).decode('UTF-8'), 'clinic_id': user_clinic })
+        return json.dumps({ 'token': self.__generate_token(args['username'], user_clinic), 'clinic_id': user_clinic })
             
 
     def __validate_user(self, username, password):
@@ -99,9 +99,9 @@ class Auth(Resource):
 
     
     def __generate_token(self, username, user_clinic):
-        return jwt.encode({
+        return str(jwt.encode({
                 'user': username,
                 'clinic': user_clinic,
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=12)
             },
-            SECRET_KEY)
+            SECRET_KEY, algorithm="HS256"))

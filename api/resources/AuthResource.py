@@ -14,8 +14,10 @@ def authenticate(func):
         if not token:
             raise RuntimeError('Token is missing')
         
+        print(token)
+
         try:
-            data = jwt.decode(token, SECRET_KEY)
+            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         except:
             raise RuntimeError('Token is invalid')
 
