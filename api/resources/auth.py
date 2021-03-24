@@ -26,7 +26,7 @@ class Auth(Resource):
         'database': 'triage',
         'user': 'admin',
         'password': 'docker',
-        'host': 'db',
+        'host': 'localhost',
         'port': '5432'
     }
     """
@@ -81,7 +81,7 @@ class Auth(Resource):
         
         user_clinic = self.__validate_user(args['username'], args['password'])
 
-        return json.dumps({ 'token': self.__generate_token(args['username'], user_clinic).decode('UTF-8') })
+        return json.dumps({ 'token': self.__generate_token(args['username'], user_clinic).decode('UTF-8'), 'clinic_id': user_clinic })
             
 
     def __validate_user(self, username, password):
