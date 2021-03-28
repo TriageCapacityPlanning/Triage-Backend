@@ -4,27 +4,26 @@ This module handles all required interaction with the `/models` endpoints
 """
 
 # External dependencies
-from flask_restful import Resource
 from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
 
 
 # Internal dependencies
+from api.resources.AuthResource import AuthResource, authenticate
 from api.common.database_interaction import DataBase
+from api.common.config import database_config
 
-
-class Models(Resource):
+class Models(AuthResource):
     """
     The `Models` class handles all of the requests relative to Models
     for the API.
     """
     DATABASE_DATA = {
-        'database': 'triage',
         'user': 'model_handler',
-        'password': 'password',
-        'host': 'db',
-        'port': '5432'
+        'database': database_config['database'],
+        'host': database_config['host'],
+        'port': database_config['port']
     }
     """
     This is the database connection information used by Models to connect

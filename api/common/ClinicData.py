@@ -5,7 +5,7 @@ The Historic is used to retrieve historic referral data from the database.
 # External dependencies.
 from datetime import datetime, timedelta
 from api.common.database_interaction import DataBase
-
+from api.common.config import database_config
 
 class ClinicData:
     """
@@ -22,11 +22,11 @@ class ClinicData:
 
     # Database connection information
     DATABASE_DATA = {
-        'database': 'triage',
         'user': 'admin',
         'password': 'docker',
-        'host': 'db',
-        'port': '5432'
+        'database': database_config['database'],
+        'host': database_config['host'],
+        'port': database_config['port']
     }
     """
     This is the database connection information used by HistoricData to connect to the database.

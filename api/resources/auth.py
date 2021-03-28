@@ -14,6 +14,7 @@ import datetime
 
 # Internal dependencies
 from api.common.database_interaction import DataBase
+from api.common.config import database_config
 
 SECRET_KEY = 'thisisthesecretkey'
 
@@ -23,11 +24,11 @@ class Auth(Resource):
     """
 
     DATABASE_DATA = {
-        'database': 'triage',
         'user': 'admin',
         'password': 'docker',
-        'host': 'db',
-        'port': '5432'
+        'database': database_config['database'],
+        'host': database_config['host'],
+        'port': database_config['port']
     }
     """
     This is the database connection information used by PastAppointments to connect to the database.
@@ -35,7 +36,7 @@ class Auth(Resource):
     """
 
     # API input schema
-    arg_schema_get = {
+    arg_schema_post = {
         "username": fields.Str(required=True),
         "password": fields.Str(required=True)
     }
@@ -55,7 +56,7 @@ class Auth(Resource):
 
     
 
-    def get(self):
+    def post(self):
         """
         Handles a get request for the predict endpoints.
         Returns a dictionary with a list of predictions based on the ML model predictions and simulation runs.
@@ -77,7 +78,7 @@ class Auth(Resource):
 
         """
         # Validate input arguments.
-        args = parser.parse(self.arg_schema_get, request, location='querystring')
+        args = parser.parse(self.arg_schema_post, request, location='json')
         
         user_clinic = self.__validate_user(args['username'], args['password'])
 

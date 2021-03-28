@@ -13,6 +13,7 @@ from api.common.database_interaction import DataBase
 from api.common.ClinicData import ClinicData
 from api.common.controller.DataFrame import DataFrame
 from sim.resources.minintervalschedule import gen_min_interval_slots, SimulationResults
+from api.common.config import database_config
 
 class TriageController:
     """
@@ -30,11 +31,11 @@ class TriageController:
 
     # Database connection information
     DATABASE_DATA = {
-        'database': 'triage',
         'user': 'admin',
         'password': 'docker',
-        'host': 'db',
-        'port': '5432'
+        'database': database_config['database'],
+        'host': database_config['host'],
+        'port': database_config['port']
     }
     """
     This is the database connection information used by Models to connect to the database.

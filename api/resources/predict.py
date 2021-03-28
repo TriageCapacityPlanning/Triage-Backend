@@ -3,28 +3,28 @@ This module handles all required interaction with the `/predict` endpoint
 """
 
 # External dependencies
-from flask_restful import Resource
 from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
 import ast
 
 # Internal dependencies
+from api.resources.AuthResource import AuthResource, authenticate
 from api.common.controller.TriageController import TriageController
 from api.common.database_interaction import DataBase
+from api.common.config import database_config
 
-
-class Predict(Resource):
+class Predict(AuthResource):
     """
     The `Predict` class handles all of the requests relative to Prediction for the API.
     """
     # Database connection information
     DATABASE_DATA = {
-        'database': 'triage',
         'user': 'predict_handler',
         'password': 'password',
-        'host': 'db',
-        'port': '5432'
+        'database': database_config['database'],
+        'host': database_config['host'],
+        'port': database_config['port']
     }
     """
     This is the database connection information used by Predict to connect to the database.
