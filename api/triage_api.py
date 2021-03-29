@@ -3,7 +3,7 @@ The Triage API to serve to the front end
 Read the documentation from Flask: https://flask-restful.readthedocs.io/en/latest/
 """
 
-from flask import Flask
+from flask import Flask, jsonify
 from flask_restful import Api
 from flask_cors import CORS
 from api.resources.predict import Predict
@@ -12,7 +12,9 @@ from api.resources.models import Models
 import api.resources.upload as Upload
 from api.resources.data import Data
 from api.resources.auth import Auth
+from api.resources.AuthResource import Unauthorized
 from api.common.config import VERSION_PREFIX
+
 
 def create_app():
     app = Flask(__name__)
@@ -25,6 +27,14 @@ def create_app():
     @app.route(VERSION_PREFIX)
     def version():
         return {'status': 200, 'version': 1}
+
+    app.config["PROPAGATE_EXCEPTIONS"] = True
+
+    @app.errorhandler(Unauthorized)
+    def handle_unauthorized_user(error):
+        response = jsonify(error.to_dict())
+        response.status_code = error.status_code
+        return response
 
     api.add_resource(Predict, VERSION_PREFIX + '/predict')
     api.add_resource(Models, *[VERSION_PREFIX + '/models', VERSION_PREFIX + '/models/use'])
