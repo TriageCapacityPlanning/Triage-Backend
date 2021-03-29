@@ -21,6 +21,7 @@ class Models(AuthResource):
     """
     DATABASE_DATA = {
         'user': 'model_handler',
+        'password': 'password',
         'database': database_config['database'],
         'host': database_config['host'],
         'port': database_config['port']
