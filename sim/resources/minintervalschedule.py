@@ -5,22 +5,24 @@ import numpy as np
 from typing import List, Tuple, Union
 import math
 from .success_ratio import success_ratio, success_ratio_already_overdue
-from api.common.controller.DataFrame import DataFrame
 
+# allow users to also pass their own datatype or use the local mock if the api module is not available
+try:
+    from api.common.controller.DataFrame import DataFrame
+except:
+    # temp mock up datatype
+    class DataFrame:
+        def __init__(self, data: List[int], intervals: List[Tuple[int, int]]):
+            self.data = data
+            self.intervals = intervals
 
-# temp mock up datatype
-# class DataFrame:
-#     def __init__(self, data: List[int], intervals: List[Tuple[int, int]]):
-#         self.data = data
-#         self.intervals = intervals
+        def get_interval_sample(self, i: int):
+            start, end = self.intervals[i]
+            return self.data[start: end]
 
-#     def get_interval_sample(self, i: int):
-#         start, end = self.intervals[i]
-#         return self.data[start: end]
-
-#     def get_interval_size(self, i: int):
-#         start, end = self.intervals[i]
-#         return end - start
+        def get_interval_size(self, i: int):
+            start, end = self.intervals[i]
+            return end - start
 
 
 class SimulationResults:
@@ -134,11 +136,9 @@ def _opt_interval_schedule(queue: deque, data_frame: DataFrame, interval: int, m
         interval_size_schedule = schedule_with_padding[:data_frame.get_interval_size(interval)]
         schedule_sim_result = simulate_allocations(arrivals=stochastic_arrivals, slot_schedule=interval_size_schedule,
                                                    current_queue=queue, offset=offset)
-        print(schedule_sim_result.remainder_queue)
         remainder_queues.append(schedule_sim_result.remainder_queue)
     # remainder queue index corresponding to N* is the confidence-level percentile index
     opt_remainder_queue_index = math.ceil(confidence / 100 * len(remainder_queues)) - 1
-    print("reran queues: ", remainder_queues, opt_remainder_queue_index)
     # sort by largest carryover size
     # TODO: investigate whether sorting by size is best, and if the sequence of values in a queue has an effect
     sorted(remainder_queues, key = lambda e : sum([remainder for time, remainder in e]))
