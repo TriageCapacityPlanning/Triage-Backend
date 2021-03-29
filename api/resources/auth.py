@@ -63,24 +63,25 @@ class Auth(Resource):
             {
                 token (str) The user's generated JWT.
                 clinic_id (int) The clinic id the user is associated with.
+                admin (bool) The user's admin status.
             }
             ```
         """
         # Validate input arguments.
         args = parser.parse(self.arg_schema_post, request, location='json')
         user_clinic = self._validate_user(args['username'], args['password'])
-        return json.dumps({'token': self._generate_token(args['username'], user_clinic), 'clinic_id': user_clinic})
+        return json.dumps({'token': self._generate_token(args['username'], user_clinic), 'clinic_id': user_clinic, 'admin': admin })
 
     def _validate_user(self, username, password):
         db = DataBase(self.DATABASE_DATA)
-        query = "SELECT clinic_id FROM triagedata.users "
+        query = "SELECT clinic_id, admin FROM triagedata.users "
         query += "WHERE username='%s' " % username
         query += "AND password='%s'" % password
 
         result = db.select(query)
 
         if len(result) > 0:
-            return result[0][0]
+            return result[0][0], result[0][1]
         else:
             raise RuntimeError('Invalid User Credentials')
 
