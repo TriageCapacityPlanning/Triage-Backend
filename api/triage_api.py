@@ -12,8 +12,7 @@ from api.resources.models import Models
 import api.resources.upload as Upload
 from api.resources.data import Data
 from api.resources.auth import Auth
-
-VERSION_PREFIX = '/v1'
+from api.common.config import VERSION_PREFIX
 
 def create_app():
     app = Flask(__name__)

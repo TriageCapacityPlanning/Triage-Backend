@@ -3,3 +3,5 @@ database_config = {
     'host': 'db',
     'port': '5432'
 }
+
+VERSION_PREFIX = '/v1'
