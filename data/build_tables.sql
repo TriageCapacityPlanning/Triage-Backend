@@ -140,6 +140,18 @@ CREATE USER triage_controller WITH
 GRANT SELECT ON TriageData.HistoricData TO triage_controller;
 GRANT SELECT ON TriageData.Models TO triage_controller;
 
+DROP USER IF EXISTS clinic_data;
+CREATE USER clinic_data WITH
+    PASSWORD 'password'
+    NOSUPERUSER
+    NOCREATEDB
+    NOCREATEROLE
+    INHERIT
+    NOREPLICATION
+    CONNECTION LIMIT -1;
+GRANT SELECT ON TriageData.HistoricData TO clinic_data;
+GRANT SELECT, INSERT, UPDATE ON TriageData.TriageClasses TO clinic_data;
+
 CREATE GROUP api_handlers;
-ALTER GROUP api_handlers ADD USER triage_class_handler, model_handler, predict_handler, historic_data_handler, triage_controller;
+ALTER GROUP api_handlers ADD USER triage_class_handler, model_handler, predict_handler, historic_data_handler, triage_controller, clinic_data;
 GRANT USAGE ON SCHEMA TriageData TO GROUP api_handlers;
