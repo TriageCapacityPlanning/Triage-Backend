@@ -5,12 +5,11 @@ The Historic is used to retrieve historic referral data from the database.
 # External dependencies.
 from datetime import datetime, timedelta
 from api.common.database_interaction import DataBase
-
+from api.common.config import database_config
 
 class ClinicData:
     """
     Historic is a class to retrieve historic referral data from the database module.
-
     Usage:
         To create a new HistoricData object, create it with `HistoricData(clinic_id)` where
         those values are:
@@ -23,11 +22,11 @@ class ClinicData:
 
     # Database connection information
     DATABASE_DATA = {
-        'database': 'triage',
-        'user': 'admin',
+        'user': 'clinic_data',
         'password': 'password',
-        'host': 'db',
-        'port': '5432'
+        'database': database_config['database'],
+        'host': database_config['host'],
+        'port': database_config['port']
     }
     """
     This is the database connection information used by HistoricData to connect to the database.
@@ -42,7 +41,6 @@ class ClinicData:
         
     def get_referral_data(self, triage_class, interval):
         """Returns historic referral data to use as a start for running ML predictions.
-
         Parameters:
             `start_date` (str): The start date for predictions.
             `historic_data_year` (str): The year of historic data to query data from.
@@ -84,10 +82,8 @@ class ClinicData:
     def _get_clinic_settings_from_database(self):
         """
         Retrieves clinic triage class settings for a given clinic id.
-
         Args:
             clinic_id (int): The ID of the clinic.
-
         Returns:
             A list of dictionaries for each triage class with
             ```

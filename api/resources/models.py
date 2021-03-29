@@ -1,29 +1,30 @@
+  
 """
 This module handles all required interaction with the `/models` endpoints
 """
 
 # External dependencies
-from flask_restful import Resource
 from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
 
 
 # Internal dependencies
+from api.resources.AuthResource import AuthResource, authenticate
 from api.common.database_interaction import DataBase
+from api.common.config import database_config
 
-
-class Models(Resource):
+class Models(AuthResource):
     """
     The `Models` class handles all of the requests relative to Models
     for the API.
     """
     DATABASE_DATA = {
-        'database': 'triage',
         'user': 'model_handler',
         'password': 'password',
-        'host': 'db',
-        'port': '5432'
+        'database': database_config['database'],
+        'host': database_config['host'],
+        'port': database_config['port']
     }
     """
     This is the database connection information used by Models to connect
@@ -36,7 +37,6 @@ class Models(Resource):
     }
     """
     The required schema to handle a get request
-
     Args:
         clinic-id (int): The id of the clinic being referenced
     """
@@ -47,7 +47,6 @@ class Models(Resource):
     }
     """
     The required schema to hangle a patch request
-
     Args:
         clinic-id (int): The id of the clinic being referenced
         model-id (int): The desired new primary model's id
@@ -57,11 +56,9 @@ class Models(Resource):
         """
         Handles a get request for the models endpoints.
         Returns a dictionary with a list of models for an associated clinic.
-
         Args:
             Requires api query string arguments, see `Models.arg_schema_get`,
             in the get request
-
         Returns:
             A dictionary with
             `status` (int) The status of the request
@@ -79,11 +76,9 @@ class Models(Resource):
         """
         Handles a patch request for the models endpoints.
         Returns a dictionary with an active model.
-
         Args:
             Requires api query string arguments, see `Models.arg_schema_patch`,
             in the get request
-
         Returns:
             A dictionary with
             `status` (int) The status of the request
@@ -101,7 +96,6 @@ class Models(Resource):
         """
         Sets the active model for the given clinic if the model id exists
         for that clinic.
-
         Args:
             clinic_id (int): The id of the clinic being referenced
             model_id (int): The desired new primary model's id
@@ -113,15 +107,14 @@ class Models(Resource):
         query += "WHERE (SELECT COUNT(*) FROM triagedata.models WHERE id=%s)=1" % model_id
         query += " AND severity=(SELECT severity FROM triagedata.models WHERE id=%s)" % model_id
         query += " AND clinic_id=%s" % clinic_id
+
         db.update(query)
 
     def get_clinic_models(self, clinic_id):
         """
         Gets the available models for the given clinic.
-
         Args:
             clinic_id (int): The id of the clinic being referenced
-
         Returns:
             list: A list of dictionaries that map the key to the
                   value stored in the database

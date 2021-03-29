@@ -3,26 +3,26 @@ This module handles all required interaction with the `/classes` endpoint
 """
 
 # External dependencies
-from flask_restful import Resource
+from api.resources.AuthResource import AuthResource, authenticate
 from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
 
 # Internal dependencies
 from api.common.database_interaction import DataBase
+from api.common.config import database_config
 
-
-class UpdateTriageClasses(Resource):
+class UpdateTriageClasses(AuthResource):
     """
     The `UpdateTriageClasses` class handles all of the requests relative to updating triage class data for the API.
     """
 
     DATABASE_DATA = {
-        'database': 'triage',
         'user': 'triage_class_handler',
         'password': 'password',
-        'host': 'db',
-        'port': '5432'
+        'database': database_config['database'],
+        'host': database_config['host'],
+        'port': database_config['port']
     }
     """
     This is the database connection information used by Models to connect to the database.
@@ -94,7 +94,6 @@ class UpdateTriageClasses(Resource):
             `updated` (dict): The created or updated class.
         """
         # Validate input arguments
-        print(request.json)
         args = parser.parse(self.arg_schema_put, request, location='json')
 
         # Update triage class in database

@@ -11,29 +11,25 @@ import uuid
 
 
 # Internal dependencies
+from api.resources.AuthResource import AuthResource, authenticate
 from api.common.database_interaction import DataBase
 from api.resources.models import Models
-
+from api.common.config import database_config
 
 FILE_STORAGE_PATH = 'uploads/'
 
 
-class Waitlist(Resource):
-    def put(self):
-        raise NotImplementedError()
-
-
-class PastAppointments(Resource):
+class PastAppointments(AuthResource):
     """
     The `PastAppointments` class handles all of the requests relative to historic
     triage data for the API.
     """
     DATABASE_DATA = {
-        'database': 'triage',
         'user': 'historic_data_handler',
         'password': 'password',
-        'host': 'db',
-        'port': '5432'
+        'database': database_config['database'],
+        'host': database_config['host'],
+        'port': database_config['port']
     }
     """
     This is the database connection information used by PastAppointments to connect to the database.
@@ -69,16 +65,16 @@ class PastAppointments(Resource):
             )
 
 
-class Model(Resource):
+class Model(AuthResource):
     """
     The `Model` class handles all of the requests relative to new model data uploads for the API.
     """
     DATABASE_DATA = {
-        'database': 'triage',
         'user': 'model_handler',
         'password': 'password',
-        'host': 'db',
-        'port': '5432'
+        'database': database_config['database'],
+        'host': database_config['host'],
+        'port': database_config['port']
     }
     """
     This is the database connection information used by PastAppointments to connect to the database.

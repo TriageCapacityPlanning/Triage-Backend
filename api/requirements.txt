@@ -1,5 +1,9 @@
 numpy
 Flask
+Flask-cors
 Flask-RESTful
+flask_cors
 psycopg2
 webargs
+tensorflow
+pyjwt

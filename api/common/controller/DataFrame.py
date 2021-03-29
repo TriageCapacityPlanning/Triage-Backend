@@ -89,7 +89,7 @@ class DataFrame:
             Returns the intervals as a list of tuples with start and end indexes relative to the
             predictions given to the DataFrame.
         """
-        date_offsets = [(datetime.strptime(interval[1], '%Y-%m-%d') - datetime.strptime(interval[0], '%Y-%m-%d')).days
+        date_offsets = [(datetime.strptime(interval['end'], '%Y-%m-%d') - datetime.strptime(interval['start'], '%Y-%m-%d')).days
                         for interval in intervals]
 
         interval_start_index = padding_lengths[0]

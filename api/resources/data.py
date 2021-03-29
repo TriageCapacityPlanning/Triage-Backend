@@ -3,7 +3,6 @@ This module handles all required interaction with the `/predict` endpoint
 """
 
 # External dependencies
-from flask_restful import Resource
 from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
@@ -11,10 +10,10 @@ import ast
 import json
 
 # Internal dependencies
+from api.resources.AuthResource import AuthResource, authenticate
 from api.common.ClinicData import ClinicData
 
-
-class Data(Resource):
+class Data(AuthResource):
     """
     The `Predict` class handles all of the requests relative to Prediction for the API.
     """
