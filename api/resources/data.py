@@ -10,7 +10,7 @@ import ast
 import json
 
 # Internal dependencies
-from api.resources.AuthResource import AuthResource, authenticate
+from api.resources.AuthResource import AuthResource
 from api.common.ClinicData import ClinicData
 
 class Data(AuthResource):
