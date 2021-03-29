@@ -128,6 +128,17 @@ CREATE USER historic_data_handler WITH
 GRANT INSERT, DELETE ON TriageData.HistoricData TO historic_data_handler;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA TriageData TO historic_data_handler;
 
+DROP USER IF EXISTS auth_handler;
+CREATE USER auth_handler WITH
+    PASSWORD 'password'
+    NOSUPERUSER
+    NOCREATEDB
+    NOCREATEROLE
+    INHERIT
+    NOREPLICATION
+    CONNECTION LIMIT -1;
+GRANT SELECT ON TriageData.Users TO auth_handler;
+
 DROP USER IF EXISTS triage_controller;
 CREATE USER triage_controller WITH
     PASSWORD 'password'
@@ -138,9 +149,22 @@ CREATE USER triage_controller WITH
     NOREPLICATION
     CONNECTION LIMIT -1;
 GRANT SELECT ON TriageData.HistoricData TO triage_controller;
+GRANT SELECT ON TriageData.Models TO triage_controller;
+
+DROP USER IF EXISTS clinic_data;
+CREATE USER clinic_data WITH
+    PASSWORD 'password'
+    NOSUPERUSER
+    NOCREATEDB
+    NOCREATEROLE
+    INHERIT
+    NOREPLICATION
+    CONNECTION LIMIT -1;
+GRANT SELECT ON TriageData.HistoricData TO clinic_data;
+GRANT SELECT, INSERT, UPDATE ON TriageData.TriageClasses TO clinic_data;
 
 CREATE GROUP api_handlers;
-ALTER GROUP api_handlers ADD USER triage_class_handler, model_handler, predict_handler, historic_data_handler, triage_controller;
+ALTER GROUP api_handlers ADD USER triage_class_handler, model_handler, predict_handler, historic_data_handler, auth_handler, triage_controller, clinic_data;
 GRANT USAGE ON SCHEMA TriageData TO GROUP api_handlers;
 
 
@@ -167,7 +191,7 @@ INSERT INTO triagedata.triageclasses (clinic_id, severity, name, duration, propo
 -- Data for Name: users; Type: TABLE DATA; Schema: triagedata; Owner: admin
 --
 
-INSERT INTO triagedata.users (username, password, salt, clinic_id, admin) VALUES ('admin', 'password', 'E1F53135E559C253', 1, TRUE);
+INSERT INTO triagedata.users (username, password, salt, clinic_id, admin) VALUES ('admin', '44c707b47b5e47dfaa90fe43f8c61a81c9e3dd6b3e36e7cf95156584da34a1ae467bd4eb6d5565d9ae13f675cf82bea8c093abd784b36bdec0a201362630a556', 'E1F53135E559C253', 1, TRUE);
 
 --
 -- Data for Name: historicdata; Type: TABLE DATA; Schema: triagedata; Owner: admin
