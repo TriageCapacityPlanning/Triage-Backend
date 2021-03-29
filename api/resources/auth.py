@@ -20,7 +20,7 @@ SECRET_KEY = 'thisisthesecretkey'
 
 class Auth(Resource):
     """
-    The `Predict` class handles all of the requests relative to Prediction for the API.
+    The `Auth` class handles all of the requests relative to authenticating a user for the API.
     """
 
     DATABASE_DATA = {
@@ -31,7 +31,7 @@ class Auth(Resource):
         'port': database_config['port']
     }
     """
-    This is the database connection information used by PastAppointments to connect to the database.
+    This is the database connection information used by Auth to connect to the database.
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     """
 
@@ -42,64 +42,49 @@ class Auth(Resource):
     }
 
     """
-    The required schema to handle a get request
+    The required schema to handle a post request (authenticate a user and generate a token)
 
     Args:
-        clinic_id (int): The id of the clinic being referenced.
-        start_date (str): The start date of the predictions.
-        end_date (str): The end date of the predictions.
-        intervals (list): Date intervals for predictions to be grouped by.
-        confidence (float): Required prediction confidence.
-        num_sim_runs (int): Number of simulations to run.
-        waitlist (file): Current wait list of patients for the clinic.
+        username (str): The user's username.
+        password (str): The user's password.
     """
-
-    
 
     def post(self):
         """
-        Handles a get request for the predict endpoints.
-        Returns a dictionary with a list of predictions based on the ML model predictions and simulation runs.
+        Handles a post request for the auth endpoints.
+        Returns a generated token and clinic_id of the user if successfully authenticated.
 
         Args:
-            Requires api query string arguments, see `Predict.arg_schema_get`, in the get request
+            Requires api body arguments, see `Auth.arg_schema_post`, in the post request
 
         Returns:
             A dictionary with
             ```
             {
-                url (str) The request url.
-                intervaled_slot_predictions (list) Predictions grouped by interval.
-                number_intervals (int) Number of intervals.
-                slot_predictions (list) Total predictions.
-                models (list): A list of dictionaries representing each model
+                token (str) The user's generated JWT.
+                clinic_id (int) The clinic id the user is associated with.
             }
             ```
-
         """
         # Validate input arguments.
         args = parser.parse(self.arg_schema_post, request, location='json')
-        
-        user_clinic = self.__validate_user(args['username'], args['password'])
+        user_clinic = self._validate_user(args['username'], args['password'])
+        return json.dumps({'token': self._generate_token(args['username'], user_clinic), 'clinic_id': user_clinic})
 
-        return json.dumps({ 'token': self.__generate_token(args['username'], user_clinic), 'clinic_id': user_clinic })
-            
-
-    def __validate_user(self, username, password):
+    def _validate_user(self, username, password):
         db = DataBase(self.DATABASE_DATA)
         query = "SELECT clinic_id FROM triagedata.users "
         query += "WHERE username='%s' " % username
         query += "AND password='%s'" % password
-        
+
         result = db.select(query)
 
         if len(result) > 0:
-            return  result[0][0]
+            return result[0][0]
         else:
             raise RuntimeError('Invalid User Credentials')
 
-    
-    def __generate_token(self, username, user_clinic):
+    def _generate_token(self, username, user_clinic):
         return str(jwt.encode({
                 'user': username,
                 'clinic': user_clinic,
