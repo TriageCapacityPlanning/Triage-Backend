@@ -14,8 +14,6 @@ def authenticate(func):
         if not token:
             raise RuntimeError('Token is missing')
         
-        print(token)
-
         try:
             data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         except:
@@ -23,7 +21,6 @@ def authenticate(func):
 
         
         clinic_id = request.args.get('clinic_id')
-        print(clinic_id == data['clinic'])
         if clinic_id and not (int(clinic_id) == int(data['clinic'])):
             raise RuntimeError('User does not have permissions to access clinic %s', clinic_id)
         
