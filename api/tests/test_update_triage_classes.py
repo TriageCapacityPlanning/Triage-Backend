@@ -4,9 +4,11 @@ This module handles testing for the UpdateTriageClasses class.
 
 from api.resources.update_triage_classes import UpdateTriageClasses
 from api.triage_api import create_app
+from api.common.config import VERSION_PREFIX
 import pytest
 import json
 
+from api.tests.common import generate_token
 
 class TestUpdateTriageClassesAPI:
     """
@@ -17,17 +19,20 @@ class TestUpdateTriageClassesAPI:
         """
         Test setup that occurs once before all tests are run.
         """
-
         self.test_client = create_app().test_client()
+        self.token = generate_token('username', 1)
+        self.endpoint = VERSION_PREFIX + '/classes'
 
-    def test_get_missing_inputs(self):
+    def test_get_missing_inputs(self, mocker):
         """
         Test Type: Acceptance
         Test Purpose: Tests Requirement INT-6
         """
 
+        mocker.patch('api.resources.AuthResource.authenticate')
+
         input_mock = {}
-        response = self.test_client.get('/classes', query_string=input_mock)
+        response = self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
 
         assert response.status_code == 422
 
@@ -38,7 +43,7 @@ class TestUpdateTriageClassesAPI:
         """
 
         input_mock = {'clinic-id': '"1"'}
-        response = self.test_client.get('/classes', query_string=input_mock)
+        response = self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
 
         assert response.status_code == 422
 
@@ -61,7 +66,7 @@ class TestUpdateTriageClassesAPI:
                      return_value=triage_classes_mock)
 
         input_mock = {'clinic-id': 1}
-        response = self.test_client.get('/classes', query_string=input_mock)
+        response = self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
 
         assert response.status_code == 200
         assert json.loads(response.data)['classes'] == triage_classes_mock
@@ -99,7 +104,7 @@ class TestUpdateTriageClassesAPI:
                      return_value=triage_classes_mock)
 
         input_mock = {'clinic-id': 1}
-        response = self.test_client.get('/classes', query_string=input_mock)
+        response = self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
 
         assert response.status_code == 200
         assert json.loads(response.data)['classes'] == triage_classes_mock
@@ -111,7 +116,7 @@ class TestUpdateTriageClassesAPI:
         """
 
         input_mock = {}
-        response = self.test_client.put('/classes', json=(input_mock))
+        response = self.test_client.put('/classes', headers={'token': self.token}, json=(input_mock))
 
         assert response.status_code == 422
 
@@ -122,7 +127,7 @@ class TestUpdateTriageClassesAPI:
         """
 
         input_mock = {'triage-class': '"1"'}
-        response = self.test_client.put('/classes', json=(input_mock))
+        response = self.test_client.put('/classes', headers={'token': self.token}, json=(input_mock))
 
         assert response.status_code == 422
 
@@ -144,7 +149,7 @@ class TestUpdateTriageClassesAPI:
         input_mock = {
             'triage-class': triage_class_mock
         }
-        response = self.test_client.put('/classes', json=(input_mock))
+        response = self.test_client.put('/classes', headers={'token': self.token}, json=(input_mock))
         assert response.status_code == 200
         assert json.loads(response.data)['updated'] == triage_class_mock
 

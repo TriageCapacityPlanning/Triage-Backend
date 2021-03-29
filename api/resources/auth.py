@@ -12,12 +12,13 @@ import json
 import jwt
 import datetime
 import hashlib
+import os
 
 # Internal dependencies
 from api.common.database_interaction import DataBase
 from api.common.config import database_config
 
-SECRET_KEY = 'thisisthesecretkey'
+SECRET_KEY = os.environ['API_SECRET']
 
 class Auth(Resource):
     """

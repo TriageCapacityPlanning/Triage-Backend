@@ -2,9 +2,9 @@ from flask_restful import Resource
 from flask import request
 from functools import wraps
 import jwt
+import os
 
-# TODO: Share secret key between this file and AuthResource.py
-SECRET_KEY = 'thisisthesecretkey'
+SECRET_KEY = os.environ['API_SECRET']
 
 def authenticate(func):
     @wraps(func)
