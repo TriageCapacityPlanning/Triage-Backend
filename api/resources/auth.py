@@ -24,8 +24,8 @@ class Auth(Resource):
     """
 
     DATABASE_DATA = {
-        'user': 'admin',
-        'password': 'docker',
+        'user': 'auth_handler',
+        'password': 'password',
         'database': database_config['database'],
         'host': database_config['host'],
         'port': database_config['port']

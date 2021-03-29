@@ -128,6 +128,17 @@ CREATE USER historic_data_handler WITH
 GRANT INSERT, DELETE ON TriageData.HistoricData TO historic_data_handler;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA TriageData TO historic_data_handler;
 
+DROP USER IF EXISTS auth_handler;
+CREATE USER auth_handler WITH
+    PASSWORD 'password'
+    NOSUPERUSER
+    NOCREATEDB
+    NOCREATEROLE
+    INHERIT
+    NOREPLICATION
+    CONNECTION LIMIT -1;
+GRANT SELECT ON TriageData.Users TO auth_handler;
+
 DROP USER IF EXISTS triage_controller;
 CREATE USER triage_controller WITH
     PASSWORD 'password'
@@ -153,5 +164,5 @@ GRANT SELECT ON TriageData.HistoricData TO clinic_data;
 GRANT SELECT, INSERT, UPDATE ON TriageData.TriageClasses TO clinic_data;
 
 CREATE GROUP api_handlers;
-ALTER GROUP api_handlers ADD USER triage_class_handler, model_handler, predict_handler, historic_data_handler, triage_controller, clinic_data;
+ALTER GROUP api_handlers ADD USER triage_class_handler, model_handler, predict_handler, historic_data_handler, auth_handler, triage_controller, clinic_data;
 GRANT USAGE ON SCHEMA TriageData TO GROUP api_handlers;
