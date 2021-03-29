@@ -11,6 +11,7 @@ import ast
 import json
 import jwt
 import datetime
+import hashlib
 
 # Internal dependencies
 from api.common.database_interaction import DataBase
@@ -69,19 +70,22 @@ class Auth(Resource):
         """
         # Validate input arguments.
         args = parser.parse(self.arg_schema_post, request, location='json')
-        user_clinic = self._validate_user(args['username'], args['password'])
+        user_clinic, admin = self._validate_user(args['username'], args['password'])
         return json.dumps({'token': self._generate_token(args['username'], user_clinic), 'clinic_id': user_clinic, 'admin': admin })
 
     def _validate_user(self, username, password):
         db = DataBase(self.DATABASE_DATA)
-        query = "SELECT clinic_id, admin FROM triagedata.users "
+        query = "SELECT clinic_id, admin, password, salt FROM triagedata.users "
         query += "WHERE username='%s' " % username
-        query += "AND password='%s'" % password
 
         result = db.select(query)
 
         if len(result) > 0:
-            return result[0][0], result[0][1]
+            user_data = [user for user in result if user[2] == hashlib.sha512((password + user[3]).encode()).hexdigest()]
+            if len(user_data) > 0:
+                return result[0][0], result[0][1]
+            else:
+                    raise RuntimeError('Invalid User Credentials')
         else:
             raise RuntimeError('Invalid User Credentials')
 
