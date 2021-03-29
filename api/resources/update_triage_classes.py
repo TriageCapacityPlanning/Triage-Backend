@@ -11,6 +11,7 @@ from webargs import fields
 # Internal dependencies
 from api.common.database_interaction import DataBase
 from api.common.config import database_config
+from api.common.ClinicData import ClinicData
 
 class UpdateTriageClasses(AuthResource):
     """
@@ -40,13 +41,13 @@ class UpdateTriageClasses(AuthResource):
     """
 
     arg_schema_put = {
-        'triage-class': fields.Dict(required=True, keys=fields.Str(), values=fields.Raw())
+        'triage_class': fields.Dict(required=True, keys=fields.Str(), values=fields.Raw())
     }
     """
     The required schema to hangle a patch request
 
     Args:
-        triage-class (int): A dictionary containing a triage classes information including
+        triage_class (int): A dictionary containing a triage classes information including
         ```
         {
             clinic_id (int): The ID of the clinic.
@@ -76,7 +77,8 @@ class UpdateTriageClasses(AuthResource):
         args = parser.parse(self.arg_schema_get, request,
                             location='querystring')
         # Retrieve triage classes from database
-        triage_classes = self.get_triage_classes(args['clinic_id'])
+        clinic_data = ClinicData(args['clinic_id'])
+        triage_classes = clinic_data.get_clinic_settings()
         # API Response
         return {'status': 200, 'classes': triage_classes}
 
@@ -97,61 +99,8 @@ class UpdateTriageClasses(AuthResource):
         args = parser.parse(self.arg_schema_put, request, location='json')
 
         # Update triage class in database
-        self.update_triage_class(args['triage-class'])
+        clinic_data = ClinicData(args['triage_class']['clinic_id'])
+        clinic_data.update_triage_class(args['triage_class'])
 
         # API Response
-        return {'status': 200, 'updated': args['triage-class']}
-
-    def get_triage_classes(self, clinic_id):
-        """
-        Gets the available triage classes for the given clinic.
-
-        Args:
-            clinic_id (int): The id of the clinic being referenced.
-
-        Returns:
-            A list of dictionaries representing the triage classes for the clinic.
-        """
-        # Keys for response
-        keys = ['clinic_id', 'severity', 'name', 'duration', 'proportion']
-
-        # Establish database connection and get the data
-        db = DataBase(self.DATABASE_DATA)
-        rows = db.select(("SELECT clinic_id, severity, name, duration, proportion \
-                        FROM triagedata.triageclasses \
-                        WHERE clinic_id=%(clinic_id)s" % {'clinic_id': clinic_id}))
-
-        if len(rows) == 0:
-            raise RuntimeError('Could not retrieve clinic settings for clinic_id: %s', clinic_id)
-
-        # Return data
-        return [dict(zip(keys, values)) for values in rows]
-
-    def update_triage_class(self, triage_class):
-        """
-        Creates or updates the respective triage class within the clinic.
-
-        Args:
-            triage_class (dict): The desired new or updated triage class.
-        """
-        
-        # Establish database connection
-        db = DataBase(self.DATABASE_DATA)
-        # Insert or update information
-        db.insert("INSERT INTO triagedata.triageclasses (clinic_id, severity, name, duration, proportion) \
-                    VALUES(%(clinic_id)s, \
-                        %(severity)s, \
-                        '%(name)s', \
-                        %(duration)s, \
-                        %(proportion)s) \
-                    ON CONFLICT ON CONSTRAINT pk DO UPDATE \
-                        SET name = '%(name)s', \
-                            duration = %(duration)s, \
-                            proportion = %(proportion)s" %
-                  {
-                      'clinic_id': triage_class['clinic_id'],
-                      'severity': triage_class['severity'],
-                      'name': triage_class['name'],
-                      'duration': triage_class['duration'],
-                      'proportion': triage_class['proportion']
-                  })
+        return {'status': 200, 'updated': args['triage_class']}

@@ -110,3 +110,32 @@ class ClinicData:
 
         # Return data
         return [dict(zip(keys, values)) for values in rows]
+
+    def update_triage_class(self, triage_class):
+        """
+        Creates or updates the respective triage class within the clinic.
+
+        Args:
+            triage_class (dict): The desired new or updated triage class.
+        """
+        
+        # Establish database connection
+        db = DataBase(self.DATABASE_DATA)
+        # Insert or update information
+        db.insert("INSERT INTO triagedata.triageclasses (clinic_id, severity, name, duration, proportion) \
+                    VALUES(%(clinic_id)s, \
+                        %(severity)s, \
+                        '%(name)s', \
+                        %(duration)s, \
+                        %(proportion)s) \
+                    ON CONFLICT ON CONSTRAINT pk DO UPDATE \
+                        SET name = '%(name)s', \
+                            duration = %(duration)s, \
+                            proportion = %(proportion)s" %
+                  {
+                      'clinic_id': triage_class['clinic_id'],
+                      'severity': triage_class['severity'],
+                      'name': triage_class['name'],
+                      'duration': triage_class['duration'],
+                      'proportion': triage_class['proportion']
+                  })
