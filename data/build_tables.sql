@@ -43,7 +43,9 @@ CREATE TABLE TriageData.HistoricData (
     date_seen       DATE,
     CONSTRAINT fk_clinic
         FOREIGN KEY(clinic_id)
-            REFERENCES TriageData.Clinic(id)
+            REFERENCES TriageData.Clinic(id),
+    CONSTRAINT reasonable_date
+        CHECK (date_received <= date_seen)
 );
 CREATE TABLE TriageData.Models (
     id          SERIAL PRIMARY KEY,
