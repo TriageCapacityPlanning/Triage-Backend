@@ -31,8 +31,8 @@ class TriageController:
 
     # Database connection information
     DATABASE_DATA = {
-        'user': 'admin',
-        'password': 'docker',
+        'user': 'triage_controller',
+        'password': 'password',
         'database': database_config['database'],
         'host': database_config['host'],
         'port': database_config['port']

@@ -138,6 +138,7 @@ CREATE USER triage_controller WITH
     NOREPLICATION
     CONNECTION LIMIT -1;
 GRANT SELECT ON TriageData.HistoricData TO triage_controller;
+GRANT SELECT ON TriageData.Models TO triage_controller;
 
 CREATE GROUP api_handlers;
 ALTER GROUP api_handlers ADD USER triage_class_handler, model_handler, predict_handler, historic_data_handler, triage_controller;
