@@ -36,7 +36,7 @@ class PastAppointments(AuthResource):
 
     arg_schema_put = {
         'clinic_id': fields.Int(required=True),
-        'upload_data': fields.Raw(required=True)
+        'upload_data': fields.Field()
     }
     """
     The required schema to handle a put request
@@ -46,12 +46,16 @@ class PastAppointments(AuthResource):
     """
 
     def put(self):
+        parser.parse(self.arg_schema_put, request, location='json_or_form')
+        if not request.files.get('upload_data'):
+            return "Unprocessable entity", 422
         # Figure out how to validate inputs
         mime_type = request.files.get('upload_data').mimetype
         if mime_type == 'text/csv':
-            return self.upload_csv_data(request.files.get('upload_data'))
+            self.upload_csv_data(request.files.get('upload_data'))
         else:
-            raise TypeError('Unsupported file type uploaded')
+            return "Unprocessable entity", 422
+        return {'status': 200}
 
     def upload_csv_data(self, upload_file):
         db = DataBase(self.DATABASE_DATA)
