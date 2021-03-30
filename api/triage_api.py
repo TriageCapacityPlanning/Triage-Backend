@@ -6,7 +6,6 @@ Read the documentation from Flask: https://flask-restful.readthedocs.io/en/lates
 from flask import Flask, jsonify
 from flask_restful import Api
 from flask_cors import CORS
-from api.resources.predict import Predict
 from api.resources.update_triage_classes import UpdateTriageClasses
 from api.resources.models import Models
 import api.resources.upload as Upload
@@ -36,7 +35,12 @@ def create_app():
         response.status_code = error.status_code
         return response
 
-    api.add_resource(Predict, VERSION_PREFIX + '/predict')
+    try:
+        from api.resources.predict import Predict
+        api.add_resource(Predict, VERSION_PREFIX + '/predict')
+    except:
+        print("Could not import predict")
+        
     api.add_resource(Models, *[VERSION_PREFIX + '/models', VERSION_PREFIX + '/models/use'])
     api.add_resource(UpdateTriageClasses, VERSION_PREFIX + '/classes')
     api.add_resource(Upload.PastAppointments, VERSION_PREFIX + '/upload/past-appointments')

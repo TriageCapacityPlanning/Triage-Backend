@@ -40,10 +40,9 @@ class TestUpdateTriageClassesAPI:
         Test Purpose: Tests Requirement INT-6
         """
 
-        input_mock = {'clinic_id': "'1'" }
-        response = self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
-
-        assert response.status_code == 500
+        input_mock = {'clinic_id': True }
+        with pytest.raises(ValueError):
+            response = self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
 
     def test_get_triage_classes_success_singleton(self, mocker):
         """

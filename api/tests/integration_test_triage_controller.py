@@ -1,5 +1,6 @@
 """
 This module handles testing for the TriageController.
+Requires triage-ml package to be installed
 """
 
 import pytest
