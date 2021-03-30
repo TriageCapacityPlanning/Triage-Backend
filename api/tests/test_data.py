@@ -41,8 +41,9 @@ class TestDataAPI:
 
         input_mock = {'interval': "1"}
 
-        result = self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
-        assert result.status_code == 500
+        with pytest.raises(RuntimeError):
+            result = self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
+        
 
     def test_get_success_empty(self, mocker):
         """
