@@ -101,5 +101,4 @@ class TestDataFrame:
         assert len(interval_sample) == dataframe.get_interval_size(0)
 
         for sample in zip(interval_sample, self.predictions_mock):
-            assert sample[0] >= sample[1][0] - sample[1][1]
-            assert sample[0] <= sample[1][0] + sample[1][1]
+            assert sample[0] >= 0
