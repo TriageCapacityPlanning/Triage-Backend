@@ -1,5 +1,5 @@
 """
-The Historic is used to retrieve historic referral data from the database.
+The ClinicData is used to retrieve historic referral data and triage classes from the database.
 """
 
 # External dependencies.
@@ -9,9 +9,9 @@ from api.common.config import database_config
 
 class ClinicData:
     """
-    Historic is a class to retrieve historic referral data from the database module.
+    ClinicData is a class to retrieve historic referral data and triage classes from the database module.
     Usage:
-        To create a new HistoricData object, create it with `HistoricData(clinic_id)` where
+        To create a new ClinicData object, create it with `ClinicData(clinic_id)` where
         those values are:
         ```
         {
@@ -29,7 +29,7 @@ class ClinicData:
         'port': database_config['port']
     }
     """
-    This is the database connection information used by HistoricData to connect to the database.
+    This is the database connection information used by ClinicData to connect to the database.
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     """
 
@@ -41,9 +41,8 @@ class ClinicData:
     def get_referral_data(self, triage_class, interval):
         """Returns historic referral data to use as a start for running ML predictions.
         Parameters:
-            `start_date` (str): The start date for predictions.
-            `historic_data_year` (str): The year of historic data to query data from.
-            `length` (int): The number of days to retrieve historic data for.
+            `triage_class` (int): The triage class severity level.
+            `interval` (tuple): A tuple with a start and end date.
         Returns:
             A list of historic referral datapoints.
         """
@@ -76,13 +75,15 @@ class ClinicData:
         return [(self.clinic_id, triage_class) + row for row in rows]
 
     def get_clinic_settings(self):
+        """Returns clinic settings (triage classes).
+        Returns:
+            A list of dictionaries containing triage class information. (See _get_clinic_settings_from_database)
+        """
         return self.clinic_settings
 
     def _get_clinic_settings_from_database(self):
         """
-        Retrieves clinic triage class settings for a given clinic id.
-        Args:
-            clinic_id (int): The ID of the clinic.
+        Retrieves clinic triage class settings for the given clinic.
         Returns:
             A list of dictionaries for each triage class with
             ```
