@@ -74,13 +74,15 @@ class TriageController:
             }
             ```
         """
-
+        # Setup results dictionary
         results = {}
 
+        # Setup ClinicData object.
         clinic_data = ClinicData(self.clinic_id)
 
+        # Predict for each triage class.
         for triage_class in clinic_data.get_clinic_settings():
-            # Predict and simulate
+            # Load the proper model.
             model = triage_ml.models.radius_variance.RadiusVariance(
                 seq_size=30, radius=15, time_interval=triage_ml.data.dataset.TimeInterval.WEEK)
             model._init_model()
@@ -89,34 +91,39 @@ class TriageController:
             weeks = int(
                 (self.intervals[-1]['end'] - self.intervals[0]['start']).days / 7)
 
+            # Setup model prediction dates.
             for i in range(weeks):
                 dates.append(self.gen_next_date(dates[-1]))
             dates = np.stack(dates)
 
+            # Retrieve model padding data (historic referral data).
             padding_interval = self.__get_padding_interval(
                 self.intervals[0]['start'], self.PADDING_LENGTH)
             padding_data = self.__sort_padding_data(clinic_data.get_referral_data(triage_class['severity'], padding_interval),
                                                     padding_interval[0],
                                                     self.PADDING_LENGTH)
-
-            padding_data = np.array(padding_data)[:, np.newaxis]
-
+            
+            # Predict future referral arrivals.
+            padding_data_ml = np.array(padding_data)[:, np.newaxis]
             predictions = model.predict(
-                [padding_data[np.newaxis, :], dates[0]], dates)
+                [padding_data_ml[np.newaxis, :], dates[0]], dates)
             predictions = [np.array(p)[0] for p in predictions]
-
+            
+            # Setup DataFrame for simulation.
             prediction_dataframe = DataFrame(
                 [[p, 0] for p in padding_data] + predictions, self.intervals, self.PADDING_LENGTH)
+            
+            # Run simulation.
             sim_results = gen_min_interval_slots(queue=deque(),
                                                  data_frame=prediction_dataframe,
                                                  start=1,
                                                  end=len(self.intervals),
                                                  min_ratio=triage_class['proportion'],
                                                  window=triage_class['duration'],
-                                                 final_window=2 *
-                                                 triage_class['duration'],
+                                                 final_window=2 * triage_class['duration'],
                                                  confidence=self.confidence)
 
+            # Format simulation results
             if sim_results:
                 sim_result_formatted = [{'slots': sim_result[0].expected_slots,
                                          'start': sim_result[1]['start'].strftime(DATE_FORMAT),
@@ -128,6 +135,7 @@ class TriageController:
                                          'end': interval['end'].strftime(DATE_FORMAT)
                                          } for interval in self.intervals]
 
+            # Append results for triage class to total results.
             results[triage_class['name']] = sim_result_formatted
         
         return results
