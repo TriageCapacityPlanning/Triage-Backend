@@ -36,4 +36,5 @@ jobs:
         flake8 sim --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest sim --cov=./sim/resources --cov-report term-missing -m "not (stress)"
+        cd ./sim
+        pytest sim --cov=./resources --cov-report term-missing -m "not (stress)"
