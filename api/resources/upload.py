@@ -1,8 +1,6 @@
 """
 This module handles all required interaction with the `/upload` endpoints
 """
-from typing import BinaryIO
-from flask_restful import Resource
 from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
@@ -11,7 +9,7 @@ import uuid
 
 
 # Internal dependencies
-from api.resources.AuthResource import AuthResource, authenticate
+from api.resources.AuthResource import AuthResource
 from api.common.database_interaction import DataBase
 from api.resources.models import Models
 from api.common.config import database_config
