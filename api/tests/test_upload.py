@@ -62,7 +62,53 @@ class TestUploadPastAppointmentsAPI:
 
         response = self.test_client.put(self.endpoint, headers={'token': self.token}, data=input_mock)
 
-        assert response.status_code == 405
+        assert response.status_code == 422
+
+    def test_upload_success(self, mocker):
+        """
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        """
+        mocker.patch('api.resources.upload.PastAppointments.upload_csv_data')
+        upload_file_mock = FileStorage(io.BytesIO(b"file contents"), filename="data.csv", content_type="text/csv")
+        input_mock = {
+            'clinic_id': 1,
+            'upload_data': upload_file_mock
+        }
+
+        response = self.test_client.put(self.endpoint, headers={'token': self.token}, data=input_mock)
+
+        assert response.status_code == 200
+
+    def test_upload_requires_header_with_token(self, mocker):
+        """
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        """
+        mocker.patch('api.resources.upload.PastAppointments.upload_csv_data')
+        upload_file_mock = FileStorage(io.BytesIO(b"file contents"), filename="data.csv", content_type="text/csv")
+        input_mock = {
+            'clinic_id': 1,
+            'upload_data': upload_file_mock
+        }
+        response = self.test_client.put(self.endpoint, data=input_mock)
+        assert response.status_code == 401
+
+    def test_upload_requires_valid_token(self, mocker):
+        """
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        """
+        mocker.patch('api.resources.upload.PastAppointments.upload_csv_data')
+        upload_file_mock = FileStorage(io.BytesIO(b"file contents"), filename="data.csv", content_type="text/csv")
+        input_mock = {
+            'clinic_id': 1,
+            'upload_data': upload_file_mock
+        }
+        response = self.test_client.put(self.endpoint, headers={'token': "not_valid_token"}, data=input_mock)
+        assert response.status_code == 401
+
+
 
     def test_upload_success(self, mocker):
         """
