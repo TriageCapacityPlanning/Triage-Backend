@@ -35,6 +35,12 @@ def create_app():
         response.status_code = error.status_code
         return response
 
+    @app.errorhandler(Upload.FileError)
+    def handle_file_upload_errors(error):
+        response = jsonify(error.to_dict())
+        response.status_code = error.status_code
+        return response
+
     try:
         from api.resources.predict import Predict
         api.add_resource(Predict, VERSION_PREFIX + '/predict')

@@ -111,8 +111,7 @@ class TestUploadPastAppointmentsAPI:
 
 class TestUploadModelAPI:
     """
-    The `TestUploadPastAppointmentsAPI` class contains acceptance tests for /upload/model
-    API functions.
+    The `TestUploadModelAPI` class contains acceptance tests for /upload/model API functions.
     """
 
     def setup_class(self):
@@ -126,85 +125,163 @@ class TestUploadModelAPI:
     def test_put_missing_inputs(self):
         """
         Test Type: Acceptance
-        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        Test Purpose: Tests Requirement
         """
-
         input_mock = {}
-        response = self.test_client.put(self.endpoint, headers={'token': self.token}, data=input_mock)
+        response = self.test_client.post(self.endpoint, headers={'token': self.token}, data=input_mock)
 
         assert response.status_code == 422
 
     def test_put_incorrect_input_type_clinic_id(self):
         """
         Test Type: Acceptance
-        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        Test Purpose: Tests Requirement
         """
-        upload_file_mock = FileStorage(io.BytesIO(b"file contents"), filename="data.txt", content_type="text/csv")
+        upload_file_mock = FileStorage(io.BytesIO(b"weights file contents"), filename="w.h5")
         input_mock = {
             'clinic_id': '"1"',
-            'upload_data': upload_file_mock
+            'model_weights': upload_file_mock,
+            'severity': 1,
+            'accuracy': 0.95,
+            'make_in_use': False,
         }
-        response = self.test_client.put(self.endpoint, headers={'token': self.token}, data=input_mock)
-
+        response = self.test_client.post(self.endpoint, headers={'token': self.token}, data=input_mock)
         assert response.status_code == 422
 
-    def test_put_incorrect_input_type_file(self, mocker):
+    def test_put_incorrect_input_type_file(self):
         """
         Test Type: Acceptance
-        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        Test Purpose: Tests Requirement
         """
-        upload_file_mock = FileStorage(io.BytesIO(b"file contents"), filename="data.txt", content_type="text/text")
         input_mock = {
-            'clinic_id': 1,
-            'upload_data': upload_file_mock
+            'clinic_id': '"1"',
+            'model_weights': "not_a_file",
+            'severity': 1,
+            'accuracy': 0.95,
+            'make_in_use': False,
         }
-
-        response = self.test_client.put(self.endpoint, headers={'token': self.token}, data=input_mock)
-
+        response = self.test_client.post(self.endpoint, headers={'token': self.token}, data=input_mock)
         assert response.status_code == 422
 
-    def test_upload_success(self, mocker):
+    def test_put_incorrect_input_type_severity(self):
         """
         Test Type: Acceptance
-        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        Test Purpose: Tests Requirement
         """
-        mocker.patch('api.resources.upload.PastAppointments.upload_csv_data')
-        upload_file_mock = FileStorage(io.BytesIO(b"file contents"), filename="data.csv", content_type="text/csv")
+        upload_file_mock = FileStorage(io.BytesIO(b"weights file contents"), filename="w.h5")
         input_mock = {
             'clinic_id': 1,
-            'upload_data': upload_file_mock
+            'model_weights': upload_file_mock,
+            'severity': '"1"',
+            'accuracy': 0.95,
+            'make_in_use': False,
+        }
+        response = self.test_client.post(self.endpoint, headers={'token': self.token}, data=input_mock)
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_accuracy(self):
+        """
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        """
+        upload_file_mock = FileStorage(io.BytesIO(b"weights file contents"), filename="w.h5")
+        input_mock = {
+            'clinic_id': 1,
+            'model_weights': upload_file_mock,
+            'severity': 1,
+            'accuracy': '"0.95"',
+            'make_in_use': False,
+        }
+        response = self.test_client.post(self.endpoint, headers={'token': self.token}, data=input_mock)
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_make_in_use(self):
+        """
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        """
+        upload_file_mock = FileStorage(io.BytesIO(b"weights file contents"), filename="w.h5")
+        input_mock = {
+            'clinic_id': 1,
+            'model_weights': upload_file_mock,
+            'severity': 1,
+            'accuracy': 0.95,
+            'make_in_use': '"yes"',
+        }
+        response = self.test_client.post(self.endpoint, headers={'token': self.token}, data=input_mock)
+        assert response.status_code == 422
+
+    def test_upload_success_not_make_active(self, mocker):
+        """
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        """
+        mocker.patch('api.resources.upload.Model.save_weight_file_locally')
+        mocker.patch('api.resources.upload.Model.save_model_file_path_to_db')
+        upload_file_mock = FileStorage(io.BytesIO(b"weights file contents"), filename="w.h5")
+        input_mock = {
+            'clinic_id': 1,
+            'model_weights': upload_file_mock,
+            'severity': 1,
+            'accuracy': 0.95,
+            'make_in_use': False,
         }
 
-        response = self.test_client.put(self.endpoint, headers={'token': self.token}, data=input_mock)
+        response = self.test_client.post(self.endpoint, headers={'token': self.token}, data=input_mock)
+
+        assert response.status_code == 200
+
+    def test_upload_success_make_active(self, mocker):
+        """
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        """
+        mocker.patch('api.resources.upload.Model.save_weight_file_locally')
+        mocker.patch('api.resources.upload.Model.save_model_file_path_to_db')
+        mocker.patch('api.resources.upload.Models.set_active_model')
+        upload_file_mock = FileStorage(io.BytesIO(b"weights file contents"), filename="w.h5")
+        input_mock = {
+            'clinic_id': 1,
+            'model_weights': upload_file_mock,
+            'severity': 1,
+            'accuracy': 0.95,
+            'make_in_use': True,
+        }
+
+        response = self.test_client.post(self.endpoint, headers={'token': self.token}, data=input_mock)
 
         assert response.status_code == 200
 
     def test_upload_requires_header_with_token(self, mocker):
         """
         Test Type: Acceptance
-        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        Test Purpose: Tests Requirement
         """
-        mocker.patch('api.resources.upload.PastAppointments.upload_csv_data')
-        upload_file_mock = FileStorage(io.BytesIO(b"file contents"), filename="data.csv", content_type="text/csv")
+        upload_file_mock = FileStorage(io.BytesIO(b"weights file contents"), filename="w.h5")
         input_mock = {
             'clinic_id': 1,
-            'upload_data': upload_file_mock
+            'model_weights': upload_file_mock,
+            'severity': 1,
+            'accuracy': 0.95,
+            'make_in_use': False,
         }
-        response = self.test_client.put(self.endpoint, data=input_mock)
+        response = self.test_client.post(self.endpoint, data=input_mock)
         assert response.status_code == 401
 
     def test_upload_requires_valid_token(self, mocker):
         """
         Test Type: Acceptance
-        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        Test Purpose: Tests Requirement
         """
-        mocker.patch('api.resources.upload.PastAppointments.upload_csv_data')
-        upload_file_mock = FileStorage(io.BytesIO(b"file contents"), filename="data.csv", content_type="text/csv")
+        upload_file_mock = FileStorage(io.BytesIO(b"weights file contents"), filename="w.h5")
         input_mock = {
             'clinic_id': 1,
-            'upload_data': upload_file_mock
+            'model_weights': upload_file_mock,
+            'severity': 1,
+            'accuracy': 0.95,
+            'make_in_use': False,
         }
-        response = self.test_client.put(self.endpoint, headers={'token': "not_valid_token"}, data=input_mock)
+        response = self.test_client.post(self.endpoint, headers={'token': "not_valid_token"}, data=input_mock)
         assert response.status_code == 401
 
 
