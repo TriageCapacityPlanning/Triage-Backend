@@ -3,7 +3,9 @@ This module handles testing for the Upload class.
 """
 
 import io
-from api.resources.upload import PastAppointments, Model
+
+import pytest
+from api.resources.upload import PastAppointments, Model, FileError
 from api.triage_api import create_app
 from api.common.config import VERSION_PREFIX
 from api.tests.common import generate_token
@@ -295,6 +297,40 @@ class TestPastAppointmentsUnit:
         Test setup that occurs once before all tests are run.
         """
         self.pastappointments = PastAppointments()
+
+    def test_upload_csv_data_database_error(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that an error is thrown if a the database connection fails.
+        """
+        upload_file_mock = FileStorage(io.BytesIO(b"file contents"), filename="data.csv", content_type="text/csv")
+        mocker.patch('api.common.database_interaction.DataBase.insert_data_from_file',
+                     side_effect=RuntimeError('Database error'))
+
+        with pytest.raises(RuntimeError):
+            self.pastappointments.upload_csv_data(upload_file_mock)
+
+    def test_upload_csv_data_file_error(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that an error is thrown if a the file upload fails.
+        """
+        upload_file_mock = FileStorage(io.BytesIO(b"file contents"), filename="data.csv", content_type="text/csv")
+        mocker.patch('api.common.database_interaction.DataBase.insert_data_from_file',
+                     side_effect=RuntimeError('File error'))
+
+        with pytest.raises(RuntimeError):
+            self.pastappointments.upload_csv_data(upload_file_mock)
+
+    def test_upload_csv_data_successful(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that a successful file upload.
+        """
+        upload_file_mock = FileStorage(io.BytesIO(b"file contents"), filename="data.csv", content_type="text/csv")
+        mocker.patch('api.common.database_interaction.DataBase.insert_data_from_file')
+
+        assert self.pastappointments.upload_csv_data(upload_file_mock) is None
 
 
 class TestModelUnit:
