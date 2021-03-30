@@ -3,9 +3,10 @@ This module handles testing for the Upload class.
 """
 
 import io
+import os
 
 import pytest
-from api.resources.upload import PastAppointments, Model, FileError
+from api.resources.upload import PastAppointments, Model
 from api.triage_api import create_app
 from api.common.config import VERSION_PREFIX
 from api.tests.common import generate_token
@@ -343,3 +344,63 @@ class TestModelUnit:
         Test setup that occurs once before all tests are run.
         """
         self.model = Model()
+
+    @staticmethod
+    def _write_file_at_path_with_contents(file_path, contents):
+        with open(file_path, 'w') as f:
+            f.write(contents)
+
+    def test_create_directory_if_not_exists(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that a directory is made if it doesn't already exist.
+        """
+        test_dir = './testing-dir'
+        self.model.create_directory_if_not_exists(test_dir)
+        assert os.path.exists('./testing-dir')
+        # Test clean up
+        os.rmdir(test_dir)
+
+    def test_create_directory_if_exists(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that a directory is made if it doesn't already exist.
+        """
+        test_dir = './testing-dir'
+        os.makedirs(test_dir, exist_ok=False)
+        self.model.create_directory_if_not_exists(test_dir)
+        assert os.path.exists('./testing-dir')
+        # Test clean up
+        os.rmdir(test_dir)
+
+    def test_create_directory_if_exists_with_contents(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that a directory is made if it already exists with contents.
+        """
+        test_dir = './testing-dir'
+        os.makedirs(test_dir, exist_ok=False)
+        self.model.create_directory_if_not_exists(test_dir)
+        assert os.path.exists('./testing-dir')
+        # Test clean up
+        os.rmdir(test_dir)
+
+    def test_create_directory_if_exists_without_modifying_existing_contents(self):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that a directory is made if it already exists with contents and
+                      those contents are unchanged.
+        """
+        test_dir = './testing-dir'
+        test_file = './testing-dir/test-file'
+        sample_contents = 'sample contents'
+        os.makedirs(test_dir, exist_ok=False)
+        self._write_file_at_path_with_contents(test_file, sample_contents)
+        self.model.create_directory_if_not_exists(test_dir)
+        assert os.path.exists('./testing-dir')
+        assert os.path.exists(test_file)
+        with open(test_file, 'r') as f:
+            assert f.readline() == sample_contents
+        # Test clean up
+        os.remove(test_file)
+        os.rmdir(test_dir)
