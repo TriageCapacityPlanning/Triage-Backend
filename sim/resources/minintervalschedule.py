@@ -6,23 +6,21 @@ from typing import List, Tuple, Union
 import math
 from .success_ratio import success_ratio, success_ratio_already_overdue
 
-# allow users to also pass their own datatype or use the local mock if the api module is not available
-try:
-    from api.common.controller.DataFrame import DataFrame
-except:
-    # temp mock up datatype
-    class DataFrame:
-        def __init__(self, data: List[int], intervals: List[Tuple[int, int]]):
-            self.data = data
-            self.intervals = intervals
+# Dataframe Interface with mock returns
+# when invoking, pass your own dataframe and how you want to generate samples
+class DataFrame:
+    def __init__(self, data: List[int], intervals: List[Tuple[int, int]]):
+        self.data = data
+        self.intervals = intervals
 
-        def get_interval_sample(self, i: int):
-            start, end = self.intervals[i]
-            return self.data[start: end]
+    def get_interval_sample(self, i: int):
+        start, end = self.intervals[i]
+        return self.data[start: end]
 
-        def get_interval_size(self, i: int):
-            start, end = self.intervals[i]
-            return end - start
+    def get_interval_size(self, i: int):
+        start, end = self.intervals[i]
+        return end - start
+    
 
 
 class SimulationResults:
