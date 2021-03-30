@@ -3,6 +3,8 @@ version: "3.4"  # optional since v1.27.0
 services:
   api:
     container_name: api
+    environment:
+      - API_SECRET=testing_secret_key
     build: .
     ports:
       - "5000:5000"

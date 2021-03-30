@@ -17,6 +17,22 @@ from api.common.config import database_config
 FILE_STORAGE_PATH = 'uploads/'
 
 
+class FileError(Exception):
+    status_code = 422
+
+    def __init__(self, message, status_code=None, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        return rv
+
+
 class PastAppointments(AuthResource):
     """
     The `PastAppointments` class handles all of the requests relative to historic
@@ -48,13 +64,13 @@ class PastAppointments(AuthResource):
     def put(self):
         parser.parse(self.arg_schema_put, request, location='json_or_form')
         if not request.files.get('upload_data'):
-            return "Unprocessable entity", 422
+            raise FileError("Missing upload file.")
         # Figure out how to validate inputs
         mime_type = request.files.get('upload_data').mimetype
         if mime_type == 'text/csv':
             self.upload_csv_data(request.files.get('upload_data'))
         else:
-            return "Unprocessable entity", 422
+            raise FileError("Bad upload file type received.")
         return {'status': 200}
 
     def upload_csv_data(self, upload_file):
@@ -103,8 +119,9 @@ class Model(AuthResource):
     def post(self):
         args = parser.parse(self.arg_schema_post, request, location='json_or_form')
         data_file = request.files['model_weights']
+        print(data_file)
         if not data_file:
-            return 'Unprocessable Entity', 422
+            raise FileError("Missing upload file.")
         file_path = self.save_weight_file_locally(data_file, args['clinic_id'], args['severity'])
         model_id = self.save_model_file_path_to_db(file_path, args['clinic_id'], args['severity'], args['accuracy'], False)
         if 'make_in_use' in args and args['make_in_use']:
