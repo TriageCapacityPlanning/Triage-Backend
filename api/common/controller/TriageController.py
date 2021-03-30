@@ -5,8 +5,9 @@ The TriageController is used to initiate prediction and simulation upon API requ
 # External dependencies.
 from datetime import datetime, timedelta
 from collections import Counter, deque
-import tensorflow as tf
 import numpy as np
+import triage_ml
+import json
 
 # Internal dependencies
 from api.common.database_interaction import DataBase
@@ -14,6 +15,9 @@ from api.common.ClinicData import ClinicData
 from api.common.controller.DataFrame import DataFrame
 from sim.resources.minintervalschedule import gen_min_interval_slots, SimulationResults
 from api.common.config import database_config
+
+DATE_FORMAT = '%Y-%m-%d'
+
 
 class TriageController:
     """
@@ -42,8 +46,7 @@ class TriageController:
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     """
 
-    ML_PADDING_LENGTH = 30
-    SIM_PADDING_LENGTH = 7
+    PADDING_LENGTH = 30
     """
     Minimum padding length required by ML module.
     """
@@ -51,7 +54,9 @@ class TriageController:
     # Constructor
     def __init__(self, clinic_id, intervals, confidence, num_sim_runs):
         self.clinic_id = clinic_id
-        self.intervals = intervals
+        self.intervals = [{'start': datetime.strptime(interval['start'], DATE_FORMAT),
+                           'end': datetime.strptime(interval['end'], DATE_FORMAT)}
+                          for interval in intervals]
         self.confidence = confidence
         self.num_sim_runs = num_sim_runs
 
@@ -66,60 +71,91 @@ class TriageController:
             }
             ```
         """
-        prediction_start_date = datetime.strptime(self.intervals[0]['start'], '%Y-%m-%d')
-        prediction_end_date = datetime.strptime(self.intervals[-1]['end'], '%Y-%m-%d')
-        prediction_interval_length = (prediction_end_date - prediction_start_date).days + 1
 
-        # Find the year of the most recent historic data.
-        historic_data_interval_length = max(self.ML_PADDING_LENGTH, self.SIM_PADDING_LENGTH)
-        desired_historic_data_year = self.get_historic_data_year(self.intervals[0]['start'])
-        historic_data_end_date = datetime.strptime(self.intervals[0]['start'], '%Y-%m-%d').replace(year=desired_historic_data_year)
-        historic_data_interval = (historic_data_end_date - timedelta(days=historic_data_interval_length), 
-                                  historic_data_end_date)
+        results = {}
 
-        # Retrieve historic referral data
         clinic_data = ClinicData(self.clinic_id)
-        
-        response = {}
-        for triage_class in clinic_data.clinic_settings:
-            historic_data = clinic_data.get_referral_data(triage_class['severity'], historic_data_interval)
-            sorted_referral_data = self.sort_referral_data(historic_data, 
-                                                           historic_data_interval[0],
-                                                           historic_data_interval_length)
-            
 
-            model = self.get_model(self.clinic_id, triage_class)
-            predictions = self.get_predictions(model,
-                                               sorted_referral_data[-self.ML_PADDING_LENGTH:],
-                                               prediction_start_date,
-                                               prediction_interval_length
-                          )
-            # Create DataFrame
-            padding = [[arrivals, 0] for arrivals in sorted_referral_data[-self.SIM_PADDING_LENGTH:]]
-            data_frame_data = padding + predictions + [[0, 0]]
-            data_frame = DataFrame(self.intervals, data_frame_data, (self.SIM_PADDING_LENGTH, 0))
+        for triage_class in clinic_data.get_clinic_settings():
+            # Predict and simulate
+            model = triage_ml.models.radius_variance.RadiusVariance(
+                seq_size=30, radius=15, time_interval=triage_ml.data.dataset.TimeInterval.WEEK)
+            model._init_model()
+            model.model.load_weights(self.get_model(triage_class['severity']))
+            dates = list([self.encode_date(self.intervals[0]['start'])])
+            weeks = int(
+                (self.intervals[-1]['end'] - self.intervals[0]['start']).days / 7)
 
-            # Run Simulation
-            sim_results = gen_min_interval_slots(data_frame=data_frame, 
-                                                 window=triage_class['duration'] * 7, 
+            for i in range(weeks):
+                dates.append(self.gen_next_date(dates[-1]))
+            dates = np.stack(dates)
+
+            padding_interval = self.__get_padding_interval(
+                self.intervals[0]['start'], self.PADDING_LENGTH)
+            padding_data = self.__sort_padding_data(clinic_data.get_referral_data(triage_class['severity'], padding_interval),
+                                                    padding_interval[0],
+                                                    self.PADDING_LENGTH)
+
+            padding_data = np.array(padding_data)[:, np.newaxis]
+
+            predictions = model.predict(
+                [padding_data[np.newaxis, :], dates[0]], dates)
+            predictions = [np.array(p)[0] for p in predictions]
+
+            prediction_dataframe = DataFrame(
+                [[p, 0] for p in padding_data] + predictions, self.intervals, self.PADDING_LENGTH)
+            sim_results = gen_min_interval_slots(queue=deque(),
+                                                 data_frame=prediction_dataframe,
+                                                 start=1,
+                                                 end=len(self.intervals),
                                                  min_ratio=triage_class['proportion'],
-                                                 final_window=triage_class['duration'] * 14,
-                                                 confidence=self.confidence,
-                                                 start=0,
-                                                 end=len(self.intervals)-1,
-                                                 num_sim_runs=self.num_sim_runs,
-                                                 queue=deque()
-                                                 )
-            sim_result_formatted = [{'slots': sim_result[0].expected_slots,
-                                  'start': sim_result[1]['start'],
-                                  'end': sim_result[1]['end']
-                                  } for sim_result in zip(sim_results, self.intervals)]
-            
-            response[triage_class['name']] = sim_result_formatted
-            print(response)
-        return response
+                                                 window=triage_class['duration'],
+                                                 final_window=2 *
+                                                 triage_class['duration'],
+                                                 confidence=self.confidence)
 
-    def get_historic_data_year(self, start_date):
+            if sim_results:
+                sim_result_formatted = [{'slots': sim_result[0].expected_slots,
+                                         'start': sim_result[1]['start'].strftime(DATE_FORMAT),
+                                         'end': sim_result[1]['end'].strftime(DATE_FORMAT)
+                                         } for sim_result in zip(sim_results, self.intervals)]
+            else:
+                sim_result_formatted = [{'slots': 0,
+                                         'start': interval['start'].strftime(DATE_FORMAT),
+                                         'end': interval['end'].strftime(DATE_FORMAT)
+                                         } for interval in self.intervals]
+
+            results[triage_class['name']] = sim_result_formatted
+        
+        print(results)
+        return results
+
+    def encode_date(self, date):
+        one_hot_date = np.zeros(12 + 31)
+        one_hot_date[date.date().month] = 1
+        one_hot_date[11 + date.date().day] = 1
+
+        return one_hot_date
+
+    def gen_next_date(self, date_encoding, days=7):
+        month = np.argmax(date_encoding[:12]) + 1
+        day = np.argmax(date_encoding[12:]) + 1
+        date = datetime.strptime(
+            f'2000/{0 if month < 10 else ""}{month}/{0 if day < 10 else ""}{day}', '%Y/%m/%d')
+        date = date + timedelta(days=days)
+
+        return self.encode_date(date)
+
+    def __get_padding_interval(self, start_date, weeks):
+        start = start_date - timedelta(weeks=30)
+        newest_data_year = self.__get_historic_data_year(start)
+
+        start = start.replace(year=newest_data_year)
+        end = start + timedelta(weeks=30)
+
+        return [start, end]
+
+    def __get_historic_data_year(self, start_date):
         db = DataBase(self.DATABASE_DATA)
 
         year = db.select("SELECT EXTRACT(YEAR FROM historicdata.date_received) \
@@ -129,29 +165,38 @@ class TriageController:
                          ORDER BY historicdata.date_received DESC \
                          FETCH FIRST 1 ROWS ONLY" %
                          {
-                             'month': datetime.strptime(start_date, '%Y-%m-%d').month,
-                             'day': datetime.strptime(start_date, '%Y-%m-%d').day
+                             'month': start_date.month,
+                             'day': start_date.day
                          })
 
         if len(year) != 1:
-            raise RuntimeError('Could not find historic data year for start date: %s', start_date)
+            raise RuntimeError(
+                'Could not find historic data year for start date: %s', start_date)
 
         return int(year[0][0])
 
-    def sort_referral_data(self, referral_data, start_date, interval_length):
+    def __sort_padding_data(self, referral_data, start_date, weeks):
         """Sorts historic referral data by triage class.
         Parameters:
             `referral_data` (list(str)): List of historic referral dates.
         Returns:
             Returns a dictionary with a count of patient arrivals per day for each triage class.
         """
-        date_list = [(start_date + timedelta(days=offset)).strftime('%Y-%m-%d')
-                      for offset in range(interval_length)]
-        counted_data = Counter(referral[2] for referral in referral_data)
-        
-        return [counted_data[date] if date in counted_data else 0 for date in date_list]
+        result = []
+        end_date = start_date + timedelta(weeks=1)
 
-    def get_model(self, clinic_id, triage_class):
+        partitioned_data = {}
+        for referral in referral_data:
+            week = int(
+                (datetime.strptime(referral[2], DATE_FORMAT) - start_date).days / 7)
+            if week in partitioned_data:
+                partitioned_data[week] += 1
+            else:
+                partitioned_data[week] = 0
+
+        return [partitioned_data[week] if week in partitioned_data else 0 for week in range(weeks)]
+
+    def get_model(self, triage_class_severity):
         # Establish database connection
         db = DataBase(self.DATABASE_DATA)
 
@@ -161,16 +206,17 @@ class TriageController:
                            WHERE clinic_id = %(clinic_id)s \
                            AND severity = %(severity)s \
                            AND in_use = %(in_use)s" %
-                           {
-                                'clinic_id': clinic_id,
-                                'severity': triage_class['severity'],
-                                'in_use': True
-                        })
+                         {
+                             'clinic_id': self.clinic_id,
+                             'severity': triage_class_severity,
+                             'in_use': True
+                         })
 
         if len(rows) == 0:
-            raise RuntimeError('Could not find model for clinic %s, triage class %s', clinic_id, triage_class)
-        
-        return tf.keras.models.load_model(rows[0][0], custom_objects=None, compile=True, options=None)
+            raise RuntimeError(
+                'Could not find model for clinic %s, triage class %s', self.clinic_id, triage_class_severity)
+
+        return rows[0][0]
 
     def get_predictions(self, model, data, start_date, prediction_length):
         """Runs ML model predictions and returns results.
@@ -181,8 +227,9 @@ class TriageController:
             one_hot_date = np.zeros(12 + 31)
             one_hot_date[date.month] = 1
             one_hot_date[11 + date.day] = 1
-            
-            prediction = model.predict([np.array(data)[np.newaxis, :], one_hot_date[np.newaxis, :]])
+
+            prediction = model.predict(
+                [np.array(data)[np.newaxis, :], one_hot_date[np.newaxis, :]])
             predictions.append(prediction[0])
 
             data = data[1:] + [int(prediction[0][0])]

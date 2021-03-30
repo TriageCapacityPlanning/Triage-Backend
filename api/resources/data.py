@@ -9,7 +9,7 @@ from webargs import fields
 import ast
 
 # Internal dependencies
-from api.resources.AuthResource import AuthResource
+from api.resources.AuthResource import AuthResource, authenticate
 from api.common.ClinicData import ClinicData
 
 
@@ -66,6 +66,9 @@ class Data(AuthResource):
         url_args = parser.parse(self.url_arg_schema_get, request,
                                 location='querystring')
         url_args['interval'] = ast.literal_eval(url_args['interval'])
+
+        if type(url_args['interval']) != list or len(url_args['interval']) != 2:
+            raise RuntimeError('Invalid Interval Input')
 
         clinic_data = ClinicData(path_args['clinic_id'])
 
