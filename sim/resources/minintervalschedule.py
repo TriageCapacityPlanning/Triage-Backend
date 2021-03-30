@@ -5,22 +5,24 @@ import numpy as np
 from typing import List, Tuple, Union
 import math
 from .success_ratio import success_ratio, success_ratio_already_overdue
-from api.common.controller.DataFrame import DataFrame
 
+# allow users to also pass their own datatype or use the local mock if the api module is not available
+try:
+    from api.common.controller.DataFrame import DataFrame
+except:
+    # temp mock up datatype
+    class DataFrame:
+        def __init__(self, data: List[int], intervals: List[Tuple[int, int]]):
+            self.data = data
+            self.intervals = intervals
 
-# temp mock up datatype
-'''class DataFrame:
-    def __init__(self, data: List[int], intervals: List[Tuple[int, int]]):
-        self.data = data
-        self.intervals = intervals
+        def get_interval_sample(self, i: int):
+            start, end = self.intervals[i]
+            return self.data[start: end]
 
-    def get_interval_sample(self, i: int):
-        start, end = self.intervals[i]
-        return self.data[start: end]
-
-    def get_interval_size(self, i: int):
-        start, end = self.intervals[i]
-        return end - start'''
+        def get_interval_size(self, i: int):
+            start, end = self.intervals[i]
+            return end - start
 
 
 class SimulationResults:
@@ -60,14 +62,24 @@ def gen_min_interval_slots(data_frame: DataFrame, window: float, min_ratio: floa
     :return: the results of the simulation, or None if schedule is infeasible
     """
 
+    # parameter checking
     if num_sim_runs <= 0:
         raise ValueError('Invalid simulation run value specified')
-
-    if final_window < window or min_ratio == 1.:
+    elif final_window < window or min_ratio == 1.:
         raise ValueError('Invalid final window and window value supplied')
+    elif min_ratio > 1:
+        raise ValueError('min_ratio should be a float between 0 and 1 inclusive')
+    elif confidence >= 100:
+        raise ValueError('confidence must be a number beween 0 inclusive and 100 exclusive')
+    elif start < 0:
+        raise ValueError('invalid value for the starting index of the first interval. Must be an integer >= 0')
 
-    expected_slots: List[SimulationResults] = []
+    # setup default values
+    if queue == None:
+        queue = deque()
+
     # simulate each interval
+    expected_slots: List[SimulationResults] = []
     for interval in range(len(data_frame.intervals)):
         interval_schedule = _opt_interval_schedule(queue=queue, data_frame=data_frame, interval=interval,
                                                    min_ratio=min_ratio, window=window, final_window=final_window,
@@ -115,13 +127,23 @@ def _opt_interval_schedule(queue: deque, data_frame: DataFrame, interval: int, m
         allocations.append(allocation)
     # calculate the resulting queue for N*
     opt = math.ceil(np.percentile(allocations, confidence))
-    sample_arrival = data_frame.get_interval_sample(interval)
-    schedule_with_padding = _gen_uniform_suggested_schedule(arrivals=sample_arrival, allocation_amount=opt, window=window)
 
-    interval_size_schedule = schedule_with_padding[:data_frame.get_interval_size(interval)]
-    schedule_sim_result = simulate_allocations(arrivals=sample_arrival, slot_schedule=interval_size_schedule,
-                                               current_queue=queue, offset=offset)
-    opt_allocation = AllocationResult(opt, schedule_sim_result.remainder_queue)
+    # get the remainder queue for the next interval by getting the confidence percentile of remainder queues
+    remainder_queues: deque = []
+    for _ in range(num_sim_runs):
+        stochastic_arrivals = data_frame.get_interval_sample(interval)
+        schedule_with_padding = _gen_uniform_suggested_schedule(arrivals=stochastic_arrivals, allocation_amount=opt, window=window)
+        interval_size_schedule = schedule_with_padding[:data_frame.get_interval_size(interval)]
+        schedule_sim_result = simulate_allocations(arrivals=stochastic_arrivals, slot_schedule=interval_size_schedule,
+                                                   current_queue=queue, offset=offset)
+        remainder_queues.append(schedule_sim_result.remainder_queue)
+    # remainder queue index corresponding to N* is the confidence-level percentile index
+    opt_remainder_queue_index = math.ceil(confidence / 100 * len(remainder_queues)) - 1
+    # sort by largest carryover size
+    # TODO: investigate whether sorting by size is best, and if the sequence of values in a queue has an effect
+    sorted(remainder_queues, key = lambda e : sum([remainder for time, remainder in e]))
+    opt_remainder_queue = remainder_queues[opt_remainder_queue_index]
+    opt_allocation = AllocationResult(opt, opt_remainder_queue)
     return opt_allocation
 
 
