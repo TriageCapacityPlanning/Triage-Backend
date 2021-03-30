@@ -65,10 +65,16 @@ class Predict(AuthResource):
             ```
             {
                 url (str) The request url.
-                intervaled_slot_predictions (list) Predictions grouped by interval.
-                number_intervals (int) Number of intervals.
-                slot_predictions (list) Total predictions.
-                models (list): A list of dictionaries representing each model
+                predictions (dict) Dictionary containing the interval predictions for each class.
+            }
+            ```
+
+            The keys of the predictions dict are the triage class names and the values are lists of dicts of the following format:
+            ```
+            {
+                'start' (str) Start date of the interval
+                'end' (str) End date of the interval
+                'slots' (int) Predicted slots.
             }
             ```
 
@@ -89,37 +95,3 @@ class Predict(AuthResource):
             'url': request.url,
             'predictions': predictions
         }
-
-    def get_clinic_settings(self):
-        """
-        Retrieves clinic triage class settings for a given clinic id.
-
-        Args:
-            clinic_id (int): The ID of the clinic.
-
-        Returns:
-            A list of dictionaries for each triage class with
-            ```
-            {
-                clinic_id (int) ID of the clinic.
-                severity (int) Severity of the triage class
-                name (str) Name of the triage class.
-                duration (int) Time in weeks within which a patient should be seen.
-                proportion (float) % of patients within the triage class that should be seen within the duration.
-            }
-            ```
-        """
-        # Keys for response
-        keys = ['clinic_id', 'severity', 'name', 'duration', 'proportion']
-        # Establish database connection
-        db = DataBase(self.DATABASE_DATA)
-        # Query for data
-        rows = db.select("SELECT clinic_id, severity, name, duration, proportion \
-                          FROM triagedata.triageclasses \
-                          WHERE clinic_id=%(clinic_id)s" % {'clinic_id': clinic_id})
-
-        if len(rows) == 0:
-            raise RuntimeError('Could not retrieve clinic settings for clinic-id: %s', clinic_id)
-
-        # Return data
-        return [dict(zip(keys, values)) for values in rows]

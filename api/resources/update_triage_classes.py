@@ -47,7 +47,7 @@ class UpdateTriageClasses(AuthResource):
     The required schema to hangle a patch request
 
     Args:
-        triage_class (int): A dictionary containing a triage classes information including
+        triage_class (dict): A dictionary containing a triage classes information including
         ```
         {
             clinic_id (int): The ID of the clinic.
