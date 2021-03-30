@@ -7,11 +7,11 @@ from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
 import ast
-import json
 
 # Internal dependencies
 from api.resources.AuthResource import AuthResource
 from api.common.ClinicData import ClinicData
+
 
 class Data(AuthResource):
     """
@@ -64,7 +64,7 @@ class Data(AuthResource):
         # Validate input arguments.
         path_args = parser.parse(self.path_arg_schema_get, request, location="path")
         url_args = parser.parse(self.url_arg_schema_get, request,
-                            location='querystring')
+                                location='querystring')
         url_args['interval'] = ast.literal_eval(url_args['interval'])
 
         clinic_data = ClinicData(path_args['clinic_id'])

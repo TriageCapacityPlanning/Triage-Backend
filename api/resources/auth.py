@@ -7,7 +7,6 @@ from flask_restful import Resource
 from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
-import ast
 import json
 import jwt
 import datetime
@@ -18,7 +17,9 @@ import os
 from api.common.database_interaction import DataBase
 from api.common.config import database_config
 
+
 SECRET_KEY = os.environ['API_SECRET']
+
 
 class Auth(Resource):
     """
@@ -72,7 +73,8 @@ class Auth(Resource):
         # Validate input arguments.
         args = parser.parse(self.arg_schema_post, request, location='json')
         user_clinic, admin = self._validate_user(args['username'], args['password'])
-        return json.dumps({'token': self._generate_token(args['username'], user_clinic), 'clinic_id': user_clinic, 'admin': admin })
+        auth_data = {'token': self._generate_token(args['username'], user_clinic), 'clinic_id': user_clinic, 'admin': admin}
+        return json.dumps(auth_data)
 
     def _validate_user(self, username, password):
         db = DataBase(self.DATABASE_DATA)
@@ -86,7 +88,7 @@ class Auth(Resource):
             if len(user_data) > 0:
                 return result[0][0], result[0][1]
             else:
-                    raise RuntimeError('Invalid User Credentials')
+                raise RuntimeError('Invalid User Credentials')
         else:
             raise RuntimeError('Invalid User Credentials')
 
