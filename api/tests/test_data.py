@@ -1,5 +1,5 @@
 """
-This module handles testing for the UpdateTriageClasses class.
+This module handles testing for the Data class.
 """
 
 from api.triage_api import create_app
@@ -11,7 +11,7 @@ from api.tests.common import generate_token
 
 class TestDataAPI:
     """
-    The `TestAuth` class contains acceptance tests the UpdateTriageClasses class.
+    The `TestDataAPI` class contains acceptance tests the Data class.
     """
 
     def setup_class(self):
@@ -25,7 +25,7 @@ class TestDataAPI:
     def test_get_missing_inputs(self):
         """
         Test Type: Acceptance
-        Test Purpose: Tests Requirement INT-6
+        Test Purpose: Tests Requirement DAT-2
         """
 
         input_mock = {}
@@ -36,7 +36,7 @@ class TestDataAPI:
     def test_get_incorrect_input_type(self):
         """
         Test Type: Acceptance
-        Test Purpose: Tests Requirement INT-6
+        Test Purpose: Tests Requirement DAT-2
         """
 
         input_mock = {'interval': "1"}
@@ -48,7 +48,7 @@ class TestDataAPI:
     def test_get_success_empty(self, mocker):
         """
         Test Type: Acceptance
-        Test Purpose: Tests Requirement INT-6
+        Test Purpose: Tests Requirement DAT-2
         """
         mocker.patch('api.common.ClinicData.ClinicData.__init__', return_value=None)
         
@@ -64,7 +64,7 @@ class TestDataAPI:
     def test_get_success_singleton(self, mocker):
         """
         Test Type: Acceptance
-        Test Purpose: Tests Requirement INT-6
+        Test Purpose: Tests Requirement DAT-2
         """
         mocker.patch('api.common.ClinicData.ClinicData.__init__', return_value=None)
         
@@ -80,7 +80,7 @@ class TestDataAPI:
     def test_get_success_singleton(self, mocker):
         """
         Test Type: Acceptance
-        Test Purpose: Tests Requirement INT-6
+        Test Purpose: Tests Requirement DAT-2
         """
         mocker.patch('api.common.ClinicData.ClinicData.__init__', return_value=None)
         

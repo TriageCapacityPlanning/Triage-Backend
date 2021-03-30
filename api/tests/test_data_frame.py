@@ -8,7 +8,7 @@ from api.common.controller.DataFrame import DataFrame
 
 class TestDataFrame:
     """
-    The `TestDataFRame` class contains acceptance and unit tests for the DataFrame.
+    The `TestDataFrame` class contains acceptance and unit tests for the DataFrame.
     """
 
     def setup_class(self):
@@ -29,6 +29,11 @@ class TestDataFrame:
         self.padding_length_singleton_mock = 1
 
     def test_get_interval_size_invalid_interval_error(self):
+        """
+        Test Type: Unit
+        Test Purpose: Test that invalid interval inputs are caught.
+        """
+
         data_frame_empty_intervals = DataFrame(self.predictions_empty_mock, 
                                                self.intervals_empty_mock, 
                                                self.padding_length_empty_mock)
@@ -53,6 +58,11 @@ class TestDataFrame:
             dataframe_multiple_intervals.get_interval_size(-1)
 
     def test_get_interval_size_success_one_week_interval(self):
+        """
+        Test Type: Unit
+        Test Purpose: Test that size is calculated properly for intervals of 1 week (minimum).
+        """
+
         interval_zero_mock = [{ 'start': datetime.strptime('2020-01-01','%Y-%m-%d'), 'end': datetime.strptime('2020-01-01','%Y-%m-%d')}]
         data_frame_zero_interval = DataFrame(self.predictions_empty_mock, 
                                                interval_zero_mock, 
@@ -61,6 +71,11 @@ class TestDataFrame:
         assert data_frame_zero_interval.get_interval_size(0) == 1
     
     def test_get_interval_size_success_multiple_weeks_interval(self):
+        """
+        Test Type: Unit
+        Test Purpose: Test that size is calculated properly for intervals of >1 week.
+        """
+
         data_frame_multiple_interval = DataFrame(self.predictions_empty_mock, 
                                              self.intervals_singleton_mock, 
                                              self.padding_length_empty_mock)
@@ -68,6 +83,11 @@ class TestDataFrame:
         assert data_frame_multiple_interval.get_interval_size(0) == 5
 
     def test_get_interval_sample_invalid_interval_error(self):
+        """
+        Test Type: Unit
+        Test Purpose: Test that invalid interval inputs are caught.
+        """
+
         data_frame_empty_intervals = DataFrame(self.predictions_empty_mock, 
                                                self.intervals_empty_mock, 
                                                self.padding_length_empty_mock)
@@ -92,6 +112,12 @@ class TestDataFrame:
             dataframe_multiple_intervals.get_interval_sample(-1)
 
     def test_get_interval_sample_success(self):
+        """
+        Test Type: Unit
+        Test Purpose: Test that interval sample successfully generate the proper 
+                      quantity and value of sample referral arrivals.
+        """
+
         dataframe = DataFrame(self.predictions_mock, 
                                                  self.intervals_singleton_mock,
                                                  self.padding_length_empty_mock)
