@@ -27,8 +27,10 @@ class TriageController:
         those values are:
         ```
         {
+            'clinic_id' (int) The id of the clinic.
             'intervals' (list(tuples(str))) List of start and end date strings for each interval.
-            'clinic_settings' (dict) List of triage classes for the clinic.
+            'confidence' (int) The desired confidence level of predictions.
+            'num_sim_runs' (int) The number of desired simulation runs.
         }
         ```
     """
@@ -63,11 +65,12 @@ class TriageController:
     def predict(self):
         """Returns the prediction / simulation results.
         Returns:
-            Simulation results as a dictionary with the following key-value pairs:
+            Simulation results as a dictionary with triage class as the key, and a list of dictionaries of the following form as the value:
             ```
             {
-                interval (list(dict(str, int))): The referral count predictions for each interval per triage class.
-                total (int): The referral count predictions in total per triage class.
+                'start' (str) Start date of the interval
+                'end' (str) End date of the interval
+                'slots' (int) Predicted slots.
             }
             ```
         """
@@ -127,10 +130,16 @@ class TriageController:
 
             results[triage_class['name']] = sim_result_formatted
         
-        print(results)
         return results
 
     def encode_date(self, date):
+        """Returns a one hot encoded date based on the inputted date.
+        This is used by the ML module to make predictions.
+        Parameters:
+            `date` (datetime): The date to be encoded.
+        Returns:
+            A one hot encoded date.
+        """
         one_hot_date = np.zeros(12 + 31)
         one_hot_date[date.date().month] = 1
         one_hot_date[11 + date.date().day] = 1
@@ -138,6 +147,13 @@ class TriageController:
         return one_hot_date
 
     def gen_next_date(self, date_encoding, days=7):
+        """Generates the next date for the ML prediction module to predict for.
+        Parameters:
+            `date_encoding` (datetime): The date previous date.
+            `days` (int): The number of days between prediction dates (default = 7).
+        Returns:
+            The next prediction date in one hot encoding format.
+        """
         month = np.argmax(date_encoding[:12]) + 1
         day = np.argmax(date_encoding[12:]) + 1
         date = datetime.strptime(
@@ -147,15 +163,28 @@ class TriageController:
         return self.encode_date(date)
 
     def __get_padding_interval(self, start_date, weeks):
-        start = start_date - timedelta(weeks=30)
+        """Returns the date interval for the padding data.
+        Parameters:
+            `start_date` (datetime): The start date for predictions.
+            `weeks` (int): The number of weeks predictions are for.
+        Returns:
+            A tuple with start and end date for the padding data.
+        """
+        start = start_date - timedelta(weeks=weeks)
         newest_data_year = self.__get_historic_data_year(start)
 
         start = start.replace(year=newest_data_year)
-        end = start + timedelta(weeks=30)
+        end = start + timedelta(weeks=weeks)
 
         return [start, end]
 
     def __get_historic_data_year(self, start_date):
+        """Returns the year of the most recent historic data.
+        Parameters:
+            `start_date` (datetime): The start date for predictions.
+        Returns:
+            An integer year value of the most recent year of historic data available.
+        """
         db = DataBase(self.DATABASE_DATA)
 
         year = db.select("SELECT EXTRACT(YEAR FROM historicdata.date_received) \
@@ -176,11 +205,14 @@ class TriageController:
         return int(year[0][0])
 
     def __sort_padding_data(self, referral_data, start_date, weeks):
-        """Sorts historic referral data by triage class.
+        """Sorts historic referral data by the week the referrals arrived.
         Parameters:
             `referral_data` (list(str)): List of historic referral dates.
+            `start_date` (datetime):Start date of the padding.
+            `weeks` (int): Number of weeks in the padding.
         Returns:
-            Returns a dictionary with a count of patient arrivals per day for each triage class.
+            Returns a list where each entry is the number of referrals that 
+            arrived in a given week of the padding data.
         """
         result = []
         end_date = start_date + timedelta(weeks=1)
@@ -197,6 +229,13 @@ class TriageController:
         return [partitioned_data[week] if week in partitioned_data else 0 for week in range(weeks)]
 
     def get_model(self, triage_class_severity):
+        """Retrieves the model file name to load.
+        Parameters:
+            `triage_class_severity` (int): The severity of the triage class that the model needs to predict for.
+        Returns:
+            A string file name of the needed model.
+        """
+
         # Establish database connection
         db = DataBase(self.DATABASE_DATA)
 
@@ -217,20 +256,3 @@ class TriageController:
                 'Could not find model for clinic %s, triage class %s', self.clinic_id, triage_class_severity)
 
         return rows[0][0]
-
-    def get_predictions(self, model, data, start_date, prediction_length):
-        """Runs ML model predictions and returns results.
-        """
-        predictions = []
-        for offset in range(0, prediction_length):
-            date = start_date + timedelta(days=offset)
-            one_hot_date = np.zeros(12 + 31)
-            one_hot_date[date.month] = 1
-            one_hot_date[11 + date.day] = 1
-
-            prediction = model.predict(
-                [np.array(data)[np.newaxis, :], one_hot_date[np.newaxis, :]])
-            predictions.append(prediction[0])
-
-            data = data[1:] + [int(prediction[0][0])]
-        return predictions
