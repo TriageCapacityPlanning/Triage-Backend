@@ -1,5 +1,5 @@
 """
-This module handles testing for the DataFrame.
+This module handles testing for the ClinicData.
 """
 
 import pytest
@@ -8,7 +8,7 @@ from api.common.ClinicData import ClinicData
 
 class TestClinicData:
     """
-    The `TestDataFRame` class contains acceptance and unit tests for the DataFrame.
+    The `TestClinicData` class contains acceptance and unit tests for the DataFrame.
     """
 
     def setup_class(self):
@@ -20,6 +20,11 @@ class TestClinicData:
         self.interval_mock = ['2020-01-01', '2021-01-01']
 
     def test_no_clinic_settings_error(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Test that an error occurs when no triage class settings are retrieved.
+        """
+
         mocker.patch('api.common.database_interaction.DataBase.select',
                      return_value=[])
         
@@ -91,6 +96,11 @@ class TestClinicData:
         assert clinic_data.get_clinic_settings() == result_expected
 
     def test_get_referral_data_success_empty(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Test that empty data is properly retrieved.
+        """
+
         database_clinic_settings_response_mock = [[3, 1, 'Urgent', 2, 0.8]]
         mocker.patch('api.common.database_interaction.DataBase.select',
                      return_value=database_clinic_settings_response_mock)
@@ -103,6 +113,11 @@ class TestClinicData:
         assert clinic_data.get_referral_data(self.triage_class_mock, self.interval_mock) == []
 
     def test_get_referral_data_success_singleton(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Test that singleton data is properly retrieved.
+        """
+
         database_clinic_settings_response_mock = [[3, 1, 'Urgent', 2, 0.8]]
         mocker.patch('api.common.database_interaction.DataBase.select',
                      return_value=database_clinic_settings_response_mock)
@@ -119,6 +134,11 @@ class TestClinicData:
         assert clinic_data.get_referral_data(self.triage_class_mock, self.interval_mock) == expected_result
 
     def test_get_referral_data_success_multiple(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Test that multiple data points are properly retrieved.
+        """
+
         database_clinic_settings_response_mock = [[3, 1, 'Urgent', 2, 0.8]]
         mocker.patch('api.common.database_interaction.DataBase.select',
                      return_value=database_clinic_settings_response_mock)

@@ -1,5 +1,5 @@
 """
-This module handles testing for the UpdateTriageClasses class.
+This module handles testing for the Auth class.
 """
 
 from api.triage_api import create_app
@@ -14,7 +14,7 @@ from api.tests.common import generate_token
 
 class TestAuthAPI:
     """
-    The `TestAuth` class contains acceptance tests the UpdateTriageClasses class.
+    The `TestAuth` class contains tests the auth.py API functions.
     """
 
     def setup_class(self):
@@ -27,7 +27,7 @@ class TestAuthAPI:
     def test_post_missing_inputs(self):
         """
         Test Type: Acceptance
-        Test Purpose: Tests Requirement INT-6
+        Test Purpose: Tests Requirement SEC-4
         """
 
         input_mock = {}
@@ -38,7 +38,7 @@ class TestAuthAPI:
     def test_post_incorrect_input_type(self):
         """
         Test Type: Acceptance
-        Test Purpose: Tests Requirement INT-6
+        Test Purpose: Tests Requirement SEC-4
         """
 
         input_mock = {'username': 1, 'password': 2 }
@@ -49,7 +49,7 @@ class TestAuthAPI:
     def test_post_success(self, mocker):
         """
         Test Type: Acceptance
-        Test Purpose: Tests Requirement INT-6
+        Test Purpose: Tests Requirement SEC-4
         """
         mocker.patch('api.common.database_interaction.DataBase.select', 
                      return_value=[(1, True, hashlib.sha512('passwordsalt'.encode()).hexdigest(), 'salt')])
