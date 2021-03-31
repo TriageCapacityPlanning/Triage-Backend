@@ -4,9 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>api.triage_api API documentation</title>
-<meta name="description" content="The Triage API to serve to the front end
-Read the documentation from Flask: https://flask-restful.readthedocs.io/en/latest/" />
+<title>api.tests.test_triage_api API documentation</title>
+<meta name="description" content="This module handles acceptance testing for the TriageAPI." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -20,77 +19,57 @@ Read the documentation from Flask: https://flask-restful.readthedocs.io/en/lates
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>api.triage_api</code></h1>
+<h1 class="title">Module <code>api.tests.test_triage_api</code></h1>
 </header>
 <section id="section-intro">
-<p>The Triage API to serve to the front end
-Read the documentation from Flask: <a href="https://flask-restful.readthedocs.io/en/latest/">https://flask-restful.readthedocs.io/en/latest/</a></p>
+<p>This module handles acceptance testing for the TriageAPI.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-The Triage API to serve to the front end
-Read the documentation from Flask: https://flask-restful.readthedocs.io/en/latest/
+This module handles acceptance testing for the TriageAPI.
 &#34;&#34;&#34;
 
-from api.common.exceptions import FileError, Unauthorized
-from flask import Flask, jsonify
-from flask_restful import Api
-from flask_cors import CORS
-from api.resources.update_triage_classes import UpdateTriageClasses
-from api.resources.models import Models
-import api.resources.upload as Upload
-from api.resources.data import Data
-from api.resources.auth import Auth
-from api.common.config import VERSION_PREFIX
+from api.triage_api import create_app
+import json
 
 
-def create_app():
-    app = Flask(__name__)
-    api = Api(app)
+class TestTriageAPI:
+    &#34;&#34;&#34;
+    The `TestTriageAPI` class contains acceptance tests for general API functions.
+    &#34;&#34;&#34;
 
-    @app.route(&#39;/&#39;)
-    def index():
-        return {&#39;status&#39;: 200, &#39;api&#39;: &#34;Triage API&#34;, &#39;version&#39;: 1}
+    def setup_class(self):
+        &#34;&#34;&#34;
+        Test setup that occurs once before all tests are run.
+        &#34;&#34;&#34;
+        
+        self.test_client = create_app().test_client()
 
-    @app.route(VERSION_PREFIX)
-    def version():
-        return {&#39;status&#39;: 200, &#39;version&#39;: 1}
+    def test_base_route(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-4
+        &#34;&#34;&#34;
 
-    app.config[&#34;PROPAGATE_EXCEPTIONS&#34;] = True
+        response = self.test_client.get(&#39;/&#39;)
+        response_data = json.loads(response.data)
 
-    @app.errorhandler(Unauthorized)
-    def handle_unauthorized_user(error):
-        response = jsonify(error.to_dict())
-        response.status_code = error.status_code
-        return response
+        assert response.status_code == 200
+        assert response_data[&#39;api&#39;] == &#39;Triage API&#39;
 
-    @app.errorhandler(FileError)
-    def handle_file_upload_errors(error):
-        response = jsonify(error.to_dict())
-        response.status_code = error.status_code
-        return response
+    def test_base_route_version(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-5
+        &#34;&#34;&#34;
 
-    try:
-        from api.resources.predict import Predict
-        api.add_resource(Predict, VERSION_PREFIX + &#39;/predict&#39;)
-    except ImportError:
-        print(&#34;Could not import predict&#34;)
+        response = self.test_client.get(&#39;/v1&#39;)
+        response_data = json.loads(response.data)
 
-    api.add_resource(Models, *[VERSION_PREFIX + &#39;/models&#39;, VERSION_PREFIX + &#39;/models/use&#39;])
-    api.add_resource(UpdateTriageClasses, VERSION_PREFIX + &#39;/classes&#39;)
-    api.add_resource(Upload.PastAppointments, VERSION_PREFIX + &#39;/upload/past-appointments&#39;)
-    api.add_resource(Upload.Model, VERSION_PREFIX + &#39;/upload/model&#39;)
-    api.add_resource(Data, VERSION_PREFIX + &#39;/data/&lt;clinic_id&gt;/&lt;triage_class&gt;&#39;)
-    api.add_resource(Auth, VERSION_PREFIX + &#39;/auth/login&#39;)
-    CORS(app)
-    return app
-
-
-if __name__ == &#39;__main__&#39;:
-    app = create_app()
-    app.run(host=&#34;0.0.0.0&#34;, port=int(&#34;5000&#34;), debug=True)</code></pre>
+        assert response.status_code == 200
+        assert response_data[&#39;version&#39;] == 1</code></pre>
 </details>
 </section>
 <section>
@@ -98,62 +77,123 @@ if __name__ == &#39;__main__&#39;:
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="api.triage_api.create_app"><code class="name flex">
-<span>def <span class="ident">create_app</span></span>(<span>)</span>
+<dt id="api.tests.test_triage_api.TestTriageAPI"><code class="flex name class">
+<span>class <span class="ident">TestTriageAPI</span></span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>The <code><a title="api.tests.test_triage_api.TestTriageAPI" href="#api.tests.test_triage_api.TestTriageAPI">TestTriageAPI</a></code> class contains acceptance tests for general API functions.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def create_app():
-    app = Flask(__name__)
-    api = Api(app)
+<pre><code class="python">class TestTriageAPI:
+    &#34;&#34;&#34;
+    The `TestTriageAPI` class contains acceptance tests for general API functions.
+    &#34;&#34;&#34;
 
-    @app.route(&#39;/&#39;)
-    def index():
-        return {&#39;status&#39;: 200, &#39;api&#39;: &#34;Triage API&#34;, &#39;version&#39;: 1}
+    def setup_class(self):
+        &#34;&#34;&#34;
+        Test setup that occurs once before all tests are run.
+        &#34;&#34;&#34;
+        
+        self.test_client = create_app().test_client()
 
-    @app.route(VERSION_PREFIX)
-    def version():
-        return {&#39;status&#39;: 200, &#39;version&#39;: 1}
+    def test_base_route(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-4
+        &#34;&#34;&#34;
 
-    app.config[&#34;PROPAGATE_EXCEPTIONS&#34;] = True
+        response = self.test_client.get(&#39;/&#39;)
+        response_data = json.loads(response.data)
 
-    @app.errorhandler(Unauthorized)
-    def handle_unauthorized_user(error):
-        response = jsonify(error.to_dict())
-        response.status_code = error.status_code
-        return response
+        assert response.status_code == 200
+        assert response_data[&#39;api&#39;] == &#39;Triage API&#39;
 
-    @app.errorhandler(FileError)
-    def handle_file_upload_errors(error):
-        response = jsonify(error.to_dict())
-        response.status_code = error.status_code
-        return response
+    def test_base_route_version(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-5
+        &#34;&#34;&#34;
 
-    try:
-        from api.resources.predict import Predict
-        api.add_resource(Predict, VERSION_PREFIX + &#39;/predict&#39;)
-    except ImportError:
-        print(&#34;Could not import predict&#34;)
+        response = self.test_client.get(&#39;/v1&#39;)
+        response_data = json.loads(response.data)
 
-    api.add_resource(Models, *[VERSION_PREFIX + &#39;/models&#39;, VERSION_PREFIX + &#39;/models/use&#39;])
-    api.add_resource(UpdateTriageClasses, VERSION_PREFIX + &#39;/classes&#39;)
-    api.add_resource(Upload.PastAppointments, VERSION_PREFIX + &#39;/upload/past-appointments&#39;)
-    api.add_resource(Upload.Model, VERSION_PREFIX + &#39;/upload/model&#39;)
-    api.add_resource(Data, VERSION_PREFIX + &#39;/data/&lt;clinic_id&gt;/&lt;triage_class&gt;&#39;)
-    api.add_resource(Auth, VERSION_PREFIX + &#39;/auth/login&#39;)
-    CORS(app)
-    return app</code></pre>
+        assert response.status_code == 200
+        assert response_data[&#39;version&#39;] == 1</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="api.tests.test_triage_api.TestTriageAPI.setup_class"><code class="name flex">
+<span>def <span class="ident">setup_class</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test setup that occurs once before all tests are run.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup_class(self):
+    &#34;&#34;&#34;
+    Test setup that occurs once before all tests are run.
+    &#34;&#34;&#34;
+    
+    self.test_client = create_app().test_client()</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_triage_api.TestTriageAPI.test_base_route"><code class="name flex">
+<span>def <span class="ident">test_base_route</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement INT-4</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_base_route(self):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement INT-4
+    &#34;&#34;&#34;
+
+    response = self.test_client.get(&#39;/&#39;)
+    response_data = json.loads(response.data)
+
+    assert response.status_code == 200
+    assert response_data[&#39;api&#39;] == &#39;Triage API&#39;</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_triage_api.TestTriageAPI.test_base_route_version"><code class="name flex">
+<span>def <span class="ident">test_base_route_version</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement INT-5</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_base_route_version(self):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement INT-5
+    &#34;&#34;&#34;
+
+    response = self.test_client.get(&#39;/v1&#39;)
+    response_data = json.loads(response.data)
+
+    assert response.status_code == 200
+    assert response_data[&#39;version&#39;] == 1</code></pre>
 </details>
 </dd>
 </dl>
-</section>
-<section>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -164,12 +204,19 @@ if __name__ == &#39;__main__&#39;:
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="api" href="index.html">api</a></code></li>
+<li><code><a title="api.tests" href="index.html">api.tests</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="api.tests.test_triage_api.TestTriageAPI" href="#api.tests.test_triage_api.TestTriageAPI">TestTriageAPI</a></code></h4>
 <ul class="">
-<li><code><a title="api.triage_api.create_app" href="#api.triage_api.create_app">create_app</a></code></li>
+<li><code><a title="api.tests.test_triage_api.TestTriageAPI.setup_class" href="#api.tests.test_triage_api.TestTriageAPI.setup_class">setup_class</a></code></li>
+<li><code><a title="api.tests.test_triage_api.TestTriageAPI.test_base_route" href="#api.tests.test_triage_api.TestTriageAPI.test_base_route">test_base_route</a></code></li>
+<li><code><a title="api.tests.test_triage_api.TestTriageAPI.test_base_route_version" href="#api.tests.test_triage_api.TestTriageAPI.test_base_route_version">test_base_route_version</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

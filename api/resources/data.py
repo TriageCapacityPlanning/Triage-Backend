@@ -51,7 +51,7 @@ class Data(AuthResource):
 
         Returns:
             Returns the list of tuples of historic data.
-            The tuple sinclude the following information:
+            The tuples include the following information:
             1. Clinic id
             2. Triage class severity
             3. Referral arrival date

@@ -77,6 +77,16 @@ class Auth(Resource):
         return json.dumps(auth_data)
 
     def _validate_user(self, username, password):
+        """
+        Validates a user's username and password against the database
+
+        Args:
+            username (str): The username of the user trying to validate
+            password (int): The password of the user trying to validate
+
+        Returns:
+            The clinic_id and admin status of the user if successfully validated. Raises RuntimeError otherwise.
+        """
         db = DataBase(self.DATABASE_DATA)
         query = "SELECT clinic_id, admin, password, salt FROM triagedata.users "
         query += "WHERE username='%s' " % username
@@ -93,6 +103,16 @@ class Auth(Resource):
             raise RuntimeError('Invalid User Credentials')
 
     def _generate_token(self, username, user_clinic):
+        """
+        Generates a valid 12 hour JWT token with embedded user and clinic parameters
+
+        Args:
+            username (str): The username of the user the token is being generated for
+            user_clinic (int): The clinic id the user account is associated with
+
+        Returns:
+            A generated JWT token (str) with parameters user and clinic as passed
+        """
         return str(jwt.encode({
                 'user': username,
                 'clinic': user_clinic,

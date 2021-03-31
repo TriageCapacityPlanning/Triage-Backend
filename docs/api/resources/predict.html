@@ -32,41 +32,40 @@ This module handles all required interaction with the `/predict` endpoint
 &#34;&#34;&#34;
 
 # External dependencies
-from flask_restful import Resource
 from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
+import ast
 
 # Internal dependencies
+from api.resources.AuthResource import AuthResource
 from api.common.controller.TriageController import TriageController
-from api.common.database_interaction import DataBase
+from api.common.config import database_config
 
 
-class Predict(Resource):
+class Predict(AuthResource):
     &#34;&#34;&#34;
     The `Predict` class handles all of the requests relative to Prediction for the API.
     &#34;&#34;&#34;
     # Database connection information
     DATABASE_DATA = {
-        &#39;database&#39;: &#39;triage&#39;,
         &#39;user&#39;: &#39;predict_handler&#39;,
         &#39;password&#39;: &#39;password&#39;,
-        &#39;host&#39;: &#39;localhost&#39;,
-        &#39;port&#39;: &#39;5432&#39;
+        &#39;database&#39;: database_config[&#39;database&#39;],
+        &#39;host&#39;: database_config[&#39;host&#39;],
+        &#39;port&#39;: database_config[&#39;port&#39;]
     }
     &#34;&#34;&#34;
-    This is the database connection information used by Predict to connect to the database. 
+    This is the database connection information used by Predict to connect to the database.
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     &#34;&#34;&#34;
 
     # API input schema
     arg_schema_get = {
         &#34;clinic-id&#34;: fields.Int(required=True),
-        &#34;start-date&#34;: fields.String(required=True),
-        &#34;end-date&#34;: fields.String(required=True),
-        &#34;intervals&#34;: fields.List(fields.Raw(), missing=[]),
+        &#34;intervals&#34;: fields.String(missing=&#34;[]&#34;),
         &#34;confidence&#34;: fields.Float(missing=0.95),
-        &#34;num-sim-runs&#34;: fields.Int(missing=1000),
+        &#34;num-sim-runs&#34;: fields.Int(missing=100),
         &#34;waitlist&#34;: fields.Raw(missing=[])
     }
     &#34;&#34;&#34;
@@ -84,7 +83,7 @@ class Predict(Resource):
 
     def get(self):
         &#34;&#34;&#34;
-        Handles a get request for the predict endpoints. 
+        Handles a get request for the predict endpoints.
         Returns a dictionary with a list of predictions based on the ML model predictions and simulation runs.
 
         Args:
@@ -95,59 +94,37 @@ class Predict(Resource):
             ```
             {
                 url (str) The request url.
-                intervaled_slot_predictions (list) Predictions grouped by interval.
-                number_intervals (int) Number of intervals.
-                slot_predictions (list) Total predictions.
-                models (list): A list of dictionaries representing each model
+                predictions (dict) Dictionary containing the interval predictions for each class.
             }
             ```
-            
+
+            The keys of the predictions dict are the triage class names and the values are lists of dicts of
+            the following format:
+            ```
+            {
+                &#39;start&#39; (str) Start date of the interval
+                &#39;end&#39; (str) End date of the interval
+                &#39;slots&#39; (int) Predicted slots.
+            }
+            ```
+
         &#34;&#34;&#34;
         # Validate input arguments.
         args = parser.parse(self.arg_schema_get, request,
                             location=&#39;querystring&#39;)
-        # Retrieve clinic settings
-        args[&#39;clinic-settings&#39;] = self.get_clinic_settings(args[&#39;clinic-id&#39;])
-        # Instantiate TriageController
-        triage_controller = TriageController(args)
+        args[&#39;intervals&#39;] = ast.literal_eval(args[&#39;intervals&#39;])
+
+        triage_controller = TriageController(args[&#39;clinic-id&#39;],
+                                             args[&#39;intervals&#39;],
+                                             args[&#39;confidence&#39;],
+                                             args[&#39;num-sim-runs&#39;])
         predictions = triage_controller.predict()
+
         # API response
         return {
             &#39;url&#39;: request.url,
-            &#39;intervaled_slot_predictions&#39;: predictions[&#39;interval&#39;],
-            &#39;number_intervals&#39;: len(args[&#39;intervals&#39;]),
-            &#39;slot_predictions&#39;: predictions[&#39;total&#39;]
-        }
-
-    def get_clinic_settings(self, clinic_id):
-        &#34;&#34;&#34;
-        Retrieves clinic triage class settings for a given clinic id.
-
-        Args:
-            clinic_id (int): The ID of the clinic.
-
-        Returns:
-            A list of dictionaries for each triage class with
-            ```
-            {
-                clinic_id (int) ID of the clinic.
-                severity (int) Severity of the triage class
-                name (str) Name of the triage class.
-                duration (int) Time in weeks within which a patient should be seen.
-                proportion (float) % of patients within the triage class that should be seen within the appropriate time.
-            }
-            ```
-        &#34;&#34;&#34;
-        # Keys for response
-        keys = [&#39;clinic_id&#39;, &#39;severity&#39;, &#39;name&#39;, &#39;duration&#39;, &#39;proportion&#39;]
-        # Establish database connection
-        db = DataBase(self.DATABASE_DATA)
-        # Query for data
-        rows = db.select(f&#34;SELECT clinic_id, severity, name, duration, proportion \
-                           FROM triagedata.triageclasses \
-                           WHERE clinic_id={clinic_id}&#34;)
-        # Return data
-        return [dict(zip(keys, values)) for values in rows]</code></pre>
+            &#39;predictions&#39;: predictions
+        }</code></pre>
 </details>
 </section>
 <section>
@@ -168,31 +145,29 @@ class Predict(Resource):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Predict(Resource):
+<pre><code class="python">class Predict(AuthResource):
     &#34;&#34;&#34;
     The `Predict` class handles all of the requests relative to Prediction for the API.
     &#34;&#34;&#34;
     # Database connection information
     DATABASE_DATA = {
-        &#39;database&#39;: &#39;triage&#39;,
         &#39;user&#39;: &#39;predict_handler&#39;,
         &#39;password&#39;: &#39;password&#39;,
-        &#39;host&#39;: &#39;localhost&#39;,
-        &#39;port&#39;: &#39;5432&#39;
+        &#39;database&#39;: database_config[&#39;database&#39;],
+        &#39;host&#39;: database_config[&#39;host&#39;],
+        &#39;port&#39;: database_config[&#39;port&#39;]
     }
     &#34;&#34;&#34;
-    This is the database connection information used by Predict to connect to the database. 
+    This is the database connection information used by Predict to connect to the database.
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     &#34;&#34;&#34;
 
     # API input schema
     arg_schema_get = {
         &#34;clinic-id&#34;: fields.Int(required=True),
-        &#34;start-date&#34;: fields.String(required=True),
-        &#34;end-date&#34;: fields.String(required=True),
-        &#34;intervals&#34;: fields.List(fields.Raw(), missing=[]),
+        &#34;intervals&#34;: fields.String(missing=&#34;[]&#34;),
         &#34;confidence&#34;: fields.Float(missing=0.95),
-        &#34;num-sim-runs&#34;: fields.Int(missing=1000),
+        &#34;num-sim-runs&#34;: fields.Int(missing=100),
         &#34;waitlist&#34;: fields.Raw(missing=[])
     }
     &#34;&#34;&#34;
@@ -210,7 +185,7 @@ class Predict(Resource):
 
     def get(self):
         &#34;&#34;&#34;
-        Handles a get request for the predict endpoints. 
+        Handles a get request for the predict endpoints.
         Returns a dictionary with a list of predictions based on the ML model predictions and simulation runs.
 
         Args:
@@ -221,62 +196,41 @@ class Predict(Resource):
             ```
             {
                 url (str) The request url.
-                intervaled_slot_predictions (list) Predictions grouped by interval.
-                number_intervals (int) Number of intervals.
-                slot_predictions (list) Total predictions.
-                models (list): A list of dictionaries representing each model
+                predictions (dict) Dictionary containing the interval predictions for each class.
             }
             ```
-            
+
+            The keys of the predictions dict are the triage class names and the values are lists of dicts of
+            the following format:
+            ```
+            {
+                &#39;start&#39; (str) Start date of the interval
+                &#39;end&#39; (str) End date of the interval
+                &#39;slots&#39; (int) Predicted slots.
+            }
+            ```
+
         &#34;&#34;&#34;
         # Validate input arguments.
         args = parser.parse(self.arg_schema_get, request,
                             location=&#39;querystring&#39;)
-        # Retrieve clinic settings
-        args[&#39;clinic-settings&#39;] = self.get_clinic_settings(args[&#39;clinic-id&#39;])
-        # Instantiate TriageController
-        triage_controller = TriageController(args)
+        args[&#39;intervals&#39;] = ast.literal_eval(args[&#39;intervals&#39;])
+
+        triage_controller = TriageController(args[&#39;clinic-id&#39;],
+                                             args[&#39;intervals&#39;],
+                                             args[&#39;confidence&#39;],
+                                             args[&#39;num-sim-runs&#39;])
         predictions = triage_controller.predict()
+
         # API response
         return {
             &#39;url&#39;: request.url,
-            &#39;intervaled_slot_predictions&#39;: predictions[&#39;interval&#39;],
-            &#39;number_intervals&#39;: len(args[&#39;intervals&#39;]),
-            &#39;slot_predictions&#39;: predictions[&#39;total&#39;]
-        }
-
-    def get_clinic_settings(self, clinic_id):
-        &#34;&#34;&#34;
-        Retrieves clinic triage class settings for a given clinic id.
-
-        Args:
-            clinic_id (int): The ID of the clinic.
-
-        Returns:
-            A list of dictionaries for each triage class with
-            ```
-            {
-                clinic_id (int) ID of the clinic.
-                severity (int) Severity of the triage class
-                name (str) Name of the triage class.
-                duration (int) Time in weeks within which a patient should be seen.
-                proportion (float) % of patients within the triage class that should be seen within the appropriate time.
-            }
-            ```
-        &#34;&#34;&#34;
-        # Keys for response
-        keys = [&#39;clinic_id&#39;, &#39;severity&#39;, &#39;name&#39;, &#39;duration&#39;, &#39;proportion&#39;]
-        # Establish database connection
-        db = DataBase(self.DATABASE_DATA)
-        # Query for data
-        rows = db.select(f&#34;SELECT clinic_id, severity, name, duration, proportion \
-                           FROM triagedata.triageclasses \
-                           WHERE clinic_id={clinic_id}&#34;)
-        # Return data
-        return [dict(zip(keys, values)) for values in rows]</code></pre>
+            &#39;predictions&#39;: predictions
+        }</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="api.resources.AuthResource.AuthResource" href="AuthResource.html#api.resources.AuthResource.AuthResource">AuthResource</a></li>
 <li>flask_restful.Resource</li>
 <li>flask.views.MethodView</li>
 <li>flask.views.View</li>
@@ -328,10 +282,15 @@ Returns a dictionary with a list of predictions based on the ML model prediction
 <p>A dictionary with</p>
 <pre><code>{
     url (str) The request url.
-    intervaled_slot_predictions (list) Predictions grouped by interval.
-    number_intervals (int) Number of intervals.
-    slot_predictions (list) Total predictions.
-    models (list): A list of dictionaries representing each model
+    predictions (dict) Dictionary containing the interval predictions for each class.
+}
+</code></pre>
+<p>The keys of the predictions dict are the triage class names and the values are lists of dicts of
+the following format:</p>
+<pre><code>{
+    'start' (str) Start date of the interval
+    'end' (str) End date of the interval
+    'slots' (int) Predicted slots.
 }
 </code></pre></div>
 <details class="source">
@@ -340,7 +299,7 @@ Returns a dictionary with a list of predictions based on the ML model prediction
 </summary>
 <pre><code class="python">def get(self):
     &#34;&#34;&#34;
-    Handles a get request for the predict endpoints. 
+    Handles a get request for the predict endpoints.
     Returns a dictionary with a list of predictions based on the ML model predictions and simulation runs.
 
     Args:
@@ -351,84 +310,37 @@ Returns a dictionary with a list of predictions based on the ML model prediction
         ```
         {
             url (str) The request url.
-            intervaled_slot_predictions (list) Predictions grouped by interval.
-            number_intervals (int) Number of intervals.
-            slot_predictions (list) Total predictions.
-            models (list): A list of dictionaries representing each model
+            predictions (dict) Dictionary containing the interval predictions for each class.
         }
         ```
-        
+
+        The keys of the predictions dict are the triage class names and the values are lists of dicts of
+        the following format:
+        ```
+        {
+            &#39;start&#39; (str) Start date of the interval
+            &#39;end&#39; (str) End date of the interval
+            &#39;slots&#39; (int) Predicted slots.
+        }
+        ```
+
     &#34;&#34;&#34;
     # Validate input arguments.
     args = parser.parse(self.arg_schema_get, request,
                         location=&#39;querystring&#39;)
-    # Retrieve clinic settings
-    args[&#39;clinic-settings&#39;] = self.get_clinic_settings(args[&#39;clinic-id&#39;])
-    # Instantiate TriageController
-    triage_controller = TriageController(args)
+    args[&#39;intervals&#39;] = ast.literal_eval(args[&#39;intervals&#39;])
+
+    triage_controller = TriageController(args[&#39;clinic-id&#39;],
+                                         args[&#39;intervals&#39;],
+                                         args[&#39;confidence&#39;],
+                                         args[&#39;num-sim-runs&#39;])
     predictions = triage_controller.predict()
+
     # API response
     return {
         &#39;url&#39;: request.url,
-        &#39;intervaled_slot_predictions&#39;: predictions[&#39;interval&#39;],
-        &#39;number_intervals&#39;: len(args[&#39;intervals&#39;]),
-        &#39;slot_predictions&#39;: predictions[&#39;total&#39;]
+        &#39;predictions&#39;: predictions
     }</code></pre>
-</details>
-</dd>
-<dt id="api.resources.predict.Predict.get_clinic_settings"><code class="name flex">
-<span>def <span class="ident">get_clinic_settings</span></span>(<span>self, clinic_id)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Retrieves clinic triage class settings for a given clinic id.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>clinic_id</code></strong> :&ensp;<code>int</code></dt>
-<dd>The ID of the clinic.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>A list of dictionaries for each triage class with</p>
-<pre><code>{
-    clinic_id (int) ID of the clinic.
-    severity (int) Severity of the triage class
-    name (str) Name of the triage class.
-    duration (int) Time in weeks within which a patient should be seen.
-    proportion (float) % of patients within the triage class that should be seen within the appropriate time.
-}
-</code></pre></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_clinic_settings(self, clinic_id):
-    &#34;&#34;&#34;
-    Retrieves clinic triage class settings for a given clinic id.
-
-    Args:
-        clinic_id (int): The ID of the clinic.
-
-    Returns:
-        A list of dictionaries for each triage class with
-        ```
-        {
-            clinic_id (int) ID of the clinic.
-            severity (int) Severity of the triage class
-            name (str) Name of the triage class.
-            duration (int) Time in weeks within which a patient should be seen.
-            proportion (float) % of patients within the triage class that should be seen within the appropriate time.
-        }
-        ```
-    &#34;&#34;&#34;
-    # Keys for response
-    keys = [&#39;clinic_id&#39;, &#39;severity&#39;, &#39;name&#39;, &#39;duration&#39;, &#39;proportion&#39;]
-    # Establish database connection
-    db = DataBase(self.DATABASE_DATA)
-    # Query for data
-    rows = db.select(f&#34;SELECT clinic_id, severity, name, duration, proportion \
-                       FROM triagedata.triageclasses \
-                       WHERE clinic_id={clinic_id}&#34;)
-    # Return data
-    return [dict(zip(keys, values)) for values in rows]</code></pre>
 </details>
 </dd>
 </dl>
@@ -455,7 +367,6 @@ Returns a dictionary with a list of predictions based on the ML model prediction
 <li><code><a title="api.resources.predict.Predict.DATABASE_DATA" href="#api.resources.predict.Predict.DATABASE_DATA">DATABASE_DATA</a></code></li>
 <li><code><a title="api.resources.predict.Predict.arg_schema_get" href="#api.resources.predict.Predict.arg_schema_get">arg_schema_get</a></code></li>
 <li><code><a title="api.resources.predict.Predict.get" href="#api.resources.predict.Predict.get">get</a></code></li>
-<li><code><a title="api.resources.predict.Predict.get_clinic_settings" href="#api.resources.predict.Predict.get_clinic_settings">get_clinic_settings</a></code></li>
 <li><code><a title="api.resources.predict.Predict.methods" href="#api.resources.predict.Predict.methods">methods</a></code></li>
 </ul>
 </li>

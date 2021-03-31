@@ -27,159 +27,269 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34; 
+<pre><code class="python">&#34;&#34;&#34;
 The TriageController is used to initiate prediction and simulation upon API requests.
 &#34;&#34;&#34;
 
 # External dependencies.
-import datetime
-from api.common.controller.DataFrame import DataFrame
+from datetime import datetime, timedelta
+from collections import deque
+import numpy as np
+import triage_ml
+
+# Internal dependencies
 from api.common.database_interaction import DataBase
+from api.common.ClinicData import ClinicData
+from api.common.controller.DataFrame import DataFrame
+from sim.resources.minintervalschedule import gen_min_interval_slots
+from api.common.config import database_config
+
+DATE_FORMAT = &#39;%Y-%m-%d&#39;
 
 
 class TriageController:
     &#34;&#34;&#34;
     TriageController is a class to handle API requests to run predictions and simulations.
-
     Usage:
-        To create a new triage controller, create it with `TriageController(params)` where
-        params is a dictionary with the following keys:
+        To create a new triage controller, create it with `TriageController(intervals, clinic_settings)` where
+        those values are:
         ```
         {
-            &#39;start-date&#39; (str) Start date for the predictions,
-            &#39;end-date&#39;     (str) End date for the predictions,
-            &#39;intervals&#39;    (list(tuples(str))) Date intervals that predictions are made for,
-            &#39;clinic-id&#39; (int) The ID of the clinic.
+            &#39;clinic_id&#39; (int) The id of the clinic.
+            &#39;intervals&#39; (list(tuples(str))) List of start and end date strings for each interval.
+            &#39;confidence&#39; (int) The desired confidence level of predictions.
+            &#39;num_sim_runs&#39; (int) The number of desired simulation runs.
         }
         ```
     &#34;&#34;&#34;
 
     # Database connection information
     DATABASE_DATA = {
-        &#39;database&#39;: &#39;triage&#39;,
         &#39;user&#39;: &#39;triage_controller&#39;,
         &#39;password&#39;: &#39;password&#39;,
-        &#39;host&#39;: &#39;localhost&#39;,
-        &#39;port&#39;: &#39;5432&#39;
+        &#39;database&#39;: database_config[&#39;database&#39;],
+        &#39;host&#39;: database_config[&#39;host&#39;],
+        &#39;port&#39;: database_config[&#39;port&#39;]
     }
     &#34;&#34;&#34;
-    This is the database connection information used by Models to connect to the database. 
+    This is the database connection information used by Models to connect to the database.
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     &#34;&#34;&#34;
 
+    PADDING_LENGTH = 30
+    &#34;&#34;&#34;
+    Minimum padding length required by ML module.
+    &#34;&#34;&#34;
+
     # Constructor
-    def __init__(self, params):
-        self.params = params
+    def __init__(self, clinic_id, intervals, confidence, num_sim_runs):
+        self.clinic_id = clinic_id
+        self.intervals = [{&#39;start&#39;: datetime.strptime(interval[&#39;start&#39;], DATE_FORMAT),
+                           &#39;end&#39;: datetime.strptime(interval[&#39;end&#39;], DATE_FORMAT)}
+                          for interval in intervals]
+        self.confidence = confidence
+        self.num_sim_runs = num_sim_runs
 
     def predict(self):
-        &#39;&#39;&#39;Returns the start and end date for a given interval.
-
+        &#34;&#34;&#34;Returns the prediction / simulation results.
         Returns:
-            Simulation results as a dictionary with the following key-value pairs:
+            Simulation results as a dictionary with triage class as the key, and a list of dictionaries of
+            the following form as the value:
             ```
             {
-                interval (list(dict(str, int))): The referal count predictions for each interval per triage class.
-                total (int): The referal count predictions in total per triage class.
+                &#39;start&#39; (str) Start date of the interval
+                &#39;end&#39; (str) End date of the interval
+                &#39;slots&#39; (int) Predicted slots.
             }
             ```
+        &#34;&#34;&#34;
+        # Setup results dictionary
+        results = {}
 
-        &#39;&#39;&#39;
-        # Retrieve previous years referal data from database
-        initial_referal_data = self.get_initial_referal_data(
-            self.params[&#39;start-date&#39;])
+        # Setup ClinicData object.
+        clinic_data = ClinicData(self.clinic_id)
 
-        # Format and feed historic referal data into ML model to predict future referals
-        initial_prediction_data = self.format_referal_data(
-            initial_referal_data)
-        predictions = self.get_predictions(
-            self.params[&#39;intervals&#39;], initial_prediction_data)
+        # Predict for each triage class.
+        for triage_class in clinic_data.get_clinic_settings():
+            # Load the proper model.
+            model = triage_ml.models.radius_variance.RadiusVariance(
+                seq_size=30, radius=15, time_interval=triage_ml.data.dataset.TimeInterval.WEEK)
+            model._init_model()
+            model.model.load_weights(self.get_model(triage_class[&#39;severity&#39;]))
+            dates = list([self.encode_date(self.intervals[0][&#39;start&#39;])])
+            weeks = int(
+                (self.intervals[-1][&#39;end&#39;] - self.intervals[0][&#39;start&#39;]).days / 7)
 
-        # Retrieve a distribution prediction of patients by triage class
-        distribution = self.get_triage_class_distribution(
-            self.params[&#39;clinic-settings&#39;])
+            # Setup model prediction dates.
+            for i in range(weeks):
+                dates.append(self.gen_next_date(dates[-1]))
+            dates = np.stack(dates)
 
-        # Create the dataframe and run simulation
-        data_frame = DataFrame(
-            self.params[&#39;intervals&#39;], predictions, distribution)
-        # Note: Currently returns just the predictions variable
-        # but will return simulation results connected to the simulation module
-        simulation_results = {
-            &#39;interval&#39;: predictions,
-            &#39;total&#39;: predictions
-        }
+            # Retrieve model padding data (historic referral data).
+            padding_interval = self.__get_padding_interval(
+                self.intervals[0][&#39;start&#39;], self.PADDING_LENGTH)
+            padding_data = self.__sort_padding_data(clinic_data.get_referral_data(triage_class[&#39;severity&#39;], padding_interval),
+                                                    padding_interval[0],
+                                                    self.PADDING_LENGTH)
 
-        return simulation_results
+            # Predict future referral arrivals.
+            padding_data_ml = np.array(padding_data)[:, np.newaxis]
+            predictions = model.predict(
+                [padding_data_ml[np.newaxis, :], dates[0]], dates)
+            predictions = [np.array(p)[0] for p in predictions]
 
-    def get_initial_referal_data(self, start_date):
-        &#39;&#39;&#39;Returns historic referal data to use as a start for running ML predictions.
+            # Setup DataFrame for simulation.
+            prediction_dataframe = DataFrame(
+                [[p, 0] for p in padding_data] + predictions, self.intervals, self.PADDING_LENGTH)
 
+            # Run simulation.
+            sim_results = gen_min_interval_slots(queue=deque(),
+                                                 data_frame=prediction_dataframe,
+                                                 start=1,
+                                                 end=len(self.intervals),
+                                                 min_ratio=triage_class[&#39;proportion&#39;],
+                                                 window=triage_class[&#39;duration&#39;],
+                                                 final_window=2 * triage_class[&#39;duration&#39;],
+                                                 confidence=self.confidence)
+
+            # Format simulation results
+            if sim_results:
+                sim_result_formatted = [{&#39;slots&#39;: sim_result[0].expected_slots,
+                                         &#39;start&#39;: sim_result[1][&#39;start&#39;].strftime(DATE_FORMAT),
+                                         &#39;end&#39;: sim_result[1][&#39;end&#39;].strftime(DATE_FORMAT)
+                                         } for sim_result in zip(sim_results, self.intervals)]
+            else:
+                sim_result_formatted = [{&#39;slots&#39;: 0,
+                                         &#39;start&#39;: interval[&#39;start&#39;].strftime(DATE_FORMAT),
+                                         &#39;end&#39;: interval[&#39;end&#39;].strftime(DATE_FORMAT)
+                                         } for interval in self.intervals]
+
+            # Append results for triage class to total results.
+            results[triage_class[&#39;name&#39;]] = sim_result_formatted
+
+        return results
+
+    def encode_date(self, date):
+        &#34;&#34;&#34;Returns a one hot encoded date based on the inputted date.
+        This is used by the ML module to make predictions.
         Parameters:
-            `start-date` (str): The start date for predictions.
+            `date` (datetime): The date to be encoded.
         Returns:
-            A list of historic referal datapoints.
-        &#39;&#39;&#39;
-        # Calculate the (start date - a year) to search the database for relevant historic data
-        previous_year_date = datetime.datetime.strptime(
-            start_date, &#39;%Y-%m-%d&#39;) - datetime.timedelta(days=365)
+            A one hot encoded date.
+        &#34;&#34;&#34;
+        one_hot_date = np.zeros(12 + 31)
+        one_hot_date[date.date().month] = 1
+        one_hot_date[11 + date.date().day] = 1
+
+        return one_hot_date
+
+    def gen_next_date(self, date_encoding, days=7):
+        &#34;&#34;&#34;Generates the next date for the ML prediction module to predict for.
+        Parameters:
+            `date_encoding` (datetime): The date previous date.
+            `days` (int): The number of days between prediction dates (default = 7).
+        Returns:
+            The next prediction date in one hot encoding format.
+        &#34;&#34;&#34;
+        month = np.argmax(date_encoding[:12]) + 1
+        day = np.argmax(date_encoding[12:]) + 1
+        date = datetime.strptime(
+            f&#39;2000/{0 if month &lt; 10 else &#34;&#34;}{month}/{0 if day &lt; 10 else &#34;&#34;}{day}&#39;, &#39;%Y/%m/%d&#39;)
+        date = date + timedelta(days=days)
+
+        return self.encode_date(date)
+
+    def __get_padding_interval(self, start_date, weeks):
+        &#34;&#34;&#34;Returns the date interval for the padding data.
+        Parameters:
+            `start_date` (datetime): The start date for predictions.
+            `weeks` (int): The number of weeks predictions are for.
+        Returns:
+            A tuple with start and end date for the padding data.
+        &#34;&#34;&#34;
+        start = start_date - timedelta(weeks=weeks)
+        newest_data_year = self.__get_historic_data_year(start)
+
+        start = start.replace(year=newest_data_year)
+        end = start + timedelta(weeks=weeks)
+
+        return [start, end]
+
+    def __get_historic_data_year(self, start_date):
+        &#34;&#34;&#34;Returns the year of the most recent historic data.
+        Parameters:
+            `start_date` (datetime): The start date for predictions.
+        Returns:
+            An integer year value of the most recent year of historic data available.
+        &#34;&#34;&#34;
+        db = DataBase(self.DATABASE_DATA)
+
+        year = db.select(&#34;SELECT EXTRACT(YEAR FROM historicdata.date_received) \
+                         FROM triagedata.historicdata \
+                         WHERE EXTRACT(MONTH FROM historicdata.date_received)= %(month)s AND \
+                               EXTRACT(DAY FROM historicdata.date_received) &gt;= %(day)s \
+                         ORDER BY historicdata.date_received DESC \
+                         FETCH FIRST 1 ROWS ONLY&#34; %
+                         {
+                             &#39;month&#39;: start_date.month,
+                             &#39;day&#39;: start_date.day
+                         })
+
+        if len(year) != 1:
+            raise RuntimeError(
+                &#39;Could not find historic data year for start date: %s&#39;, start_date)
+
+        return int(year[0][0])
+
+    def __sort_padding_data(self, referral_data, start_date, weeks):
+        &#34;&#34;&#34;Sorts historic referral data by the week the referrals arrived.
+        Parameters:
+            `referral_data` (list(str)): List of historic referral dates.
+            `start_date` (datetime):Start date of the padding.
+            `weeks` (int): Number of weeks in the padding.
+        Returns:
+            Returns a list where each entry is the number of referrals that
+            arrived in a given week of the padding data.
+        &#34;&#34;&#34;
+        partitioned_data = {}
+        for referral in referral_data:
+            week = int(
+                (datetime.strptime(referral[2], DATE_FORMAT) - start_date).days / 7)
+            if week in partitioned_data:
+                partitioned_data[week] += 1
+            else:
+                partitioned_data[week] = 0
+
+        return [partitioned_data[week] if week in partitioned_data else 0 for week in range(weeks)]
+
+    def get_model(self, triage_class_severity):
+        &#34;&#34;&#34;Retrieves the model file name to load.
+        Parameters:
+            `triage_class_severity` (int): The severity of the triage class that the model needs to predict for.
+        Returns:
+            A string file name of the needed model.
+        &#34;&#34;&#34;
 
         # Establish database connection
         db = DataBase(self.DATABASE_DATA)
 
-        # Query for referal data from previous year
-        rows = db.select(f&#34;SELECT date_received \
-                           FROM triagedata.historicdata \
-                           WHERE date_received &lt; %(previous_year_date)s::date \
-                           ORDER BY date_received DESC \
-                           FETCH FIRST 31 ROWS ONLY&#34;,
+        # Query for referral data from previous year
+        rows = db.select(&#34;SELECT file_path \
+                           FROM triagedata.models  \
+                           WHERE clinic_id = %(clinic_id)s \
+                           AND severity = %(severity)s \
+                           AND in_use = %(in_use)s&#34; %
                          {
-                             &#39;previous_year_date&#39;: previous_year_date
+                             &#39;clinic_id&#39;: self.clinic_id,
+                             &#39;severity&#39;: triage_class_severity,
+                             &#39;in_use&#39;: True
                          })
 
-        # Return results
-        return [date_seen[0] for date_seen in rows]
+        if len(rows) == 0:
+            raise RuntimeError(
+                &#39;Could not find model for clinic %s, triage class %s&#39;, self.clinic_id, triage_class_severity)
 
-    def format_referal_data(self, referal_data):
-        &#39;&#39;&#39;Formats historic referal data to be provided to the ML model.
-
-        Parameters:
-            `referal-data` (list(str)): List of historic referal dates.
-        Returns:
-            Returns a list of differences in time (days) between historic referal dates.
-        &#39;&#39;&#39;
-        # Find the difference in days between historic referal datapoints
-        return [(next_referal - previous_referal).days
-                for previous_referal, next_referal
-                in zip(referal_data[:-1], referal_data[1:])]
-
-    def get_predictions(self, intervals, initial_prediction_data):
-        &#39;&#39;&#39;Runs ML model predictions and returns results.
-
-        Parameters:
-            `intervals` (list(tuple(str))): The list of date intervals to make predictions for.
-            `initial_prediction_data` (list(int)): List of historic referal date differences.
-        Returns:
-            A list of predictions for each interval of time including a predicted referal count and variability.
-        &#39;&#39;&#39;
-        # Return a list of predictions
-        # Note: Currently hardcoded but will change when connected to the ML module
-        return [(1, 1) for x in range(len(intervals))]
-
-    def get_triage_class_distribution(self, clinic_settings):
-        &#39;&#39;&#39;Returns the distribution of patients for a given clinic by triage class.
-
-        Parameters:
-            `clinic_settings` (dict(string, any)): Set of clinic specific settings including triage classes and their expected distributions.
-        Returns:
-            A dictionary with keys being triage class severity and values being their expected % distirbution relative to total patients for the clinic.
-        &#39;&#39;&#39;
-        # Return a distribution of patient referals by triage class
-        # Note: Currently hard coded but will be calculated once more data is provided by the client
-        return {
-            1: 0.5,
-            2: 0.2,
-            3: 0.2,
-            4: 0.1
-        }</code></pre>
+        return rows[0][0]</code></pre>
 </details>
 </section>
 <section>
@@ -193,18 +303,18 @@ class TriageController:
 <dl>
 <dt id="api.common.controller.TriageController.TriageController"><code class="flex name class">
 <span>class <span class="ident">TriageController</span></span>
-<span>(</span><span>params)</span>
+<span>(</span><span>clinic_id, intervals, confidence, num_sim_runs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>TriageController is a class to handle API requests to run predictions and simulations.</p>
 <h2 id="usage">Usage</h2>
-<p>To create a new triage controller, create it with <code><a title="api.common.controller.TriageController.TriageController" href="#api.common.controller.TriageController.TriageController">TriageController</a>(params)</code> where
-params is a dictionary with the following keys:</p>
+<p>To create a new triage controller, create it with <code><a title="api.common.controller.TriageController.TriageController" href="#api.common.controller.TriageController.TriageController">TriageController</a>(intervals, clinic_settings)</code> where
+those values are:</p>
 <pre><code>{
-    'start-date' (str) Start date for the predictions,
-    'end-date'     (str) End date for the predictions,
-    'intervals'    (list(tuples(str))) Date intervals that predictions are made for,
-    'clinic-id' (int) The ID of the clinic.
+    'clinic_id' (int) The id of the clinic.
+    'intervals' (list(tuples(str))) List of start and end date strings for each interval.
+    'confidence' (int) The desired confidence level of predictions.
+    'num_sim_runs' (int) The number of desired simulation runs.
 }
 </code></pre></div>
 <details class="source">
@@ -214,146 +324,246 @@ params is a dictionary with the following keys:</p>
 <pre><code class="python">class TriageController:
     &#34;&#34;&#34;
     TriageController is a class to handle API requests to run predictions and simulations.
-
     Usage:
-        To create a new triage controller, create it with `TriageController(params)` where
-        params is a dictionary with the following keys:
+        To create a new triage controller, create it with `TriageController(intervals, clinic_settings)` where
+        those values are:
         ```
         {
-            &#39;start-date&#39; (str) Start date for the predictions,
-            &#39;end-date&#39;     (str) End date for the predictions,
-            &#39;intervals&#39;    (list(tuples(str))) Date intervals that predictions are made for,
-            &#39;clinic-id&#39; (int) The ID of the clinic.
+            &#39;clinic_id&#39; (int) The id of the clinic.
+            &#39;intervals&#39; (list(tuples(str))) List of start and end date strings for each interval.
+            &#39;confidence&#39; (int) The desired confidence level of predictions.
+            &#39;num_sim_runs&#39; (int) The number of desired simulation runs.
         }
         ```
     &#34;&#34;&#34;
 
     # Database connection information
     DATABASE_DATA = {
-        &#39;database&#39;: &#39;triage&#39;,
         &#39;user&#39;: &#39;triage_controller&#39;,
         &#39;password&#39;: &#39;password&#39;,
-        &#39;host&#39;: &#39;localhost&#39;,
-        &#39;port&#39;: &#39;5432&#39;
+        &#39;database&#39;: database_config[&#39;database&#39;],
+        &#39;host&#39;: database_config[&#39;host&#39;],
+        &#39;port&#39;: database_config[&#39;port&#39;]
     }
     &#34;&#34;&#34;
-    This is the database connection information used by Models to connect to the database. 
+    This is the database connection information used by Models to connect to the database.
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     &#34;&#34;&#34;
 
+    PADDING_LENGTH = 30
+    &#34;&#34;&#34;
+    Minimum padding length required by ML module.
+    &#34;&#34;&#34;
+
     # Constructor
-    def __init__(self, params):
-        self.params = params
+    def __init__(self, clinic_id, intervals, confidence, num_sim_runs):
+        self.clinic_id = clinic_id
+        self.intervals = [{&#39;start&#39;: datetime.strptime(interval[&#39;start&#39;], DATE_FORMAT),
+                           &#39;end&#39;: datetime.strptime(interval[&#39;end&#39;], DATE_FORMAT)}
+                          for interval in intervals]
+        self.confidence = confidence
+        self.num_sim_runs = num_sim_runs
 
     def predict(self):
-        &#39;&#39;&#39;Returns the start and end date for a given interval.
-
+        &#34;&#34;&#34;Returns the prediction / simulation results.
         Returns:
-            Simulation results as a dictionary with the following key-value pairs:
+            Simulation results as a dictionary with triage class as the key, and a list of dictionaries of
+            the following form as the value:
             ```
             {
-                interval (list(dict(str, int))): The referal count predictions for each interval per triage class.
-                total (int): The referal count predictions in total per triage class.
+                &#39;start&#39; (str) Start date of the interval
+                &#39;end&#39; (str) End date of the interval
+                &#39;slots&#39; (int) Predicted slots.
             }
             ```
+        &#34;&#34;&#34;
+        # Setup results dictionary
+        results = {}
 
-        &#39;&#39;&#39;
-        # Retrieve previous years referal data from database
-        initial_referal_data = self.get_initial_referal_data(
-            self.params[&#39;start-date&#39;])
+        # Setup ClinicData object.
+        clinic_data = ClinicData(self.clinic_id)
 
-        # Format and feed historic referal data into ML model to predict future referals
-        initial_prediction_data = self.format_referal_data(
-            initial_referal_data)
-        predictions = self.get_predictions(
-            self.params[&#39;intervals&#39;], initial_prediction_data)
+        # Predict for each triage class.
+        for triage_class in clinic_data.get_clinic_settings():
+            # Load the proper model.
+            model = triage_ml.models.radius_variance.RadiusVariance(
+                seq_size=30, radius=15, time_interval=triage_ml.data.dataset.TimeInterval.WEEK)
+            model._init_model()
+            model.model.load_weights(self.get_model(triage_class[&#39;severity&#39;]))
+            dates = list([self.encode_date(self.intervals[0][&#39;start&#39;])])
+            weeks = int(
+                (self.intervals[-1][&#39;end&#39;] - self.intervals[0][&#39;start&#39;]).days / 7)
 
-        # Retrieve a distribution prediction of patients by triage class
-        distribution = self.get_triage_class_distribution(
-            self.params[&#39;clinic-settings&#39;])
+            # Setup model prediction dates.
+            for i in range(weeks):
+                dates.append(self.gen_next_date(dates[-1]))
+            dates = np.stack(dates)
 
-        # Create the dataframe and run simulation
-        data_frame = DataFrame(
-            self.params[&#39;intervals&#39;], predictions, distribution)
-        # Note: Currently returns just the predictions variable
-        # but will return simulation results connected to the simulation module
-        simulation_results = {
-            &#39;interval&#39;: predictions,
-            &#39;total&#39;: predictions
-        }
+            # Retrieve model padding data (historic referral data).
+            padding_interval = self.__get_padding_interval(
+                self.intervals[0][&#39;start&#39;], self.PADDING_LENGTH)
+            padding_data = self.__sort_padding_data(clinic_data.get_referral_data(triage_class[&#39;severity&#39;], padding_interval),
+                                                    padding_interval[0],
+                                                    self.PADDING_LENGTH)
 
-        return simulation_results
+            # Predict future referral arrivals.
+            padding_data_ml = np.array(padding_data)[:, np.newaxis]
+            predictions = model.predict(
+                [padding_data_ml[np.newaxis, :], dates[0]], dates)
+            predictions = [np.array(p)[0] for p in predictions]
 
-    def get_initial_referal_data(self, start_date):
-        &#39;&#39;&#39;Returns historic referal data to use as a start for running ML predictions.
+            # Setup DataFrame for simulation.
+            prediction_dataframe = DataFrame(
+                [[p, 0] for p in padding_data] + predictions, self.intervals, self.PADDING_LENGTH)
 
+            # Run simulation.
+            sim_results = gen_min_interval_slots(queue=deque(),
+                                                 data_frame=prediction_dataframe,
+                                                 start=1,
+                                                 end=len(self.intervals),
+                                                 min_ratio=triage_class[&#39;proportion&#39;],
+                                                 window=triage_class[&#39;duration&#39;],
+                                                 final_window=2 * triage_class[&#39;duration&#39;],
+                                                 confidence=self.confidence)
+
+            # Format simulation results
+            if sim_results:
+                sim_result_formatted = [{&#39;slots&#39;: sim_result[0].expected_slots,
+                                         &#39;start&#39;: sim_result[1][&#39;start&#39;].strftime(DATE_FORMAT),
+                                         &#39;end&#39;: sim_result[1][&#39;end&#39;].strftime(DATE_FORMAT)
+                                         } for sim_result in zip(sim_results, self.intervals)]
+            else:
+                sim_result_formatted = [{&#39;slots&#39;: 0,
+                                         &#39;start&#39;: interval[&#39;start&#39;].strftime(DATE_FORMAT),
+                                         &#39;end&#39;: interval[&#39;end&#39;].strftime(DATE_FORMAT)
+                                         } for interval in self.intervals]
+
+            # Append results for triage class to total results.
+            results[triage_class[&#39;name&#39;]] = sim_result_formatted
+
+        return results
+
+    def encode_date(self, date):
+        &#34;&#34;&#34;Returns a one hot encoded date based on the inputted date.
+        This is used by the ML module to make predictions.
         Parameters:
-            `start-date` (str): The start date for predictions.
+            `date` (datetime): The date to be encoded.
         Returns:
-            A list of historic referal datapoints.
-        &#39;&#39;&#39;
-        # Calculate the (start date - a year) to search the database for relevant historic data
-        previous_year_date = datetime.datetime.strptime(
-            start_date, &#39;%Y-%m-%d&#39;) - datetime.timedelta(days=365)
+            A one hot encoded date.
+        &#34;&#34;&#34;
+        one_hot_date = np.zeros(12 + 31)
+        one_hot_date[date.date().month] = 1
+        one_hot_date[11 + date.date().day] = 1
+
+        return one_hot_date
+
+    def gen_next_date(self, date_encoding, days=7):
+        &#34;&#34;&#34;Generates the next date for the ML prediction module to predict for.
+        Parameters:
+            `date_encoding` (datetime): The date previous date.
+            `days` (int): The number of days between prediction dates (default = 7).
+        Returns:
+            The next prediction date in one hot encoding format.
+        &#34;&#34;&#34;
+        month = np.argmax(date_encoding[:12]) + 1
+        day = np.argmax(date_encoding[12:]) + 1
+        date = datetime.strptime(
+            f&#39;2000/{0 if month &lt; 10 else &#34;&#34;}{month}/{0 if day &lt; 10 else &#34;&#34;}{day}&#39;, &#39;%Y/%m/%d&#39;)
+        date = date + timedelta(days=days)
+
+        return self.encode_date(date)
+
+    def __get_padding_interval(self, start_date, weeks):
+        &#34;&#34;&#34;Returns the date interval for the padding data.
+        Parameters:
+            `start_date` (datetime): The start date for predictions.
+            `weeks` (int): The number of weeks predictions are for.
+        Returns:
+            A tuple with start and end date for the padding data.
+        &#34;&#34;&#34;
+        start = start_date - timedelta(weeks=weeks)
+        newest_data_year = self.__get_historic_data_year(start)
+
+        start = start.replace(year=newest_data_year)
+        end = start + timedelta(weeks=weeks)
+
+        return [start, end]
+
+    def __get_historic_data_year(self, start_date):
+        &#34;&#34;&#34;Returns the year of the most recent historic data.
+        Parameters:
+            `start_date` (datetime): The start date for predictions.
+        Returns:
+            An integer year value of the most recent year of historic data available.
+        &#34;&#34;&#34;
+        db = DataBase(self.DATABASE_DATA)
+
+        year = db.select(&#34;SELECT EXTRACT(YEAR FROM historicdata.date_received) \
+                         FROM triagedata.historicdata \
+                         WHERE EXTRACT(MONTH FROM historicdata.date_received)= %(month)s AND \
+                               EXTRACT(DAY FROM historicdata.date_received) &gt;= %(day)s \
+                         ORDER BY historicdata.date_received DESC \
+                         FETCH FIRST 1 ROWS ONLY&#34; %
+                         {
+                             &#39;month&#39;: start_date.month,
+                             &#39;day&#39;: start_date.day
+                         })
+
+        if len(year) != 1:
+            raise RuntimeError(
+                &#39;Could not find historic data year for start date: %s&#39;, start_date)
+
+        return int(year[0][0])
+
+    def __sort_padding_data(self, referral_data, start_date, weeks):
+        &#34;&#34;&#34;Sorts historic referral data by the week the referrals arrived.
+        Parameters:
+            `referral_data` (list(str)): List of historic referral dates.
+            `start_date` (datetime):Start date of the padding.
+            `weeks` (int): Number of weeks in the padding.
+        Returns:
+            Returns a list where each entry is the number of referrals that
+            arrived in a given week of the padding data.
+        &#34;&#34;&#34;
+        partitioned_data = {}
+        for referral in referral_data:
+            week = int(
+                (datetime.strptime(referral[2], DATE_FORMAT) - start_date).days / 7)
+            if week in partitioned_data:
+                partitioned_data[week] += 1
+            else:
+                partitioned_data[week] = 0
+
+        return [partitioned_data[week] if week in partitioned_data else 0 for week in range(weeks)]
+
+    def get_model(self, triage_class_severity):
+        &#34;&#34;&#34;Retrieves the model file name to load.
+        Parameters:
+            `triage_class_severity` (int): The severity of the triage class that the model needs to predict for.
+        Returns:
+            A string file name of the needed model.
+        &#34;&#34;&#34;
 
         # Establish database connection
         db = DataBase(self.DATABASE_DATA)
 
-        # Query for referal data from previous year
-        rows = db.select(f&#34;SELECT date_received \
-                           FROM triagedata.historicdata \
-                           WHERE date_received &lt; %(previous_year_date)s::date \
-                           ORDER BY date_received DESC \
-                           FETCH FIRST 31 ROWS ONLY&#34;,
+        # Query for referral data from previous year
+        rows = db.select(&#34;SELECT file_path \
+                           FROM triagedata.models  \
+                           WHERE clinic_id = %(clinic_id)s \
+                           AND severity = %(severity)s \
+                           AND in_use = %(in_use)s&#34; %
                          {
-                             &#39;previous_year_date&#39;: previous_year_date
+                             &#39;clinic_id&#39;: self.clinic_id,
+                             &#39;severity&#39;: triage_class_severity,
+                             &#39;in_use&#39;: True
                          })
 
-        # Return results
-        return [date_seen[0] for date_seen in rows]
+        if len(rows) == 0:
+            raise RuntimeError(
+                &#39;Could not find model for clinic %s, triage class %s&#39;, self.clinic_id, triage_class_severity)
 
-    def format_referal_data(self, referal_data):
-        &#39;&#39;&#39;Formats historic referal data to be provided to the ML model.
-
-        Parameters:
-            `referal-data` (list(str)): List of historic referal dates.
-        Returns:
-            Returns a list of differences in time (days) between historic referal dates.
-        &#39;&#39;&#39;
-        # Find the difference in days between historic referal datapoints
-        return [(next_referal - previous_referal).days
-                for previous_referal, next_referal
-                in zip(referal_data[:-1], referal_data[1:])]
-
-    def get_predictions(self, intervals, initial_prediction_data):
-        &#39;&#39;&#39;Runs ML model predictions and returns results.
-
-        Parameters:
-            `intervals` (list(tuple(str))): The list of date intervals to make predictions for.
-            `initial_prediction_data` (list(int)): List of historic referal date differences.
-        Returns:
-            A list of predictions for each interval of time including a predicted referal count and variability.
-        &#39;&#39;&#39;
-        # Return a list of predictions
-        # Note: Currently hardcoded but will change when connected to the ML module
-        return [(1, 1) for x in range(len(intervals))]
-
-    def get_triage_class_distribution(self, clinic_settings):
-        &#39;&#39;&#39;Returns the distribution of patients for a given clinic by triage class.
-
-        Parameters:
-            `clinic_settings` (dict(string, any)): Set of clinic specific settings including triage classes and their expected distributions.
-        Returns:
-            A dictionary with keys being triage class severity and values being their expected % distirbution relative to total patients for the clinic.
-        &#39;&#39;&#39;
-        # Return a distribution of patient referals by triage class
-        # Note: Currently hard coded but will be calculated once more data is provided by the client
-        return {
-            1: 0.5,
-            2: 0.2,
-            3: 0.2,
-            4: 0.1
-        }</code></pre>
+        return rows[0][0]</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -362,147 +572,128 @@ params is a dictionary with the following keys:</p>
 <div class="desc"><p>This is the database connection information used by Models to connect to the database.
 See <code><a title="api.common.database_interaction.DataBase" href="../database_interaction.html#api.common.database_interaction.DataBase">DataBase</a></code> for configuration details and required arguments.</p></div>
 </dd>
+<dt id="api.common.controller.TriageController.TriageController.PADDING_LENGTH"><code class="name">var <span class="ident">PADDING_LENGTH</span></code></dt>
+<dd>
+<div class="desc"><p>Minimum padding length required by ML module.</p></div>
+</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="api.common.controller.TriageController.TriageController.format_referal_data"><code class="name flex">
-<span>def <span class="ident">format_referal_data</span></span>(<span>self, referal_data)</span>
+<dt id="api.common.controller.TriageController.TriageController.encode_date"><code class="name flex">
+<span>def <span class="ident">encode_date</span></span>(<span>self, date)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Formats historic referal data to be provided to the ML model.</p>
+<div class="desc"><p>Returns a one hot encoded date based on the inputted date.
+This is used by the ML module to make predictions.</p>
 <h2 id="parameters">Parameters</h2>
-<p><code>referal-data</code> (list(str)): List of historic referal dates.</p>
+<p><code>date</code> (datetime): The date to be encoded.</p>
 <h2 id="returns">Returns</h2>
-<p>Returns a list of differences in time (days) between historic referal dates.</p></div>
+<p>A one hot encoded date.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def format_referal_data(self, referal_data):
-    &#39;&#39;&#39;Formats historic referal data to be provided to the ML model.
-
+<pre><code class="python">def encode_date(self, date):
+    &#34;&#34;&#34;Returns a one hot encoded date based on the inputted date.
+    This is used by the ML module to make predictions.
     Parameters:
-        `referal-data` (list(str)): List of historic referal dates.
+        `date` (datetime): The date to be encoded.
     Returns:
-        Returns a list of differences in time (days) between historic referal dates.
-    &#39;&#39;&#39;
-    # Find the difference in days between historic referal datapoints
-    return [(next_referal - previous_referal).days
-            for previous_referal, next_referal
-            in zip(referal_data[:-1], referal_data[1:])]</code></pre>
+        A one hot encoded date.
+    &#34;&#34;&#34;
+    one_hot_date = np.zeros(12 + 31)
+    one_hot_date[date.date().month] = 1
+    one_hot_date[11 + date.date().day] = 1
+
+    return one_hot_date</code></pre>
 </details>
 </dd>
-<dt id="api.common.controller.TriageController.TriageController.get_initial_referal_data"><code class="name flex">
-<span>def <span class="ident">get_initial_referal_data</span></span>(<span>self, start_date)</span>
+<dt id="api.common.controller.TriageController.TriageController.gen_next_date"><code class="name flex">
+<span>def <span class="ident">gen_next_date</span></span>(<span>self, date_encoding, days=7)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns historic referal data to use as a start for running ML predictions.</p>
+<div class="desc"><p>Generates the next date for the ML prediction module to predict for.</p>
 <h2 id="parameters">Parameters</h2>
-<p><code>start-date</code> (str): The start date for predictions.</p>
+<p><code>date_encoding</code> (datetime): The date previous date.
+<code>days</code> (int): The number of days between prediction dates (default = 7).</p>
 <h2 id="returns">Returns</h2>
-<p>A list of historic referal datapoints.</p></div>
+<p>The next prediction date in one hot encoding format.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_initial_referal_data(self, start_date):
-    &#39;&#39;&#39;Returns historic referal data to use as a start for running ML predictions.
-
+<pre><code class="python">def gen_next_date(self, date_encoding, days=7):
+    &#34;&#34;&#34;Generates the next date for the ML prediction module to predict for.
     Parameters:
-        `start-date` (str): The start date for predictions.
+        `date_encoding` (datetime): The date previous date.
+        `days` (int): The number of days between prediction dates (default = 7).
     Returns:
-        A list of historic referal datapoints.
-    &#39;&#39;&#39;
-    # Calculate the (start date - a year) to search the database for relevant historic data
-    previous_year_date = datetime.datetime.strptime(
-        start_date, &#39;%Y-%m-%d&#39;) - datetime.timedelta(days=365)
+        The next prediction date in one hot encoding format.
+    &#34;&#34;&#34;
+    month = np.argmax(date_encoding[:12]) + 1
+    day = np.argmax(date_encoding[12:]) + 1
+    date = datetime.strptime(
+        f&#39;2000/{0 if month &lt; 10 else &#34;&#34;}{month}/{0 if day &lt; 10 else &#34;&#34;}{day}&#39;, &#39;%Y/%m/%d&#39;)
+    date = date + timedelta(days=days)
+
+    return self.encode_date(date)</code></pre>
+</details>
+</dd>
+<dt id="api.common.controller.TriageController.TriageController.get_model"><code class="name flex">
+<span>def <span class="ident">get_model</span></span>(<span>self, triage_class_severity)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retrieves the model file name to load.</p>
+<h2 id="parameters">Parameters</h2>
+<p><code>triage_class_severity</code> (int): The severity of the triage class that the model needs to predict for.</p>
+<h2 id="returns">Returns</h2>
+<p>A string file name of the needed model.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_model(self, triage_class_severity):
+    &#34;&#34;&#34;Retrieves the model file name to load.
+    Parameters:
+        `triage_class_severity` (int): The severity of the triage class that the model needs to predict for.
+    Returns:
+        A string file name of the needed model.
+    &#34;&#34;&#34;
 
     # Establish database connection
     db = DataBase(self.DATABASE_DATA)
 
-    # Query for referal data from previous year
-    rows = db.select(f&#34;SELECT date_received \
-                       FROM triagedata.historicdata \
-                       WHERE date_received &lt; %(previous_year_date)s::date \
-                       ORDER BY date_received DESC \
-                       FETCH FIRST 31 ROWS ONLY&#34;,
+    # Query for referral data from previous year
+    rows = db.select(&#34;SELECT file_path \
+                       FROM triagedata.models  \
+                       WHERE clinic_id = %(clinic_id)s \
+                       AND severity = %(severity)s \
+                       AND in_use = %(in_use)s&#34; %
                      {
-                         &#39;previous_year_date&#39;: previous_year_date
+                         &#39;clinic_id&#39;: self.clinic_id,
+                         &#39;severity&#39;: triage_class_severity,
+                         &#39;in_use&#39;: True
                      })
 
-    # Return results
-    return [date_seen[0] for date_seen in rows]</code></pre>
-</details>
-</dd>
-<dt id="api.common.controller.TriageController.TriageController.get_predictions"><code class="name flex">
-<span>def <span class="ident">get_predictions</span></span>(<span>self, intervals, initial_prediction_data)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Runs ML model predictions and returns results.</p>
-<h2 id="parameters">Parameters</h2>
-<p><code>intervals</code> (list(tuple(str))): The list of date intervals to make predictions for.
-<code>initial_prediction_data</code> (list(int)): List of historic referal date differences.</p>
-<h2 id="returns">Returns</h2>
-<p>A list of predictions for each interval of time including a predicted referal count and variability.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_predictions(self, intervals, initial_prediction_data):
-    &#39;&#39;&#39;Runs ML model predictions and returns results.
+    if len(rows) == 0:
+        raise RuntimeError(
+            &#39;Could not find model for clinic %s, triage class %s&#39;, self.clinic_id, triage_class_severity)
 
-    Parameters:
-        `intervals` (list(tuple(str))): The list of date intervals to make predictions for.
-        `initial_prediction_data` (list(int)): List of historic referal date differences.
-    Returns:
-        A list of predictions for each interval of time including a predicted referal count and variability.
-    &#39;&#39;&#39;
-    # Return a list of predictions
-    # Note: Currently hardcoded but will change when connected to the ML module
-    return [(1, 1) for x in range(len(intervals))]</code></pre>
-</details>
-</dd>
-<dt id="api.common.controller.TriageController.TriageController.get_triage_class_distribution"><code class="name flex">
-<span>def <span class="ident">get_triage_class_distribution</span></span>(<span>self, clinic_settings)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns the distribution of patients for a given clinic by triage class.</p>
-<h2 id="parameters">Parameters</h2>
-<p><code>clinic_settings</code> (dict(string, any)): Set of clinic specific settings including triage classes and their expected distributions.</p>
-<h2 id="returns">Returns</h2>
-<p>A dictionary with keys being triage class severity and values being their expected % distirbution relative to total patients for the clinic.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_triage_class_distribution(self, clinic_settings):
-    &#39;&#39;&#39;Returns the distribution of patients for a given clinic by triage class.
-
-    Parameters:
-        `clinic_settings` (dict(string, any)): Set of clinic specific settings including triage classes and their expected distributions.
-    Returns:
-        A dictionary with keys being triage class severity and values being their expected % distirbution relative to total patients for the clinic.
-    &#39;&#39;&#39;
-    # Return a distribution of patient referals by triage class
-    # Note: Currently hard coded but will be calculated once more data is provided by the client
-    return {
-        1: 0.5,
-        2: 0.2,
-        3: 0.2,
-        4: 0.1
-    }</code></pre>
+    return rows[0][0]</code></pre>
 </details>
 </dd>
 <dt id="api.common.controller.TriageController.TriageController.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns the start and end date for a given interval.</p>
+<div class="desc"><p>Returns the prediction / simulation results.</p>
 <h2 id="returns">Returns</h2>
-<p>Simulation results as a dictionary with the following key-value pairs:</p>
+<p>Simulation results as a dictionary with triage class as the key, and a list of dictionaries of
+the following form as the value:</p>
 <pre><code>{
-    interval (list(dict(str, int))): The referal count predictions for each interval per triage class.
-    total (int): The referal count predictions in total per triage class.
+    'start' (str) Start date of the interval
+    'end' (str) End date of the interval
+    'slots' (int) Predicted slots.
 }
 </code></pre></div>
 <details class="source">
@@ -510,43 +701,83 @@ See <code><a title="api.common.database_interaction.DataBase" href="../database_
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict(self):
-    &#39;&#39;&#39;Returns the start and end date for a given interval.
-
+    &#34;&#34;&#34;Returns the prediction / simulation results.
     Returns:
-        Simulation results as a dictionary with the following key-value pairs:
+        Simulation results as a dictionary with triage class as the key, and a list of dictionaries of
+        the following form as the value:
         ```
         {
-            interval (list(dict(str, int))): The referal count predictions for each interval per triage class.
-            total (int): The referal count predictions in total per triage class.
+            &#39;start&#39; (str) Start date of the interval
+            &#39;end&#39; (str) End date of the interval
+            &#39;slots&#39; (int) Predicted slots.
         }
         ```
+    &#34;&#34;&#34;
+    # Setup results dictionary
+    results = {}
 
-    &#39;&#39;&#39;
-    # Retrieve previous years referal data from database
-    initial_referal_data = self.get_initial_referal_data(
-        self.params[&#39;start-date&#39;])
+    # Setup ClinicData object.
+    clinic_data = ClinicData(self.clinic_id)
 
-    # Format and feed historic referal data into ML model to predict future referals
-    initial_prediction_data = self.format_referal_data(
-        initial_referal_data)
-    predictions = self.get_predictions(
-        self.params[&#39;intervals&#39;], initial_prediction_data)
+    # Predict for each triage class.
+    for triage_class in clinic_data.get_clinic_settings():
+        # Load the proper model.
+        model = triage_ml.models.radius_variance.RadiusVariance(
+            seq_size=30, radius=15, time_interval=triage_ml.data.dataset.TimeInterval.WEEK)
+        model._init_model()
+        model.model.load_weights(self.get_model(triage_class[&#39;severity&#39;]))
+        dates = list([self.encode_date(self.intervals[0][&#39;start&#39;])])
+        weeks = int(
+            (self.intervals[-1][&#39;end&#39;] - self.intervals[0][&#39;start&#39;]).days / 7)
 
-    # Retrieve a distribution prediction of patients by triage class
-    distribution = self.get_triage_class_distribution(
-        self.params[&#39;clinic-settings&#39;])
+        # Setup model prediction dates.
+        for i in range(weeks):
+            dates.append(self.gen_next_date(dates[-1]))
+        dates = np.stack(dates)
 
-    # Create the dataframe and run simulation
-    data_frame = DataFrame(
-        self.params[&#39;intervals&#39;], predictions, distribution)
-    # Note: Currently returns just the predictions variable
-    # but will return simulation results connected to the simulation module
-    simulation_results = {
-        &#39;interval&#39;: predictions,
-        &#39;total&#39;: predictions
-    }
+        # Retrieve model padding data (historic referral data).
+        padding_interval = self.__get_padding_interval(
+            self.intervals[0][&#39;start&#39;], self.PADDING_LENGTH)
+        padding_data = self.__sort_padding_data(clinic_data.get_referral_data(triage_class[&#39;severity&#39;], padding_interval),
+                                                padding_interval[0],
+                                                self.PADDING_LENGTH)
 
-    return simulation_results</code></pre>
+        # Predict future referral arrivals.
+        padding_data_ml = np.array(padding_data)[:, np.newaxis]
+        predictions = model.predict(
+            [padding_data_ml[np.newaxis, :], dates[0]], dates)
+        predictions = [np.array(p)[0] for p in predictions]
+
+        # Setup DataFrame for simulation.
+        prediction_dataframe = DataFrame(
+            [[p, 0] for p in padding_data] + predictions, self.intervals, self.PADDING_LENGTH)
+
+        # Run simulation.
+        sim_results = gen_min_interval_slots(queue=deque(),
+                                             data_frame=prediction_dataframe,
+                                             start=1,
+                                             end=len(self.intervals),
+                                             min_ratio=triage_class[&#39;proportion&#39;],
+                                             window=triage_class[&#39;duration&#39;],
+                                             final_window=2 * triage_class[&#39;duration&#39;],
+                                             confidence=self.confidence)
+
+        # Format simulation results
+        if sim_results:
+            sim_result_formatted = [{&#39;slots&#39;: sim_result[0].expected_slots,
+                                     &#39;start&#39;: sim_result[1][&#39;start&#39;].strftime(DATE_FORMAT),
+                                     &#39;end&#39;: sim_result[1][&#39;end&#39;].strftime(DATE_FORMAT)
+                                     } for sim_result in zip(sim_results, self.intervals)]
+        else:
+            sim_result_formatted = [{&#39;slots&#39;: 0,
+                                     &#39;start&#39;: interval[&#39;start&#39;].strftime(DATE_FORMAT),
+                                     &#39;end&#39;: interval[&#39;end&#39;].strftime(DATE_FORMAT)
+                                     } for interval in self.intervals]
+
+        # Append results for triage class to total results.
+        results[triage_class[&#39;name&#39;]] = sim_result_formatted
+
+    return results</code></pre>
 </details>
 </dd>
 </dl>
@@ -569,12 +800,12 @@ See <code><a title="api.common.database_interaction.DataBase" href="../database_
 <ul>
 <li>
 <h4><code><a title="api.common.controller.TriageController.TriageController" href="#api.common.controller.TriageController.TriageController">TriageController</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="api.common.controller.TriageController.TriageController.DATABASE_DATA" href="#api.common.controller.TriageController.TriageController.DATABASE_DATA">DATABASE_DATA</a></code></li>
-<li><code><a title="api.common.controller.TriageController.TriageController.format_referal_data" href="#api.common.controller.TriageController.TriageController.format_referal_data">format_referal_data</a></code></li>
-<li><code><a title="api.common.controller.TriageController.TriageController.get_initial_referal_data" href="#api.common.controller.TriageController.TriageController.get_initial_referal_data">get_initial_referal_data</a></code></li>
-<li><code><a title="api.common.controller.TriageController.TriageController.get_predictions" href="#api.common.controller.TriageController.TriageController.get_predictions">get_predictions</a></code></li>
-<li><code><a title="api.common.controller.TriageController.TriageController.get_triage_class_distribution" href="#api.common.controller.TriageController.TriageController.get_triage_class_distribution">get_triage_class_distribution</a></code></li>
+<li><code><a title="api.common.controller.TriageController.TriageController.PADDING_LENGTH" href="#api.common.controller.TriageController.TriageController.PADDING_LENGTH">PADDING_LENGTH</a></code></li>
+<li><code><a title="api.common.controller.TriageController.TriageController.encode_date" href="#api.common.controller.TriageController.TriageController.encode_date">encode_date</a></code></li>
+<li><code><a title="api.common.controller.TriageController.TriageController.gen_next_date" href="#api.common.controller.TriageController.TriageController.gen_next_date">gen_next_date</a></code></li>
+<li><code><a title="api.common.controller.TriageController.TriageController.get_model" href="#api.common.controller.TriageController.TriageController.get_model">get_model</a></code></li>
 <li><code><a title="api.common.controller.TriageController.TriageController.predict" href="#api.common.controller.TriageController.TriageController.predict">predict</a></code></li>
 </ul>
 </li>

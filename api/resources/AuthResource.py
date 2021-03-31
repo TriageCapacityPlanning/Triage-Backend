@@ -1,3 +1,4 @@
+from api.common.exceptions import Unauthorized
 from flask_restful import Resource
 from flask import request
 from functools import wraps
@@ -8,23 +9,10 @@ import os
 SECRET_KEY = os.environ['API_SECRET']
 
 
-class Unauthorized(Exception):
-    status_code = 401
-
-    def __init__(self, message, status_code=None, payload=None):
-        Exception.__init__(self)
-        self.message = message
-        if status_code is not None:
-            self.status_code = status_code
-        self.payload = payload
-
-    def to_dict(self):
-        rv = dict(self.payload or ())
-        rv['message'] = self.message
-        return rv
-
-
 def authenticate(func):
+    """
+    A function decorator for protecting functions that require authentication to access.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
         token = request.headers.get('token')
@@ -46,4 +34,7 @@ def authenticate(func):
 
 
 class AuthResource(Resource):
+    """
+    An inheritance class for auth protected endpoints
+    """
     method_decorators = [authenticate]

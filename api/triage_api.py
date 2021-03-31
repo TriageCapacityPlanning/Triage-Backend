@@ -3,6 +3,7 @@ The Triage API to serve to the front end
 Read the documentation from Flask: https://flask-restful.readthedocs.io/en/latest/
 """
 
+from api.common.exceptions import FileError, Unauthorized
 from flask import Flask, jsonify
 from flask_restful import Api
 from flask_cors import CORS
@@ -11,7 +12,6 @@ from api.resources.models import Models
 import api.resources.upload as Upload
 from api.resources.data import Data
 from api.resources.auth import Auth
-from api.resources.AuthResource import Unauthorized
 from api.common.config import VERSION_PREFIX
 
 
@@ -35,7 +35,7 @@ def create_app():
         response.status_code = error.status_code
         return response
 
-    @app.errorhandler(Upload.FileError)
+    @app.errorhandler(FileError)
     def handle_file_upload_errors(error):
         response = jsonify(error.to_dict())
         response.status_code = error.status_code
