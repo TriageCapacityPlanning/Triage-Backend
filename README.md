@@ -50,11 +50,15 @@ Note: This also requires the DB docker container from above to be running. This 
 
 ### Endpoints
 Currently the following endpoints are implemented:
+- [GET /auth/login](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#get-v1predict)
 - [GET /predict](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#get-v1predict)
 - [GET /classes](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#get-v1classes)
 - [PUT /classes](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#put-v1classes)
 - [GET /models](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#get-v1models)
 - [PATCH /models/use](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#patch-v1modelsuse)
+- [PUT /upload/past-appointments](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#get-v1models)
+- [POST /upload/model](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#get-v1models)
+- [GET /data/(clinic-id)/(triage-class)](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#patch-v1modelsuse)
 
 ### Unit Testing
 To install the requirements for testing by navigating to the `api` folder and running:
