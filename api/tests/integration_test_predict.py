@@ -1,11 +1,13 @@
 """
 This module handles testing for the Predict class.
+Requires triage-ml package to be installed
 """
 
 import pytest
 import json
 from api.resources.predict import Predict
 from api.triage_api import create_app
+
 
 class TestPredictAPI:
     """

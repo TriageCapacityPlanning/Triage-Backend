@@ -1,0 +1,2 @@
+[run]
+omit = */tests/*, api/common/controller/TriageController.py, api/resources/predict.py

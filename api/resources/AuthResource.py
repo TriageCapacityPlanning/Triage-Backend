@@ -1,34 +1,40 @@
+from api.common.exceptions import Unauthorized
 from flask_restful import Resource
 from flask import request
 from functools import wraps
 import jwt
+import os
 
-# TODO: Share secret key between this file and AuthResource.py
-SECRET_KEY = 'thisisthesecretkey'
+
+SECRET_KEY = os.environ['API_SECRET']
+
 
 def authenticate(func):
+    """
+    A function decorator for protecting functions that require authentication to access.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
         token = request.headers.get('token')
 
         if not token:
-            raise RuntimeError('Token is missing')
-        
-        print(token)
+            raise Unauthorized("A valid authentication token is required for this route.")
 
         try:
             data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        except:
-            raise RuntimeError('Token is invalid')
+        except jwt.PyJWTError:
+            raise Unauthorized("A valid authentication token is required for this route.")
 
-        
         clinic_id = request.args.get('clinic_id')
-        print(clinic_id == data['clinic'])
         if clinic_id and not (int(clinic_id) == int(data['clinic'])):
-            raise RuntimeError('User does not have permissions to access clinic %s', clinic_id)
-        
+            raise Unauthorized('User does not have permissions to access clinic %s', clinic_id)
+
         return func(*args, **kwargs)
     return wrapper
 
+
 class AuthResource(Resource):
+    """
+    An inheritance class for auth protected endpoints
+    """
     method_decorators = [authenticate]

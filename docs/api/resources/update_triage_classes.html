@@ -32,50 +32,51 @@ This module handles all required interaction with the `/classes` endpoint
 &#34;&#34;&#34;
 
 # External dependencies
-from flask_restful import Resource
+from api.resources.AuthResource import AuthResource
 from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
 
 # Internal dependencies
-from api.common.database_interaction import DataBase
+from api.common.config import database_config
+from api.common.ClinicData import ClinicData
 
 
-class UpdateTriageClasses(Resource):
+class UpdateTriageClasses(AuthResource):
     &#34;&#34;&#34;
     The `UpdateTriageClasses` class handles all of the requests relative to updating triage class data for the API.
     &#34;&#34;&#34;
 
     DATABASE_DATA = {
-        &#39;database&#39;: &#39;triage&#39;,
         &#39;user&#39;: &#39;triage_class_handler&#39;,
         &#39;password&#39;: &#39;password&#39;,
-        &#39;host&#39;: &#39;localhost&#39;,
-        &#39;port&#39;: &#39;5432&#39;
+        &#39;database&#39;: database_config[&#39;database&#39;],
+        &#39;host&#39;: database_config[&#39;host&#39;],
+        &#39;port&#39;: database_config[&#39;port&#39;]
     }
     &#34;&#34;&#34;
-    This is the database connection information used by Models to connect to the database. 
+    This is the database connection information used by Models to connect to the database.
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     &#34;&#34;&#34;
 
     arg_schema_get = {
-        &#39;clinic-id&#39;: fields.Int(required=True)
+        &#39;clinic_id&#39;: fields.Int(required=True)
     }
     &#34;&#34;&#34;
     The required schema to handle a get request
 
     Args:
-        clinic-id (int): The id of the clinic being referenced
+        clinic_id (int): The id of the clinic being referenced
     &#34;&#34;&#34;
 
     arg_schema_put = {
-        &#39;triage-class&#39;: fields.Dict(required=True, keys=fields.Str(), values=fields.Raw())
+        &#39;triage_class&#39;: fields.Dict(required=True, keys=fields.Str(), values=fields.Raw())
     }
     &#34;&#34;&#34;
     The required schema to hangle a patch request
 
     Args:
-        triage-class (int): A dictionary containing a triage classes information including
+        triage_class (dict): A dictionary containing a triage classes information including
         ```
         {
             clinic_id (int): The ID of the clinic.
@@ -89,12 +90,12 @@ class UpdateTriageClasses(Resource):
 
     def get(self):
         &#34;&#34;&#34;
-        Handles a get request for the classes endpoints. 
+        Handles a get request for the classes endpoints.
         Returns a dictionary with a list of triage classes for an associated clinic.
 
         Args:
             Requires api query string arguments, see `UpdateTriageClasses.arg_schema_get`, in the get request
-        
+
         Returns:
             A dictionary with
             `status` (int) The status of the request
@@ -105,80 +106,33 @@ class UpdateTriageClasses(Resource):
         args = parser.parse(self.arg_schema_get, request,
                             location=&#39;querystring&#39;)
         # Retrieve triage classes from database
-        triage_classes = self.get_triage_classes(args[&#39;clinic-id&#39;])
+        clinic_data = ClinicData(args[&#39;clinic_id&#39;])
+        triage_classes = clinic_data.get_clinic_settings()
         # API Response
         return {&#39;status&#39;: 200, &#39;classes&#39;: triage_classes}
 
     def put(self):
         &#34;&#34;&#34;
-        Handles a put request for the classes endpoints. 
+        Handles a put request for the classes endpoints.
         Updates or creates a triage class in the database.
 
         Args:
             Requires api query string arguments, see `UpdateTriageClasses.arg_schema_put`, in the put request
-        
+
         Returns:
             A dictionary with
             `status` (int) The status of the request
             `updated` (dict): The created or updated class.
         &#34;&#34;&#34;
-
         # Validate input arguments
-        args = parser.parse(self.arg_schema_put, request)
+        args = parser.parse(self.arg_schema_put, request, location=&#39;json&#39;)
+
         # Update triage class in database
-        self.update_triage_class(args[&#39;triage-class&#39;])
+        clinic_data = ClinicData(args[&#39;triage_class&#39;][&#39;clinic_id&#39;])
+        clinic_data.update_triage_class(args[&#39;triage_class&#39;])
+
         # API Response
-        return {&#39;status&#39;: 200, &#39;updated&#39;: args[&#39;triage-class&#39;]}
-
-    def get_triage_classes(self, clinic_id):
-        &#34;&#34;&#34;
-        Gets the available triage classes for the given clinic.
-
-        Args:
-            clinic_id (int): The id of the clinic being referenced.
-        
-        Returns:
-            A list of dictionaries representing the triage classes for the clinic.
-        &#34;&#34;&#34;
-
-        # Keys for response
-        keys = [&#39;clinic_id&#39;, &#39;severity&#39;, &#39;name&#39;, &#39;duration&#39;, &#39;proportion&#39;]
-        # Establish database connection and get the data
-        db = DataBase(self.DATABASE_DATA)
-        rows = db.select(f&#34;SELECT clinic_id, severity, name, duration, proportion \
-                           FROM triagedata.triageclasses \
-                           WHERE clinic_id={clinic_id}&#34;)
-        # Return data
-        return [dict(zip(keys, values)) for values in rows]
-
-    def update_triage_class(self, triage_class):
-        &#34;&#34;&#34;
-        Creates or updates the respective triage class within the clinic.
-
-        Args:
-            triage_class (dict): The desired new or updated triage class.
-        &#34;&#34;&#34;
-
-        # Establish database connection
-        db = DataBase(self.DATABASE_DATA)
-        # Insert or update information
-        db.insert(f&#34;INSERT INTO triagedata.triageclasses (clinic_id, severity, name, duration, proportion) \
-                    VALUES(%(clinic_id)s, \
-                           %(severity)s, \
-                           %(name)s, \
-                           %(duration)s, \
-                           %(proportion)s) \
-                    ON CONFLICT ON CONSTRAINT pk DO UPDATE \
-                        SET name = %(name)s, \
-                            duration = %(duration)s, \
-                            proportion = %(proportion)s&#34;,
-                  {
-                      &#39;clinic_id&#39;: triage_class[&#39;clinic-id&#39;],
-                      &#39;severity&#39;: triage_class[&#39;severity&#39;],
-                      &#39;name&#39;: triage_class[&#39;name&#39;],
-                      &#39;duration&#39;: triage_class[&#39;duration&#39;],
-                      &#39;proportion&#39;: triage_class[&#39;proportion&#39;]
-                  })</code></pre>
+        return {&#39;status&#39;: 200, &#39;updated&#39;: args[&#39;triage_class&#39;]}</code></pre>
 </details>
 </section>
 <section>
@@ -199,41 +153,41 @@ class UpdateTriageClasses(Resource):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class UpdateTriageClasses(Resource):
+<pre><code class="python">class UpdateTriageClasses(AuthResource):
     &#34;&#34;&#34;
     The `UpdateTriageClasses` class handles all of the requests relative to updating triage class data for the API.
     &#34;&#34;&#34;
 
     DATABASE_DATA = {
-        &#39;database&#39;: &#39;triage&#39;,
         &#39;user&#39;: &#39;triage_class_handler&#39;,
         &#39;password&#39;: &#39;password&#39;,
-        &#39;host&#39;: &#39;localhost&#39;,
-        &#39;port&#39;: &#39;5432&#39;
+        &#39;database&#39;: database_config[&#39;database&#39;],
+        &#39;host&#39;: database_config[&#39;host&#39;],
+        &#39;port&#39;: database_config[&#39;port&#39;]
     }
     &#34;&#34;&#34;
-    This is the database connection information used by Models to connect to the database. 
+    This is the database connection information used by Models to connect to the database.
     See `api.common.database_interaction.DataBase` for configuration details and required arguments.
     &#34;&#34;&#34;
 
     arg_schema_get = {
-        &#39;clinic-id&#39;: fields.Int(required=True)
+        &#39;clinic_id&#39;: fields.Int(required=True)
     }
     &#34;&#34;&#34;
     The required schema to handle a get request
 
     Args:
-        clinic-id (int): The id of the clinic being referenced
+        clinic_id (int): The id of the clinic being referenced
     &#34;&#34;&#34;
 
     arg_schema_put = {
-        &#39;triage-class&#39;: fields.Dict(required=True, keys=fields.Str(), values=fields.Raw())
+        &#39;triage_class&#39;: fields.Dict(required=True, keys=fields.Str(), values=fields.Raw())
     }
     &#34;&#34;&#34;
     The required schema to hangle a patch request
 
     Args:
-        triage-class (int): A dictionary containing a triage classes information including
+        triage_class (dict): A dictionary containing a triage classes information including
         ```
         {
             clinic_id (int): The ID of the clinic.
@@ -247,12 +201,12 @@ class UpdateTriageClasses(Resource):
 
     def get(self):
         &#34;&#34;&#34;
-        Handles a get request for the classes endpoints. 
+        Handles a get request for the classes endpoints.
         Returns a dictionary with a list of triage classes for an associated clinic.
 
         Args:
             Requires api query string arguments, see `UpdateTriageClasses.arg_schema_get`, in the get request
-        
+
         Returns:
             A dictionary with
             `status` (int) The status of the request
@@ -263,83 +217,37 @@ class UpdateTriageClasses(Resource):
         args = parser.parse(self.arg_schema_get, request,
                             location=&#39;querystring&#39;)
         # Retrieve triage classes from database
-        triage_classes = self.get_triage_classes(args[&#39;clinic-id&#39;])
+        clinic_data = ClinicData(args[&#39;clinic_id&#39;])
+        triage_classes = clinic_data.get_clinic_settings()
         # API Response
         return {&#39;status&#39;: 200, &#39;classes&#39;: triage_classes}
 
     def put(self):
         &#34;&#34;&#34;
-        Handles a put request for the classes endpoints. 
+        Handles a put request for the classes endpoints.
         Updates or creates a triage class in the database.
 
         Args:
             Requires api query string arguments, see `UpdateTriageClasses.arg_schema_put`, in the put request
-        
+
         Returns:
             A dictionary with
             `status` (int) The status of the request
             `updated` (dict): The created or updated class.
         &#34;&#34;&#34;
-
         # Validate input arguments
-        args = parser.parse(self.arg_schema_put, request)
+        args = parser.parse(self.arg_schema_put, request, location=&#39;json&#39;)
+
         # Update triage class in database
-        self.update_triage_class(args[&#39;triage-class&#39;])
+        clinic_data = ClinicData(args[&#39;triage_class&#39;][&#39;clinic_id&#39;])
+        clinic_data.update_triage_class(args[&#39;triage_class&#39;])
+
         # API Response
-        return {&#39;status&#39;: 200, &#39;updated&#39;: args[&#39;triage-class&#39;]}
-
-    def get_triage_classes(self, clinic_id):
-        &#34;&#34;&#34;
-        Gets the available triage classes for the given clinic.
-
-        Args:
-            clinic_id (int): The id of the clinic being referenced.
-        
-        Returns:
-            A list of dictionaries representing the triage classes for the clinic.
-        &#34;&#34;&#34;
-
-        # Keys for response
-        keys = [&#39;clinic_id&#39;, &#39;severity&#39;, &#39;name&#39;, &#39;duration&#39;, &#39;proportion&#39;]
-        # Establish database connection and get the data
-        db = DataBase(self.DATABASE_DATA)
-        rows = db.select(f&#34;SELECT clinic_id, severity, name, duration, proportion \
-                           FROM triagedata.triageclasses \
-                           WHERE clinic_id={clinic_id}&#34;)
-        # Return data
-        return [dict(zip(keys, values)) for values in rows]
-
-    def update_triage_class(self, triage_class):
-        &#34;&#34;&#34;
-        Creates or updates the respective triage class within the clinic.
-
-        Args:
-            triage_class (dict): The desired new or updated triage class.
-        &#34;&#34;&#34;
-
-        # Establish database connection
-        db = DataBase(self.DATABASE_DATA)
-        # Insert or update information
-        db.insert(f&#34;INSERT INTO triagedata.triageclasses (clinic_id, severity, name, duration, proportion) \
-                    VALUES(%(clinic_id)s, \
-                           %(severity)s, \
-                           %(name)s, \
-                           %(duration)s, \
-                           %(proportion)s) \
-                    ON CONFLICT ON CONSTRAINT pk DO UPDATE \
-                        SET name = %(name)s, \
-                            duration = %(duration)s, \
-                            proportion = %(proportion)s&#34;,
-                  {
-                      &#39;clinic_id&#39;: triage_class[&#39;clinic-id&#39;],
-                      &#39;severity&#39;: triage_class[&#39;severity&#39;],
-                      &#39;name&#39;: triage_class[&#39;name&#39;],
-                      &#39;duration&#39;: triage_class[&#39;duration&#39;],
-                      &#39;proportion&#39;: triage_class[&#39;proportion&#39;]
-                  })</code></pre>
+        return {&#39;status&#39;: 200, &#39;updated&#39;: args[&#39;triage_class&#39;]}</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="api.resources.AuthResource.AuthResource" href="AuthResource.html#api.resources.AuthResource.AuthResource">AuthResource</a></li>
 <li>flask_restful.Resource</li>
 <li>flask.views.MethodView</li>
 <li>flask.views.View</li>
@@ -355,13 +263,19 @@ See <code><a title="api.common.database_interaction.DataBase" href="../common/da
 <dd>
 <div class="desc"><p>The required schema to handle a get request</p>
 <h2 id="args">Args</h2>
-<p>clinic-id (int): The id of the clinic being referenced</p></div>
+<dl>
+<dt><strong><code>clinic_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>The id of the clinic being referenced</dd>
+</dl></div>
 </dd>
 <dt id="api.resources.update_triage_classes.UpdateTriageClasses.arg_schema_put"><code class="name">var <span class="ident">arg_schema_put</span></code></dt>
 <dd>
 <div class="desc"><p>The required schema to hangle a patch request</p>
 <h2 id="args">Args</h2>
-<p>triage-class (int): A dictionary containing a triage classes information including</p>
+<dl>
+<dt><strong><code>triage_class</code></strong> :&ensp;<code>dict</code></dt>
+<dd>A dictionary containing a triage classes information including</dd>
+</dl>
 <pre><code>{
     clinic_id (int): The ID of the clinic.
     severity (int): The severity level of the triage class.
@@ -396,12 +310,12 @@ Returns a dictionary with a list of triage classes for an associated clinic.</p>
 </summary>
 <pre><code class="python">def get(self):
     &#34;&#34;&#34;
-    Handles a get request for the classes endpoints. 
+    Handles a get request for the classes endpoints.
     Returns a dictionary with a list of triage classes for an associated clinic.
 
     Args:
         Requires api query string arguments, see `UpdateTriageClasses.arg_schema_get`, in the get request
-    
+
     Returns:
         A dictionary with
         `status` (int) The status of the request
@@ -412,47 +326,10 @@ Returns a dictionary with a list of triage classes for an associated clinic.</p>
     args = parser.parse(self.arg_schema_get, request,
                         location=&#39;querystring&#39;)
     # Retrieve triage classes from database
-    triage_classes = self.get_triage_classes(args[&#39;clinic-id&#39;])
+    clinic_data = ClinicData(args[&#39;clinic_id&#39;])
+    triage_classes = clinic_data.get_clinic_settings()
     # API Response
     return {&#39;status&#39;: 200, &#39;classes&#39;: triage_classes}</code></pre>
-</details>
-</dd>
-<dt id="api.resources.update_triage_classes.UpdateTriageClasses.get_triage_classes"><code class="name flex">
-<span>def <span class="ident">get_triage_classes</span></span>(<span>self, clinic_id)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Gets the available triage classes for the given clinic.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>clinic_id</code></strong> :&ensp;<code>int</code></dt>
-<dd>The id of the clinic being referenced.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>A list of dictionaries representing the triage classes for the clinic.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_triage_classes(self, clinic_id):
-    &#34;&#34;&#34;
-    Gets the available triage classes for the given clinic.
-
-    Args:
-        clinic_id (int): The id of the clinic being referenced.
-    
-    Returns:
-        A list of dictionaries representing the triage classes for the clinic.
-    &#34;&#34;&#34;
-
-    # Keys for response
-    keys = [&#39;clinic_id&#39;, &#39;severity&#39;, &#39;name&#39;, &#39;duration&#39;, &#39;proportion&#39;]
-    # Establish database connection and get the data
-    db = DataBase(self.DATABASE_DATA)
-    rows = db.select(f&#34;SELECT clinic_id, severity, name, duration, proportion \
-                       FROM triagedata.triageclasses \
-                       WHERE clinic_id={clinic_id}&#34;)
-    # Return data
-    return [dict(zip(keys, values)) for values in rows]</code></pre>
 </details>
 </dd>
 <dt id="api.resources.update_triage_classes.UpdateTriageClasses.put"><code class="name flex">
@@ -473,68 +350,26 @@ Updates or creates a triage class in the database.</p>
 </summary>
 <pre><code class="python">def put(self):
     &#34;&#34;&#34;
-    Handles a put request for the classes endpoints. 
+    Handles a put request for the classes endpoints.
     Updates or creates a triage class in the database.
 
     Args:
         Requires api query string arguments, see `UpdateTriageClasses.arg_schema_put`, in the put request
-    
+
     Returns:
         A dictionary with
         `status` (int) The status of the request
         `updated` (dict): The created or updated class.
     &#34;&#34;&#34;
-
     # Validate input arguments
-    args = parser.parse(self.arg_schema_put, request)
+    args = parser.parse(self.arg_schema_put, request, location=&#39;json&#39;)
+
     # Update triage class in database
-    self.update_triage_class(args[&#39;triage-class&#39;])
+    clinic_data = ClinicData(args[&#39;triage_class&#39;][&#39;clinic_id&#39;])
+    clinic_data.update_triage_class(args[&#39;triage_class&#39;])
+
     # API Response
-    return {&#39;status&#39;: 200, &#39;updated&#39;: args[&#39;triage-class&#39;]}</code></pre>
-</details>
-</dd>
-<dt id="api.resources.update_triage_classes.UpdateTriageClasses.update_triage_class"><code class="name flex">
-<span>def <span class="ident">update_triage_class</span></span>(<span>self, triage_class)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Creates or updates the respective triage class within the clinic.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>triage_class</code></strong> :&ensp;<code>dict</code></dt>
-<dd>The desired new or updated triage class.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def update_triage_class(self, triage_class):
-    &#34;&#34;&#34;
-    Creates or updates the respective triage class within the clinic.
-
-    Args:
-        triage_class (dict): The desired new or updated triage class.
-    &#34;&#34;&#34;
-
-    # Establish database connection
-    db = DataBase(self.DATABASE_DATA)
-    # Insert or update information
-    db.insert(f&#34;INSERT INTO triagedata.triageclasses (clinic_id, severity, name, duration, proportion) \
-                VALUES(%(clinic_id)s, \
-                       %(severity)s, \
-                       %(name)s, \
-                       %(duration)s, \
-                       %(proportion)s) \
-                ON CONFLICT ON CONSTRAINT pk DO UPDATE \
-                    SET name = %(name)s, \
-                        duration = %(duration)s, \
-                        proportion = %(proportion)s&#34;,
-              {
-                  &#39;clinic_id&#39;: triage_class[&#39;clinic-id&#39;],
-                  &#39;severity&#39;: triage_class[&#39;severity&#39;],
-                  &#39;name&#39;: triage_class[&#39;name&#39;],
-                  &#39;duration&#39;: triage_class[&#39;duration&#39;],
-                  &#39;proportion&#39;: triage_class[&#39;proportion&#39;]
-              })</code></pre>
+    return {&#39;status&#39;: 200, &#39;updated&#39;: args[&#39;triage_class&#39;]}</code></pre>
 </details>
 </dd>
 </dl>
@@ -562,10 +397,8 @@ Updates or creates a triage class in the database.</p>
 <li><code><a title="api.resources.update_triage_classes.UpdateTriageClasses.arg_schema_get" href="#api.resources.update_triage_classes.UpdateTriageClasses.arg_schema_get">arg_schema_get</a></code></li>
 <li><code><a title="api.resources.update_triage_classes.UpdateTriageClasses.arg_schema_put" href="#api.resources.update_triage_classes.UpdateTriageClasses.arg_schema_put">arg_schema_put</a></code></li>
 <li><code><a title="api.resources.update_triage_classes.UpdateTriageClasses.get" href="#api.resources.update_triage_classes.UpdateTriageClasses.get">get</a></code></li>
-<li><code><a title="api.resources.update_triage_classes.UpdateTriageClasses.get_triage_classes" href="#api.resources.update_triage_classes.UpdateTriageClasses.get_triage_classes">get_triage_classes</a></code></li>
 <li><code><a title="api.resources.update_triage_classes.UpdateTriageClasses.methods" href="#api.resources.update_triage_classes.UpdateTriageClasses.methods">methods</a></code></li>
 <li><code><a title="api.resources.update_triage_classes.UpdateTriageClasses.put" href="#api.resources.update_triage_classes.UpdateTriageClasses.put">put</a></code></li>
-<li><code><a title="api.resources.update_triage_classes.UpdateTriageClasses.update_triage_class" href="#api.resources.update_triage_classes.UpdateTriageClasses.update_triage_class">update_triage_class</a></code></li>
 </ul>
 </li>
 </ul>

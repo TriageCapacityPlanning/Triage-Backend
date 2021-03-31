@@ -27,89 +27,88 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34; 
+<pre><code class="python">&#34;&#34;&#34;
 The DataFrame is used to generate varying sets of referal predictions for the purposes of simulation.
 &#34;&#34;&#34;
 
 # External dependencies
-import random
+import numpy as np
+import math
 
 
 class DataFrame:
     &#34;&#34;&#34;
     DataFrame is a class to generate data for simulating patient referals.
-
     Usage:
-        To create a new data frame, create it with `DataFrame(intervals, predictions, distribution)`.
-    
+        To create a new data frame, create it with `DataFrame(intervals, predictions, padding_length)`.
+
     Args:
         intervals (list): List of interval start and end dates.
-        predictions (list): List of predictions for each interval.
-        distribution (dict): Distribution of patients by triage class.
+        predictions (list): List of predictions and padding data.
+        padding_length (dict): Distribution of patients by triage class.
     &#34;&#34;&#34;
 
-    def __init__(self, intervals, predictions, distribution):
-        self.intervals = intervals
+    def __init__(self, predictions, intervals, padding_length):
+        self.intervals = self.__format_intervals(intervals, padding_length)
+        print(self.intervals)
         self.predictions = predictions
-        self.distribution = distribution
 
-    def get_interval_dates(self, interval: int):
-        &#39;&#39;&#39;Returns the start and end date for a given interval.
-
+    def get_interval_size(self, interval):
+        &#34;&#34;&#34;Returns the size of an interval (in weeks).
         Parameters:
             `interval` (int): The index of the desired interval.
-
         Returns:
-            The start and end date for the given interval as a 2-ary tuple.
-            Example: (&#39;2020-01-01&#39;, &#39;2020-02-15&#39;)
+            Returns an integer value equal to the size of the interval (in weeks).
+        &#34;&#34;&#34;
 
-        &#39;&#39;&#39;
-        # Return the dates of a given interval
-        return self.intervals[interval]
+        # Check validity of input interval index.
+        if interval not in range(0, len(self.intervals)):
+            raise ValueError(&#34;Invalid interval %s.&#34;, interval)
 
-    def get_sample(self, interval: int, triage_class: int):
-        &#39;&#39;&#39;Returns a sample prediction for referal count of patients within a triage class for a given interval.
+        # Return the length of a given interval
+        return (self.intervals[interval][1] - self.intervals[interval][0]) + 1
 
+    def get_interval_sample(self, interval):
+        &#34;&#34;&#34;Returns a sample prediction for referal count of patients.
         Parameters:
             `interval` (int): The index of the desired interval.
-            `triage_class` (int): The severity of the desired triage class.
-
         Returns:
-            Returns an integer prediction of the number of referals.
-        &#39;&#39;&#39;
-        # Find the base prediction of referals relative to a triage class
-        base_referal_prediction = self.predictions[interval][0] * \
-            self.distribution[triage_class]
-        # Generate a variance of referals relative to a triage class
-        variance = random.uniform(-self.predictions[interval][1],
-                                  self.predictions[interval][1]) * self.distribution[triage_class]
-        # Sum the base prediction and the variance
-        sample = base_referal_prediction + variance
-        # Return a valid sample or 0
-        return sample if sample &gt; 0 else 0
+            Returns a list (of length equal to the number of weeks in the given interval) where each
+            entry is an integer signifying the number of patient referrals predicted to arrive.
+        &#34;&#34;&#34;
+        # Check validity of input interval index.
+        if interval not in range(0, len(self.intervals)):
+            raise ValueError(&#34;Invalid interval %s.&#34;, interval)
 
-    def get_distribution(self, interval: int, triage_class: int):
-        &#39;&#39;&#39;Returns distribution information about a given triage class within a provided interval.
+        # Get start and end of interval
+        start = self.intervals[interval][0]
+        end = self.intervals[interval][1] + 1
 
+        # Generate and return sample
+        res = [np.round(max(0, np.random.normal(p[0], math.sqrt(p[1])))) for p in self.predictions[start:end]]
+        return res
+
+    def __format_intervals(self, intervals, padding_length):
+        &#34;&#34;&#34;Converts intervals from date format (start and end date for an interval) to relative
+        indexes in the list of predictions.
         Parameters:
-            `interval` (int): The index of the desired interval.
-            `triage_class` (int): The severity of the desired triage class.
-
+            `intervals` (list): List of date tuples with the start and end dates of the interval.
+            `padding_length` (int): The size of the padding data (in weeks).
         Returns:
-            A dictionary containing:
-                `start-date` (str): Start date of the interval.
-                `end-date` (str): End date of the interval.
-                `predicted-patients` (int): The predicted referals of the given triage class for the interval.
-                `predicted-variance` (int): The predicted variance of referals of the given triage class for the interval.
+            Returns the intervals as a list of tuples with start and end indexes relative to the
+            predictions given to the DataFrame.
+        &#34;&#34;&#34;
 
-        &#39;&#39;&#39;
-        # Return distribution information for a given interval and triage class pair
-        return {
-            &#39;start-date&#39;: self.intervals[interval][0],
-            &#39;end-date&#39;: self.intervals[interval][1],
-            &#39;predicted-patients&#39;: self.predictions[interval][0] * self.distribution[triage_class],
-            &#39;predicted-variance&#39;: self.predictions[interval][1] * self.distribution[triage_class]
-        }</code></pre>
+        formatted_intervals = []
+        if padding_length != 0:
+            formatted_intervals.append((0, padding_length-1))
+
+        for interval in intervals:
+            start = int((interval[&#39;start&#39;] - intervals[0][&#39;start&#39;]).days / 7) + padding_length
+            end = int((interval[&#39;end&#39;] - intervals[0][&#39;start&#39;]).days / 7) + padding_length
+            formatted_intervals.append([start, end])
+
+        return formatted_intervals</code></pre>
 </details>
 </section>
 <section>
@@ -123,19 +122,19 @@ class DataFrame:
 <dl>
 <dt id="api.common.controller.DataFrame.DataFrame"><code class="flex name class">
 <span>class <span class="ident">DataFrame</span></span>
-<span>(</span><span>intervals, predictions, distribution)</span>
+<span>(</span><span>predictions, intervals, padding_length)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>DataFrame is a class to generate data for simulating patient referals.</p>
 <h2 id="usage">Usage</h2>
-<p>To create a new data frame, create it with <code><a title="api.common.controller.DataFrame.DataFrame" href="#api.common.controller.DataFrame.DataFrame">DataFrame</a>(intervals, predictions, distribution)</code>.</p>
+<p>To create a new data frame, create it with <code><a title="api.common.controller.DataFrame.DataFrame" href="#api.common.controller.DataFrame.DataFrame">DataFrame</a>(intervals, predictions, padding_length)</code>.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>intervals</code></strong> :&ensp;<code>list</code></dt>
 <dd>List of interval start and end dates.</dd>
 <dt><strong><code>predictions</code></strong> :&ensp;<code>list</code></dt>
-<dd>List of predictions for each interval.</dd>
-<dt><strong><code>distribution</code></strong> :&ensp;<code>dict</code></dt>
+<dd>List of predictions and padding data.</dd>
+<dt><strong><code>padding_length</code></strong> :&ensp;<code>dict</code></dt>
 <dd>Distribution of patients by triage class.</dd>
 </dl></div>
 <details class="source">
@@ -145,189 +144,141 @@ class DataFrame:
 <pre><code class="python">class DataFrame:
     &#34;&#34;&#34;
     DataFrame is a class to generate data for simulating patient referals.
-
     Usage:
-        To create a new data frame, create it with `DataFrame(intervals, predictions, distribution)`.
-    
+        To create a new data frame, create it with `DataFrame(intervals, predictions, padding_length)`.
+
     Args:
         intervals (list): List of interval start and end dates.
-        predictions (list): List of predictions for each interval.
-        distribution (dict): Distribution of patients by triage class.
+        predictions (list): List of predictions and padding data.
+        padding_length (dict): Distribution of patients by triage class.
     &#34;&#34;&#34;
 
-    def __init__(self, intervals, predictions, distribution):
-        self.intervals = intervals
+    def __init__(self, predictions, intervals, padding_length):
+        self.intervals = self.__format_intervals(intervals, padding_length)
+        print(self.intervals)
         self.predictions = predictions
-        self.distribution = distribution
 
-    def get_interval_dates(self, interval: int):
-        &#39;&#39;&#39;Returns the start and end date for a given interval.
-
+    def get_interval_size(self, interval):
+        &#34;&#34;&#34;Returns the size of an interval (in weeks).
         Parameters:
             `interval` (int): The index of the desired interval.
-
         Returns:
-            The start and end date for the given interval as a 2-ary tuple.
-            Example: (&#39;2020-01-01&#39;, &#39;2020-02-15&#39;)
+            Returns an integer value equal to the size of the interval (in weeks).
+        &#34;&#34;&#34;
 
-        &#39;&#39;&#39;
-        # Return the dates of a given interval
-        return self.intervals[interval]
+        # Check validity of input interval index.
+        if interval not in range(0, len(self.intervals)):
+            raise ValueError(&#34;Invalid interval %s.&#34;, interval)
 
-    def get_sample(self, interval: int, triage_class: int):
-        &#39;&#39;&#39;Returns a sample prediction for referal count of patients within a triage class for a given interval.
+        # Return the length of a given interval
+        return (self.intervals[interval][1] - self.intervals[interval][0]) + 1
 
+    def get_interval_sample(self, interval):
+        &#34;&#34;&#34;Returns a sample prediction for referal count of patients.
         Parameters:
             `interval` (int): The index of the desired interval.
-            `triage_class` (int): The severity of the desired triage class.
-
         Returns:
-            Returns an integer prediction of the number of referals.
-        &#39;&#39;&#39;
-        # Find the base prediction of referals relative to a triage class
-        base_referal_prediction = self.predictions[interval][0] * \
-            self.distribution[triage_class]
-        # Generate a variance of referals relative to a triage class
-        variance = random.uniform(-self.predictions[interval][1],
-                                  self.predictions[interval][1]) * self.distribution[triage_class]
-        # Sum the base prediction and the variance
-        sample = base_referal_prediction + variance
-        # Return a valid sample or 0
-        return sample if sample &gt; 0 else 0
+            Returns a list (of length equal to the number of weeks in the given interval) where each
+            entry is an integer signifying the number of patient referrals predicted to arrive.
+        &#34;&#34;&#34;
+        # Check validity of input interval index.
+        if interval not in range(0, len(self.intervals)):
+            raise ValueError(&#34;Invalid interval %s.&#34;, interval)
 
-    def get_distribution(self, interval: int, triage_class: int):
-        &#39;&#39;&#39;Returns distribution information about a given triage class within a provided interval.
+        # Get start and end of interval
+        start = self.intervals[interval][0]
+        end = self.intervals[interval][1] + 1
 
+        # Generate and return sample
+        res = [np.round(max(0, np.random.normal(p[0], math.sqrt(p[1])))) for p in self.predictions[start:end]]
+        return res
+
+    def __format_intervals(self, intervals, padding_length):
+        &#34;&#34;&#34;Converts intervals from date format (start and end date for an interval) to relative
+        indexes in the list of predictions.
         Parameters:
-            `interval` (int): The index of the desired interval.
-            `triage_class` (int): The severity of the desired triage class.
-
+            `intervals` (list): List of date tuples with the start and end dates of the interval.
+            `padding_length` (int): The size of the padding data (in weeks).
         Returns:
-            A dictionary containing:
-                `start-date` (str): Start date of the interval.
-                `end-date` (str): End date of the interval.
-                `predicted-patients` (int): The predicted referals of the given triage class for the interval.
-                `predicted-variance` (int): The predicted variance of referals of the given triage class for the interval.
+            Returns the intervals as a list of tuples with start and end indexes relative to the
+            predictions given to the DataFrame.
+        &#34;&#34;&#34;
 
-        &#39;&#39;&#39;
-        # Return distribution information for a given interval and triage class pair
-        return {
-            &#39;start-date&#39;: self.intervals[interval][0],
-            &#39;end-date&#39;: self.intervals[interval][1],
-            &#39;predicted-patients&#39;: self.predictions[interval][0] * self.distribution[triage_class],
-            &#39;predicted-variance&#39;: self.predictions[interval][1] * self.distribution[triage_class]
-        }</code></pre>
+        formatted_intervals = []
+        if padding_length != 0:
+            formatted_intervals.append((0, padding_length-1))
+
+        for interval in intervals:
+            start = int((interval[&#39;start&#39;] - intervals[0][&#39;start&#39;]).days / 7) + padding_length
+            end = int((interval[&#39;end&#39;] - intervals[0][&#39;start&#39;]).days / 7) + padding_length
+            formatted_intervals.append([start, end])
+
+        return formatted_intervals</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="api.common.controller.DataFrame.DataFrame.get_distribution"><code class="name flex">
-<span>def <span class="ident">get_distribution</span></span>(<span>self, interval: int, triage_class: int)</span>
+<dt id="api.common.controller.DataFrame.DataFrame.get_interval_sample"><code class="name flex">
+<span>def <span class="ident">get_interval_sample</span></span>(<span>self, interval)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns distribution information about a given triage class within a provided interval.</p>
-<h2 id="parameters">Parameters</h2>
-<p><code>interval</code> (int): The index of the desired interval.
-<code>triage_class</code> (int): The severity of the desired triage class.</p>
-<h2 id="returns">Returns</h2>
-<p>A dictionary containing:
-<code>start-date</code> (str): Start date of the interval.
-<code>end-date</code> (str): End date of the interval.
-<code>predicted-patients</code> (int): The predicted referals of the given triage class for the interval.
-<code>predicted-variance</code> (int): The predicted variance of referals of the given triage class for the interval.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_distribution(self, interval: int, triage_class: int):
-    &#39;&#39;&#39;Returns distribution information about a given triage class within a provided interval.
-
-    Parameters:
-        `interval` (int): The index of the desired interval.
-        `triage_class` (int): The severity of the desired triage class.
-
-    Returns:
-        A dictionary containing:
-            `start-date` (str): Start date of the interval.
-            `end-date` (str): End date of the interval.
-            `predicted-patients` (int): The predicted referals of the given triage class for the interval.
-            `predicted-variance` (int): The predicted variance of referals of the given triage class for the interval.
-
-    &#39;&#39;&#39;
-    # Return distribution information for a given interval and triage class pair
-    return {
-        &#39;start-date&#39;: self.intervals[interval][0],
-        &#39;end-date&#39;: self.intervals[interval][1],
-        &#39;predicted-patients&#39;: self.predictions[interval][0] * self.distribution[triage_class],
-        &#39;predicted-variance&#39;: self.predictions[interval][1] * self.distribution[triage_class]
-    }</code></pre>
-</details>
-</dd>
-<dt id="api.common.controller.DataFrame.DataFrame.get_interval_dates"><code class="name flex">
-<span>def <span class="ident">get_interval_dates</span></span>(<span>self, interval: int)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns the start and end date for a given interval.</p>
+<div class="desc"><p>Returns a sample prediction for referal count of patients.</p>
 <h2 id="parameters">Parameters</h2>
 <p><code>interval</code> (int): The index of the desired interval.</p>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt>The start and end date for the given interval as a 2-ary tuple.</dt>
-<dt><code>Example</code></dt>
-<dd>('2020-01-01', '2020-02-15')</dd>
-</dl></div>
+<p>Returns a list (of length equal to the number of weeks in the given interval) where each
+entry is an integer signifying the number of patient referrals predicted to arrive.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_interval_dates(self, interval: int):
-    &#39;&#39;&#39;Returns the start and end date for a given interval.
-
+<pre><code class="python">def get_interval_sample(self, interval):
+    &#34;&#34;&#34;Returns a sample prediction for referal count of patients.
     Parameters:
         `interval` (int): The index of the desired interval.
-
     Returns:
-        The start and end date for the given interval as a 2-ary tuple.
-        Example: (&#39;2020-01-01&#39;, &#39;2020-02-15&#39;)
+        Returns a list (of length equal to the number of weeks in the given interval) where each
+        entry is an integer signifying the number of patient referrals predicted to arrive.
+    &#34;&#34;&#34;
+    # Check validity of input interval index.
+    if interval not in range(0, len(self.intervals)):
+        raise ValueError(&#34;Invalid interval %s.&#34;, interval)
 
-    &#39;&#39;&#39;
-    # Return the dates of a given interval
-    return self.intervals[interval]</code></pre>
+    # Get start and end of interval
+    start = self.intervals[interval][0]
+    end = self.intervals[interval][1] + 1
+
+    # Generate and return sample
+    res = [np.round(max(0, np.random.normal(p[0], math.sqrt(p[1])))) for p in self.predictions[start:end]]
+    return res</code></pre>
 </details>
 </dd>
-<dt id="api.common.controller.DataFrame.DataFrame.get_sample"><code class="name flex">
-<span>def <span class="ident">get_sample</span></span>(<span>self, interval: int, triage_class: int)</span>
+<dt id="api.common.controller.DataFrame.DataFrame.get_interval_size"><code class="name flex">
+<span>def <span class="ident">get_interval_size</span></span>(<span>self, interval)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns a sample prediction for referal count of patients within a triage class for a given interval.</p>
+<div class="desc"><p>Returns the size of an interval (in weeks).</p>
 <h2 id="parameters">Parameters</h2>
-<p><code>interval</code> (int): The index of the desired interval.
-<code>triage_class</code> (int): The severity of the desired triage class.</p>
+<p><code>interval</code> (int): The index of the desired interval.</p>
 <h2 id="returns">Returns</h2>
-<p>Returns an integer prediction of the number of referals.</p></div>
+<p>Returns an integer value equal to the size of the interval (in weeks).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_sample(self, interval: int, triage_class: int):
-    &#39;&#39;&#39;Returns a sample prediction for referal count of patients within a triage class for a given interval.
-
+<pre><code class="python">def get_interval_size(self, interval):
+    &#34;&#34;&#34;Returns the size of an interval (in weeks).
     Parameters:
         `interval` (int): The index of the desired interval.
-        `triage_class` (int): The severity of the desired triage class.
-
     Returns:
-        Returns an integer prediction of the number of referals.
-    &#39;&#39;&#39;
-    # Find the base prediction of referals relative to a triage class
-    base_referal_prediction = self.predictions[interval][0] * \
-        self.distribution[triage_class]
-    # Generate a variance of referals relative to a triage class
-    variance = random.uniform(-self.predictions[interval][1],
-                              self.predictions[interval][1]) * self.distribution[triage_class]
-    # Sum the base prediction and the variance
-    sample = base_referal_prediction + variance
-    # Return a valid sample or 0
-    return sample if sample &gt; 0 else 0</code></pre>
+        Returns an integer value equal to the size of the interval (in weeks).
+    &#34;&#34;&#34;
+
+    # Check validity of input interval index.
+    if interval not in range(0, len(self.intervals)):
+        raise ValueError(&#34;Invalid interval %s.&#34;, interval)
+
+    # Return the length of a given interval
+    return (self.intervals[interval][1] - self.intervals[interval][0]) + 1</code></pre>
 </details>
 </dd>
 </dl>
@@ -351,9 +302,8 @@ class DataFrame:
 <li>
 <h4><code><a title="api.common.controller.DataFrame.DataFrame" href="#api.common.controller.DataFrame.DataFrame">DataFrame</a></code></h4>
 <ul class="">
-<li><code><a title="api.common.controller.DataFrame.DataFrame.get_distribution" href="#api.common.controller.DataFrame.DataFrame.get_distribution">get_distribution</a></code></li>
-<li><code><a title="api.common.controller.DataFrame.DataFrame.get_interval_dates" href="#api.common.controller.DataFrame.DataFrame.get_interval_dates">get_interval_dates</a></code></li>
-<li><code><a title="api.common.controller.DataFrame.DataFrame.get_sample" href="#api.common.controller.DataFrame.DataFrame.get_sample">get_sample</a></code></li>
+<li><code><a title="api.common.controller.DataFrame.DataFrame.get_interval_sample" href="#api.common.controller.DataFrame.DataFrame.get_interval_sample">get_interval_sample</a></code></li>
+<li><code><a title="api.common.controller.DataFrame.DataFrame.get_interval_size" href="#api.common.controller.DataFrame.DataFrame.get_interval_size">get_interval_size</a></code></li>
 </ul>
 </li>
 </ul>

@@ -1,10 +1,12 @@
 """
 This module handles testing for the TriageController.
+Requires triage-ml package to be installed
 """
 
 import pytest
 from datetime import datetime
 from api.common.controller.TriageController import TriageController
+
 
 class TestTriageController:
     """
@@ -244,5 +246,5 @@ class TestTriageController:
         Test Type: Acceptance
         Test Purpose: Tests Requirement INT-6 / SIM-1
         """
-        
+
         assert False

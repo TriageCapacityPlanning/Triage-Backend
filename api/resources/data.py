@@ -1,5 +1,5 @@
 """
-This module handles all required interaction with the `/predict` endpoint
+This module handles all required interaction with the `/data` endpoint
 """
 
 # External dependencies
@@ -7,15 +7,15 @@ from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
 import ast
-import json
 
 # Internal dependencies
-from api.resources.AuthResource import AuthResource, authenticate
+from api.resources.AuthResource import AuthResource
 from api.common.ClinicData import ClinicData
+
 
 class Data(AuthResource):
     """
-    The `Predict` class handles all of the requests relative to Prediction for the API.
+    The `Data` class handles all of the requests relative to retrieving Data for the API.
     """
 
     # API input schema
@@ -23,6 +23,13 @@ class Data(AuthResource):
         "clinic_id": fields.Int(required=True),
         "triage_class": fields.Int(required=True)
     }
+    """
+    The required schema of path arguments to handle a get request
+
+    Args:
+        clinic_id (int): The id of the clinic being referenced.
+        triage_class (int): The triage class severity level.
+    """
 
     url_arg_schema_get = {
         "interval": fields.Raw(required=True)
@@ -31,41 +38,33 @@ class Data(AuthResource):
     The required schema to handle a get request
 
     Args:
-        clinic_id (int): The id of the clinic being referenced.
-        start_date (str): The start date of the predictions.
-        end_date (str): The end date of the predictions.
-        intervals (list): Date intervals for predictions to be grouped by.
-        confidence (float): Required prediction confidence.
-        num_sim_runs (int): Number of simulations to run.
-        waitlist (file): Current wait list of patients for the clinic.
+        intervals (tuple): 2-ary tuple with start and end date for desired data retrieval.
     """
 
     def get(self, clinic_id, triage_class):
         """
-        Handles a get request for the predict endpoints.
-        Returns a dictionary with a list of predictions based on the ML model predictions and simulation runs.
+        Handles a get request for the data endpoints.
 
         Args:
-            Requires api query string arguments, see `Predict.arg_schema_get`, in the get request
+            Requires api query string arguments, see `Data.url_arg_schema_get`, in the get request
+            Requires api path arguments, see `Data.path_arg_schema_get`, in the get request
 
         Returns:
-            A dictionary with
-            ```
-            {
-                url (str) The request url.
-                intervaled_slot_predictions (list) Predictions grouped by interval.
-                number_intervals (int) Number of intervals.
-                slot_predictions (list) Total predictions.
-                models (list): A list of dictionaries representing each model
-            }
-            ```
-
+            Returns the list of tuples of historic data.
+            The tuples include the following information:
+            1. Clinic id
+            2. Triage class severity
+            3. Referral arrival date
+            4. Patient seen date
         """
         # Validate input arguments.
         path_args = parser.parse(self.path_arg_schema_get, request, location="path")
         url_args = parser.parse(self.url_arg_schema_get, request,
-                            location='querystring')
+                                location='querystring')
         url_args['interval'] = ast.literal_eval(url_args['interval'])
+
+        if type(url_args['interval']) != list or len(url_args['interval']) != 2:
+            raise RuntimeError('Invalid Interval Input')
 
         clinic_data = ClinicData(path_args['clinic_id'])
 

@@ -1,0 +1,2058 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>api.tests.test_upload API documentation</title>
+<meta name="description" content="This module handles testing for the Upload class." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>api.tests.test_upload</code></h1>
+</header>
+<section id="section-intro">
+<p>This module handles testing for the Upload class.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+This module handles testing for the Upload class.
+&#34;&#34;&#34;
+
+import io
+import os
+import uuid
+import psycopg2
+
+import pytest
+from api.resources.upload import PastAppointments, Model
+from api.triage_api import create_app
+from api.common.config import VERSION_PREFIX
+from api.tests.common import generate_token
+from werkzeug.datastructures import FileStorage
+
+
+class TestUploadPastAppointmentsAPI:
+    &#34;&#34;&#34;
+    The `TestUploadPastAppointmentsAPI` class contains acceptance tests for /upload/past-appointments
+    API functions.
+    &#34;&#34;&#34;
+
+    def setup_class(self):
+        &#34;&#34;&#34;
+        Test setup that occurs once before all tests are run.
+        &#34;&#34;&#34;
+        self.test_client = create_app().test_client()
+        self.token = generate_token(&#39;username&#39;, 1)
+        self.endpoint = VERSION_PREFIX + &#39;/upload/past-appointments&#39;
+
+    def test_put_missing_inputs(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        &#34;&#34;&#34;
+
+        input_mock = {}
+        response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_clinic_id(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.txt&#34;, content_type=&#34;text/csv&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: &#39;&#34;1&#34;&#39;,
+            &#39;upload_data&#39;: upload_file_mock
+        }
+        response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_file(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.txt&#34;, content_type=&#34;text/text&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;upload_data&#39;: upload_file_mock
+        }
+
+        response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+        assert response.status_code == 422
+
+    def test_upload_success(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        &#34;&#34;&#34;
+        mocker.patch(&#39;api.resources.upload.PastAppointments.upload_csv_data&#39;)
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;upload_data&#39;: upload_file_mock
+        }
+
+        response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+        assert response.status_code == 200
+
+    def test_upload_requires_header_with_token(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        &#34;&#34;&#34;
+        mocker.patch(&#39;api.resources.upload.PastAppointments.upload_csv_data&#39;)
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;upload_data&#39;: upload_file_mock
+        }
+        response = self.test_client.put(self.endpoint, data=input_mock)
+        assert response.status_code == 401
+
+    def test_upload_requires_valid_token(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        &#34;&#34;&#34;
+        mocker.patch(&#39;api.resources.upload.PastAppointments.upload_csv_data&#39;)
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;upload_data&#39;: upload_file_mock
+        }
+        response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: &#34;not_valid_token&#34;}, data=input_mock)
+        assert response.status_code == 401
+
+
+class TestUploadModelAPI:
+    &#34;&#34;&#34;
+    The `TestUploadModelAPI` class contains acceptance tests for /upload/model API functions.
+    &#34;&#34;&#34;
+
+    def setup_class(self):
+        &#34;&#34;&#34;
+        Test setup that occurs once before all tests are run.
+        &#34;&#34;&#34;
+        self.test_client = create_app().test_client()
+        self.token = generate_token(&#39;username&#39;, 1)
+        self.endpoint = VERSION_PREFIX + &#39;/upload/model&#39;
+
+    def test_put_missing_inputs(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        input_mock = {}
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_clinic_id(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: &#39;&#34;1&#34;&#39;,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: False,
+        }
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_file(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        input_mock = {
+            &#39;clinic_id&#39;: &#39;&#34;1&#34;&#39;,
+            &#39;model_weights&#39;: &#34;not_a_file&#34;,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: False,
+        }
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_severity(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: &#39;&#34;1&#34;&#39;,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: False,
+        }
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_accuracy(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: &#39;&#34;0.95&#34;&#39;,
+            &#39;make_in_use&#39;: False,
+        }
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_make_in_use(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: &#39;&#34;yes&#34;&#39;,
+        }
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+        assert response.status_code == 422
+
+    def test_upload_success_not_make_active(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        mocker.patch(&#39;api.resources.upload.Model.save_weight_file_locally&#39;)
+        mocker.patch(&#39;api.resources.upload.Model.save_model_file_path_to_db&#39;)
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: False,
+        }
+
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+        assert response.status_code == 200
+
+    def test_upload_success_make_active(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        mocker.patch(&#39;api.resources.upload.Model.save_weight_file_locally&#39;)
+        mocker.patch(&#39;api.resources.upload.Model.save_model_file_path_to_db&#39;)
+        mocker.patch(&#39;api.resources.upload.Models.set_active_model&#39;)
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: True,
+        }
+
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+        assert response.status_code == 200
+
+    def test_upload_requires_header_with_token(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: False,
+        }
+        response = self.test_client.post(self.endpoint, data=input_mock)
+        assert response.status_code == 401
+
+    def test_upload_requires_valid_token(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: False,
+        }
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: &#34;not_valid_token&#34;}, data=input_mock)
+        assert response.status_code == 401
+
+
+class TestPastAppointmentsUnit:
+    &#34;&#34;&#34;
+    The `TestPastAppointmentsUnit` class contains unit tests for uploading past appointments functions.
+    &#34;&#34;&#34;
+
+    def setup_class(self):
+        &#34;&#34;&#34;
+        Test setup that occurs once before all tests are run.
+        &#34;&#34;&#34;
+        self.pastappointments = PastAppointments()
+
+    def test_upload_csv_data_database_error(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that an error is thrown if a the database connection fails.
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+        mocker.patch(&#39;api.common.database_interaction.DataBase.insert_data_from_file&#39;,
+                     side_effect=RuntimeError(&#39;Database error&#39;))
+
+        with pytest.raises(RuntimeError):
+            self.pastappointments.upload_csv_data(upload_file_mock)
+
+    def test_upload_csv_data_file_error(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that an error is thrown if a the file upload fails.
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+        mocker.patch(&#39;api.common.database_interaction.DataBase.insert_data_from_file&#39;,
+                     side_effect=RuntimeError(&#39;File error&#39;))
+
+        with pytest.raises(RuntimeError):
+            self.pastappointments.upload_csv_data(upload_file_mock)
+
+    def test_upload_csv_data_successful(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a successful file upload.
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+        mocker.patch(&#39;api.common.database_interaction.DataBase.insert_data_from_file&#39;)
+
+        assert self.pastappointments.upload_csv_data(upload_file_mock) is None
+
+
+class TestModelUnit:
+    &#34;&#34;&#34;
+    The `TestModelUnit` class contains unit tests for uploading models to the server functions.
+    &#34;&#34;&#34;
+
+    def setup_class(self):
+        &#34;&#34;&#34;
+        Test setup that occurs once before all tests are run.
+        &#34;&#34;&#34;
+        self.model = Model()
+        self.upload_storage_path = &#39;./test-upload-storage/&#39;
+
+    @staticmethod
+    def _write_file_at_path_with_contents(file_path, contents):
+        &#34;&#34;&#34;
+        Create a sample file with some contents for testing purposes.
+        &#34;&#34;&#34;
+        with open(file_path, &#39;w&#39;) as f:
+            f.write(contents)
+
+    def test_save_model_file_path_to_db_success(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that the operation returns the expected result from the db.
+        &#34;&#34;&#34;
+        id = 5
+        mocker.patch(&#39;api.common.database_interaction.DataBase.insert&#39;, return_value=id)
+
+        assert self.model.save_model_file_path_to_db(&#39;sample/file/path&#39;, 1, 1, 0.95, False) == id
+
+    def test_save_model_file_path_to_db_database_error(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests a database error when saving a model file path.
+        &#34;&#34;&#34;
+        mocker.patch(&#39;api.common.database_interaction.DataBase.insert&#39;, side_effect=psycopg2.ProgrammingError)
+
+        with pytest.raises(psycopg2.ProgrammingError):
+            self.model.save_model_file_path_to_db(&#39;sample/file/path&#39;, 1, 1, 0.95, False)
+
+    def test_save_model_file_path_to_db_error(self):
+        pass
+
+    def test_save_weight_file_locally_without_existing_dir(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a weights file is saved if the directory does not already exist.
+        &#34;&#34;&#34;
+        # Test setup
+        files_dir = &#34;./testing-files/&#34;
+        file_contents = b&#34;sample contents&#34;
+        clinic_id, severity = 1, 1
+        mock_uuid = mocker.patch(&#39;uuid.uuid4&#39;, return_value=uuid.UUID(&#34;6b8873dc-ac4a-4ac0-8f16-28af79761008&#34;))
+        file_name = mock_uuid().hex
+        mocker.patch(&#39;api.resources.upload.FILE_STORAGE_PATH&#39;, files_dir)
+        data_file = FileStorage(io.BytesIO(file_contents), filename=&#34;test.h5&#34;)
+        # Testing
+        self.model.save_weight_file_locally(data_file, clinic_id, severity)
+        assert os.path.exists(&#39;%s&#39; % files_dir)
+        assert os.path.exists(&#39;%s%s&#39; % (files_dir, clinic_id))
+        assert os.path.exists(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+        assert os.path.exists(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+        with open(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name), &#39;r&#39;) as f:
+            assert f.read() == file_contents.decode()
+        # Test clean up
+        os.remove(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+        os.rmdir(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+        os.rmdir(&#39;%s%s&#39; % (files_dir, clinic_id))
+        os.rmdir(&#39;%s&#39; % files_dir)
+
+    def test_save_weight_file_locally_with_existing_dir(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a weights file is saved if the directory already exists.
+        &#34;&#34;&#34;
+        # Test setup
+        files_dir = &#34;./testing-files/&#34;
+        file_contents = b&#34;sample contents&#34;
+        clinic_id, severity = 1, 1
+        os.makedirs(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity), exist_ok=False)
+        mock_uuid = mocker.patch(&#39;uuid.uuid4&#39;, return_value=uuid.UUID(&#34;6b8873dc-ac4a-4ac0-8f16-28af79761008&#34;))
+        file_name = mock_uuid().hex
+        mocker.patch(&#39;api.resources.upload.FILE_STORAGE_PATH&#39;, files_dir)
+        data_file = FileStorage(io.BytesIO(file_contents), filename=&#34;test.h5&#34;)
+        # Testing
+        self.model.save_weight_file_locally(data_file, clinic_id, severity)
+        assert os.path.exists(&#39;%s&#39; % files_dir)
+        assert os.path.exists(&#39;%s%s&#39; % (files_dir, clinic_id))
+        assert os.path.exists(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+        assert os.path.exists(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+        with open(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name), &#39;r&#39;) as f:
+            assert f.read() == file_contents.decode()
+        # Test clean up
+        os.remove(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+        os.rmdir(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+        os.rmdir(&#39;%s%s&#39; % (files_dir, clinic_id))
+        os.rmdir(&#39;%s&#39; % files_dir)
+
+    def test_save_weight_file_locally_with_existing_dir_and_contents(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a weights file is saved if the directory already exists with contents and the contents of
+                      the other file remain unchanged. (prevent a sideeffect)
+        &#34;&#34;&#34;
+        # Test setup
+        files_dir = &#34;./testing-files/&#34;
+        file_contents = b&#34;sample contents&#34;
+        other_contents = &#39;other stuff&#39;
+        clinic_id, severity = 1, 1
+        other_file_full_path = &#39;%s%s/%s/other.txt&#39; % (files_dir, clinic_id, severity)
+        os.makedirs(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity), exist_ok=False)
+        self._write_file_at_path_with_contents(other_file_full_path, other_contents)
+        mock_uuid = mocker.patch(&#39;uuid.uuid4&#39;, return_value=uuid.UUID(&#34;6b8873dc-ac4a-4ac0-8f16-28af79761008&#34;))
+        file_name = mock_uuid().hex
+        mocker.patch(&#39;api.resources.upload.FILE_STORAGE_PATH&#39;, files_dir)
+        data_file = FileStorage(io.BytesIO(file_contents), filename=&#34;test.h5&#34;)
+        # Testing
+        self.model.save_weight_file_locally(data_file, clinic_id, severity)
+        assert os.path.exists(&#39;%s&#39; % files_dir)
+        assert os.path.exists(&#39;%s%s&#39; % (files_dir, clinic_id))
+        assert os.path.exists(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+        assert os.path.exists(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+        with open(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name), &#39;r&#39;) as f:
+            assert f.read() == file_contents.decode()
+        with open(other_file_full_path, &#39;r&#39;) as f:
+            assert f.read() == other_contents
+        # Test clean up
+        os.remove(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+        os.remove(other_file_full_path)
+        os.rmdir(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+        os.rmdir(&#39;%s%s&#39; % (files_dir, clinic_id))
+        os.rmdir(&#39;%s&#39; % files_dir)
+
+    def test_create_directory_if_not_exists(self):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a directory is made if it doesn&#39;t already exist.
+        &#34;&#34;&#34;
+        test_dir = &#39;./testing-dir&#39;
+        self.model.create_directory_if_not_exists(test_dir)
+        assert os.path.exists(&#39;./testing-dir&#39;)
+        # Test clean up
+        os.rmdir(test_dir)
+
+    def test_create_directory_if_exists(self):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a directory is made if it doesn&#39;t already exist.
+        &#34;&#34;&#34;
+        # Test setup
+        test_dir = &#39;./testing-dir&#39;
+        os.makedirs(test_dir, exist_ok=False)
+        # Testing
+        self.model.create_directory_if_not_exists(test_dir)
+        assert os.path.exists(&#39;./testing-dir&#39;)
+        # Test clean up
+        os.rmdir(test_dir)
+
+    def test_create_directory_if_exists_with_contents(self):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a directory is made if it already exists with contents.
+        &#34;&#34;&#34;
+        # Test setup
+        test_dir = &#39;./testing-dir&#39;
+        os.makedirs(test_dir, exist_ok=False)
+        # Testing
+        self.model.create_directory_if_not_exists(test_dir)
+        assert os.path.exists(&#39;./testing-dir&#39;)
+        # Test clean up
+        os.rmdir(test_dir)
+
+    def test_create_directory_if_exists_without_modifying_existing_contents(self):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a directory is made if it already exists with contents and
+                      those contents are unchanged.
+        &#34;&#34;&#34;
+        # Test setup
+        test_dir = &#39;./testing-dir&#39;
+        test_file = &#39;./testing-dir/test-file&#39;
+        sample_contents = &#39;sample contents&#39;
+        os.makedirs(test_dir, exist_ok=False)
+        self._write_file_at_path_with_contents(test_file, sample_contents)
+        # Testing
+        self.model.create_directory_if_not_exists(test_dir)
+        assert os.path.exists(&#39;./testing-dir&#39;)
+        assert os.path.exists(test_file)
+        with open(test_file, &#39;r&#39;) as f:
+            assert f.read() == sample_contents
+        # Test clean up
+        os.remove(test_file)
+        os.rmdir(test_dir)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="api.tests.test_upload.TestModelUnit"><code class="flex name class">
+<span>class <span class="ident">TestModelUnit</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>The <code><a title="api.tests.test_upload.TestModelUnit" href="#api.tests.test_upload.TestModelUnit">TestModelUnit</a></code> class contains unit tests for uploading models to the server functions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TestModelUnit:
+    &#34;&#34;&#34;
+    The `TestModelUnit` class contains unit tests for uploading models to the server functions.
+    &#34;&#34;&#34;
+
+    def setup_class(self):
+        &#34;&#34;&#34;
+        Test setup that occurs once before all tests are run.
+        &#34;&#34;&#34;
+        self.model = Model()
+        self.upload_storage_path = &#39;./test-upload-storage/&#39;
+
+    @staticmethod
+    def _write_file_at_path_with_contents(file_path, contents):
+        &#34;&#34;&#34;
+        Create a sample file with some contents for testing purposes.
+        &#34;&#34;&#34;
+        with open(file_path, &#39;w&#39;) as f:
+            f.write(contents)
+
+    def test_save_model_file_path_to_db_success(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that the operation returns the expected result from the db.
+        &#34;&#34;&#34;
+        id = 5
+        mocker.patch(&#39;api.common.database_interaction.DataBase.insert&#39;, return_value=id)
+
+        assert self.model.save_model_file_path_to_db(&#39;sample/file/path&#39;, 1, 1, 0.95, False) == id
+
+    def test_save_model_file_path_to_db_database_error(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests a database error when saving a model file path.
+        &#34;&#34;&#34;
+        mocker.patch(&#39;api.common.database_interaction.DataBase.insert&#39;, side_effect=psycopg2.ProgrammingError)
+
+        with pytest.raises(psycopg2.ProgrammingError):
+            self.model.save_model_file_path_to_db(&#39;sample/file/path&#39;, 1, 1, 0.95, False)
+
+    def test_save_model_file_path_to_db_error(self):
+        pass
+
+    def test_save_weight_file_locally_without_existing_dir(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a weights file is saved if the directory does not already exist.
+        &#34;&#34;&#34;
+        # Test setup
+        files_dir = &#34;./testing-files/&#34;
+        file_contents = b&#34;sample contents&#34;
+        clinic_id, severity = 1, 1
+        mock_uuid = mocker.patch(&#39;uuid.uuid4&#39;, return_value=uuid.UUID(&#34;6b8873dc-ac4a-4ac0-8f16-28af79761008&#34;))
+        file_name = mock_uuid().hex
+        mocker.patch(&#39;api.resources.upload.FILE_STORAGE_PATH&#39;, files_dir)
+        data_file = FileStorage(io.BytesIO(file_contents), filename=&#34;test.h5&#34;)
+        # Testing
+        self.model.save_weight_file_locally(data_file, clinic_id, severity)
+        assert os.path.exists(&#39;%s&#39; % files_dir)
+        assert os.path.exists(&#39;%s%s&#39; % (files_dir, clinic_id))
+        assert os.path.exists(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+        assert os.path.exists(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+        with open(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name), &#39;r&#39;) as f:
+            assert f.read() == file_contents.decode()
+        # Test clean up
+        os.remove(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+        os.rmdir(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+        os.rmdir(&#39;%s%s&#39; % (files_dir, clinic_id))
+        os.rmdir(&#39;%s&#39; % files_dir)
+
+    def test_save_weight_file_locally_with_existing_dir(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a weights file is saved if the directory already exists.
+        &#34;&#34;&#34;
+        # Test setup
+        files_dir = &#34;./testing-files/&#34;
+        file_contents = b&#34;sample contents&#34;
+        clinic_id, severity = 1, 1
+        os.makedirs(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity), exist_ok=False)
+        mock_uuid = mocker.patch(&#39;uuid.uuid4&#39;, return_value=uuid.UUID(&#34;6b8873dc-ac4a-4ac0-8f16-28af79761008&#34;))
+        file_name = mock_uuid().hex
+        mocker.patch(&#39;api.resources.upload.FILE_STORAGE_PATH&#39;, files_dir)
+        data_file = FileStorage(io.BytesIO(file_contents), filename=&#34;test.h5&#34;)
+        # Testing
+        self.model.save_weight_file_locally(data_file, clinic_id, severity)
+        assert os.path.exists(&#39;%s&#39; % files_dir)
+        assert os.path.exists(&#39;%s%s&#39; % (files_dir, clinic_id))
+        assert os.path.exists(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+        assert os.path.exists(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+        with open(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name), &#39;r&#39;) as f:
+            assert f.read() == file_contents.decode()
+        # Test clean up
+        os.remove(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+        os.rmdir(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+        os.rmdir(&#39;%s%s&#39; % (files_dir, clinic_id))
+        os.rmdir(&#39;%s&#39; % files_dir)
+
+    def test_save_weight_file_locally_with_existing_dir_and_contents(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a weights file is saved if the directory already exists with contents and the contents of
+                      the other file remain unchanged. (prevent a sideeffect)
+        &#34;&#34;&#34;
+        # Test setup
+        files_dir = &#34;./testing-files/&#34;
+        file_contents = b&#34;sample contents&#34;
+        other_contents = &#39;other stuff&#39;
+        clinic_id, severity = 1, 1
+        other_file_full_path = &#39;%s%s/%s/other.txt&#39; % (files_dir, clinic_id, severity)
+        os.makedirs(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity), exist_ok=False)
+        self._write_file_at_path_with_contents(other_file_full_path, other_contents)
+        mock_uuid = mocker.patch(&#39;uuid.uuid4&#39;, return_value=uuid.UUID(&#34;6b8873dc-ac4a-4ac0-8f16-28af79761008&#34;))
+        file_name = mock_uuid().hex
+        mocker.patch(&#39;api.resources.upload.FILE_STORAGE_PATH&#39;, files_dir)
+        data_file = FileStorage(io.BytesIO(file_contents), filename=&#34;test.h5&#34;)
+        # Testing
+        self.model.save_weight_file_locally(data_file, clinic_id, severity)
+        assert os.path.exists(&#39;%s&#39; % files_dir)
+        assert os.path.exists(&#39;%s%s&#39; % (files_dir, clinic_id))
+        assert os.path.exists(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+        assert os.path.exists(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+        with open(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name), &#39;r&#39;) as f:
+            assert f.read() == file_contents.decode()
+        with open(other_file_full_path, &#39;r&#39;) as f:
+            assert f.read() == other_contents
+        # Test clean up
+        os.remove(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+        os.remove(other_file_full_path)
+        os.rmdir(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+        os.rmdir(&#39;%s%s&#39; % (files_dir, clinic_id))
+        os.rmdir(&#39;%s&#39; % files_dir)
+
+    def test_create_directory_if_not_exists(self):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a directory is made if it doesn&#39;t already exist.
+        &#34;&#34;&#34;
+        test_dir = &#39;./testing-dir&#39;
+        self.model.create_directory_if_not_exists(test_dir)
+        assert os.path.exists(&#39;./testing-dir&#39;)
+        # Test clean up
+        os.rmdir(test_dir)
+
+    def test_create_directory_if_exists(self):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a directory is made if it doesn&#39;t already exist.
+        &#34;&#34;&#34;
+        # Test setup
+        test_dir = &#39;./testing-dir&#39;
+        os.makedirs(test_dir, exist_ok=False)
+        # Testing
+        self.model.create_directory_if_not_exists(test_dir)
+        assert os.path.exists(&#39;./testing-dir&#39;)
+        # Test clean up
+        os.rmdir(test_dir)
+
+    def test_create_directory_if_exists_with_contents(self):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a directory is made if it already exists with contents.
+        &#34;&#34;&#34;
+        # Test setup
+        test_dir = &#39;./testing-dir&#39;
+        os.makedirs(test_dir, exist_ok=False)
+        # Testing
+        self.model.create_directory_if_not_exists(test_dir)
+        assert os.path.exists(&#39;./testing-dir&#39;)
+        # Test clean up
+        os.rmdir(test_dir)
+
+    def test_create_directory_if_exists_without_modifying_existing_contents(self):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a directory is made if it already exists with contents and
+                      those contents are unchanged.
+        &#34;&#34;&#34;
+        # Test setup
+        test_dir = &#39;./testing-dir&#39;
+        test_file = &#39;./testing-dir/test-file&#39;
+        sample_contents = &#39;sample contents&#39;
+        os.makedirs(test_dir, exist_ok=False)
+        self._write_file_at_path_with_contents(test_file, sample_contents)
+        # Testing
+        self.model.create_directory_if_not_exists(test_dir)
+        assert os.path.exists(&#39;./testing-dir&#39;)
+        assert os.path.exists(test_file)
+        with open(test_file, &#39;r&#39;) as f:
+            assert f.read() == sample_contents
+        # Test clean up
+        os.remove(test_file)
+        os.rmdir(test_dir)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="api.tests.test_upload.TestModelUnit.setup_class"><code class="name flex">
+<span>def <span class="ident">setup_class</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test setup that occurs once before all tests are run.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup_class(self):
+    &#34;&#34;&#34;
+    Test setup that occurs once before all tests are run.
+    &#34;&#34;&#34;
+    self.model = Model()
+    self.upload_storage_path = &#39;./test-upload-storage/&#39;</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestModelUnit.test_create_directory_if_exists"><code class="name flex">
+<span>def <span class="ident">test_create_directory_if_exists</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Unit
+Test Purpose: Tests that a directory is made if it doesn't already exist.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_create_directory_if_exists(self):
+    &#34;&#34;&#34;
+    Test Type: Unit
+    Test Purpose: Tests that a directory is made if it doesn&#39;t already exist.
+    &#34;&#34;&#34;
+    # Test setup
+    test_dir = &#39;./testing-dir&#39;
+    os.makedirs(test_dir, exist_ok=False)
+    # Testing
+    self.model.create_directory_if_not_exists(test_dir)
+    assert os.path.exists(&#39;./testing-dir&#39;)
+    # Test clean up
+    os.rmdir(test_dir)</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestModelUnit.test_create_directory_if_exists_with_contents"><code class="name flex">
+<span>def <span class="ident">test_create_directory_if_exists_with_contents</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Unit
+Test Purpose: Tests that a directory is made if it already exists with contents.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_create_directory_if_exists_with_contents(self):
+    &#34;&#34;&#34;
+    Test Type: Unit
+    Test Purpose: Tests that a directory is made if it already exists with contents.
+    &#34;&#34;&#34;
+    # Test setup
+    test_dir = &#39;./testing-dir&#39;
+    os.makedirs(test_dir, exist_ok=False)
+    # Testing
+    self.model.create_directory_if_not_exists(test_dir)
+    assert os.path.exists(&#39;./testing-dir&#39;)
+    # Test clean up
+    os.rmdir(test_dir)</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestModelUnit.test_create_directory_if_exists_without_modifying_existing_contents"><code class="name flex">
+<span>def <span class="ident">test_create_directory_if_exists_without_modifying_existing_contents</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Unit
+Test Purpose: Tests that a directory is made if it already exists with contents and
+those contents are unchanged.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_create_directory_if_exists_without_modifying_existing_contents(self):
+    &#34;&#34;&#34;
+    Test Type: Unit
+    Test Purpose: Tests that a directory is made if it already exists with contents and
+                  those contents are unchanged.
+    &#34;&#34;&#34;
+    # Test setup
+    test_dir = &#39;./testing-dir&#39;
+    test_file = &#39;./testing-dir/test-file&#39;
+    sample_contents = &#39;sample contents&#39;
+    os.makedirs(test_dir, exist_ok=False)
+    self._write_file_at_path_with_contents(test_file, sample_contents)
+    # Testing
+    self.model.create_directory_if_not_exists(test_dir)
+    assert os.path.exists(&#39;./testing-dir&#39;)
+    assert os.path.exists(test_file)
+    with open(test_file, &#39;r&#39;) as f:
+        assert f.read() == sample_contents
+    # Test clean up
+    os.remove(test_file)
+    os.rmdir(test_dir)</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestModelUnit.test_create_directory_if_not_exists"><code class="name flex">
+<span>def <span class="ident">test_create_directory_if_not_exists</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Unit
+Test Purpose: Tests that a directory is made if it doesn't already exist.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_create_directory_if_not_exists(self):
+    &#34;&#34;&#34;
+    Test Type: Unit
+    Test Purpose: Tests that a directory is made if it doesn&#39;t already exist.
+    &#34;&#34;&#34;
+    test_dir = &#39;./testing-dir&#39;
+    self.model.create_directory_if_not_exists(test_dir)
+    assert os.path.exists(&#39;./testing-dir&#39;)
+    # Test clean up
+    os.rmdir(test_dir)</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestModelUnit.test_save_model_file_path_to_db_database_error"><code class="name flex">
+<span>def <span class="ident">test_save_model_file_path_to_db_database_error</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Unit
+Test Purpose: Tests a database error when saving a model file path.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_save_model_file_path_to_db_database_error(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Unit
+    Test Purpose: Tests a database error when saving a model file path.
+    &#34;&#34;&#34;
+    mocker.patch(&#39;api.common.database_interaction.DataBase.insert&#39;, side_effect=psycopg2.ProgrammingError)
+
+    with pytest.raises(psycopg2.ProgrammingError):
+        self.model.save_model_file_path_to_db(&#39;sample/file/path&#39;, 1, 1, 0.95, False)</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestModelUnit.test_save_model_file_path_to_db_error"><code class="name flex">
+<span>def <span class="ident">test_save_model_file_path_to_db_error</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_save_model_file_path_to_db_error(self):
+    pass</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestModelUnit.test_save_model_file_path_to_db_success"><code class="name flex">
+<span>def <span class="ident">test_save_model_file_path_to_db_success</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Unit
+Test Purpose: Tests that the operation returns the expected result from the db.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_save_model_file_path_to_db_success(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Unit
+    Test Purpose: Tests that the operation returns the expected result from the db.
+    &#34;&#34;&#34;
+    id = 5
+    mocker.patch(&#39;api.common.database_interaction.DataBase.insert&#39;, return_value=id)
+
+    assert self.model.save_model_file_path_to_db(&#39;sample/file/path&#39;, 1, 1, 0.95, False) == id</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestModelUnit.test_save_weight_file_locally_with_existing_dir"><code class="name flex">
+<span>def <span class="ident">test_save_weight_file_locally_with_existing_dir</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Unit
+Test Purpose: Tests that a weights file is saved if the directory already exists.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_save_weight_file_locally_with_existing_dir(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Unit
+    Test Purpose: Tests that a weights file is saved if the directory already exists.
+    &#34;&#34;&#34;
+    # Test setup
+    files_dir = &#34;./testing-files/&#34;
+    file_contents = b&#34;sample contents&#34;
+    clinic_id, severity = 1, 1
+    os.makedirs(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity), exist_ok=False)
+    mock_uuid = mocker.patch(&#39;uuid.uuid4&#39;, return_value=uuid.UUID(&#34;6b8873dc-ac4a-4ac0-8f16-28af79761008&#34;))
+    file_name = mock_uuid().hex
+    mocker.patch(&#39;api.resources.upload.FILE_STORAGE_PATH&#39;, files_dir)
+    data_file = FileStorage(io.BytesIO(file_contents), filename=&#34;test.h5&#34;)
+    # Testing
+    self.model.save_weight_file_locally(data_file, clinic_id, severity)
+    assert os.path.exists(&#39;%s&#39; % files_dir)
+    assert os.path.exists(&#39;%s%s&#39; % (files_dir, clinic_id))
+    assert os.path.exists(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+    assert os.path.exists(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+    with open(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name), &#39;r&#39;) as f:
+        assert f.read() == file_contents.decode()
+    # Test clean up
+    os.remove(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+    os.rmdir(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+    os.rmdir(&#39;%s%s&#39; % (files_dir, clinic_id))
+    os.rmdir(&#39;%s&#39; % files_dir)</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestModelUnit.test_save_weight_file_locally_with_existing_dir_and_contents"><code class="name flex">
+<span>def <span class="ident">test_save_weight_file_locally_with_existing_dir_and_contents</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Unit
+Test Purpose: Tests that a weights file is saved if the directory already exists with contents and the contents of
+the other file remain unchanged. (prevent a sideeffect)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_save_weight_file_locally_with_existing_dir_and_contents(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Unit
+    Test Purpose: Tests that a weights file is saved if the directory already exists with contents and the contents of
+                  the other file remain unchanged. (prevent a sideeffect)
+    &#34;&#34;&#34;
+    # Test setup
+    files_dir = &#34;./testing-files/&#34;
+    file_contents = b&#34;sample contents&#34;
+    other_contents = &#39;other stuff&#39;
+    clinic_id, severity = 1, 1
+    other_file_full_path = &#39;%s%s/%s/other.txt&#39; % (files_dir, clinic_id, severity)
+    os.makedirs(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity), exist_ok=False)
+    self._write_file_at_path_with_contents(other_file_full_path, other_contents)
+    mock_uuid = mocker.patch(&#39;uuid.uuid4&#39;, return_value=uuid.UUID(&#34;6b8873dc-ac4a-4ac0-8f16-28af79761008&#34;))
+    file_name = mock_uuid().hex
+    mocker.patch(&#39;api.resources.upload.FILE_STORAGE_PATH&#39;, files_dir)
+    data_file = FileStorage(io.BytesIO(file_contents), filename=&#34;test.h5&#34;)
+    # Testing
+    self.model.save_weight_file_locally(data_file, clinic_id, severity)
+    assert os.path.exists(&#39;%s&#39; % files_dir)
+    assert os.path.exists(&#39;%s%s&#39; % (files_dir, clinic_id))
+    assert os.path.exists(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+    assert os.path.exists(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+    with open(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name), &#39;r&#39;) as f:
+        assert f.read() == file_contents.decode()
+    with open(other_file_full_path, &#39;r&#39;) as f:
+        assert f.read() == other_contents
+    # Test clean up
+    os.remove(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+    os.remove(other_file_full_path)
+    os.rmdir(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+    os.rmdir(&#39;%s%s&#39; % (files_dir, clinic_id))
+    os.rmdir(&#39;%s&#39; % files_dir)</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestModelUnit.test_save_weight_file_locally_without_existing_dir"><code class="name flex">
+<span>def <span class="ident">test_save_weight_file_locally_without_existing_dir</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Unit
+Test Purpose: Tests that a weights file is saved if the directory does not already exist.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_save_weight_file_locally_without_existing_dir(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Unit
+    Test Purpose: Tests that a weights file is saved if the directory does not already exist.
+    &#34;&#34;&#34;
+    # Test setup
+    files_dir = &#34;./testing-files/&#34;
+    file_contents = b&#34;sample contents&#34;
+    clinic_id, severity = 1, 1
+    mock_uuid = mocker.patch(&#39;uuid.uuid4&#39;, return_value=uuid.UUID(&#34;6b8873dc-ac4a-4ac0-8f16-28af79761008&#34;))
+    file_name = mock_uuid().hex
+    mocker.patch(&#39;api.resources.upload.FILE_STORAGE_PATH&#39;, files_dir)
+    data_file = FileStorage(io.BytesIO(file_contents), filename=&#34;test.h5&#34;)
+    # Testing
+    self.model.save_weight_file_locally(data_file, clinic_id, severity)
+    assert os.path.exists(&#39;%s&#39; % files_dir)
+    assert os.path.exists(&#39;%s%s&#39; % (files_dir, clinic_id))
+    assert os.path.exists(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+    assert os.path.exists(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+    with open(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name), &#39;r&#39;) as f:
+        assert f.read() == file_contents.decode()
+    # Test clean up
+    os.remove(&#39;%s%s/%s/%s.h5&#39; % (files_dir, clinic_id, severity, file_name))
+    os.rmdir(&#39;%s%s/%s&#39; % (files_dir, clinic_id, severity))
+    os.rmdir(&#39;%s%s&#39; % (files_dir, clinic_id))
+    os.rmdir(&#39;%s&#39; % files_dir)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="api.tests.test_upload.TestPastAppointmentsUnit"><code class="flex name class">
+<span>class <span class="ident">TestPastAppointmentsUnit</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>The <code><a title="api.tests.test_upload.TestPastAppointmentsUnit" href="#api.tests.test_upload.TestPastAppointmentsUnit">TestPastAppointmentsUnit</a></code> class contains unit tests for uploading past appointments functions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TestPastAppointmentsUnit:
+    &#34;&#34;&#34;
+    The `TestPastAppointmentsUnit` class contains unit tests for uploading past appointments functions.
+    &#34;&#34;&#34;
+
+    def setup_class(self):
+        &#34;&#34;&#34;
+        Test setup that occurs once before all tests are run.
+        &#34;&#34;&#34;
+        self.pastappointments = PastAppointments()
+
+    def test_upload_csv_data_database_error(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that an error is thrown if a the database connection fails.
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+        mocker.patch(&#39;api.common.database_interaction.DataBase.insert_data_from_file&#39;,
+                     side_effect=RuntimeError(&#39;Database error&#39;))
+
+        with pytest.raises(RuntimeError):
+            self.pastappointments.upload_csv_data(upload_file_mock)
+
+    def test_upload_csv_data_file_error(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that an error is thrown if a the file upload fails.
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+        mocker.patch(&#39;api.common.database_interaction.DataBase.insert_data_from_file&#39;,
+                     side_effect=RuntimeError(&#39;File error&#39;))
+
+        with pytest.raises(RuntimeError):
+            self.pastappointments.upload_csv_data(upload_file_mock)
+
+    def test_upload_csv_data_successful(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Unit
+        Test Purpose: Tests that a successful file upload.
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+        mocker.patch(&#39;api.common.database_interaction.DataBase.insert_data_from_file&#39;)
+
+        assert self.pastappointments.upload_csv_data(upload_file_mock) is None</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="api.tests.test_upload.TestPastAppointmentsUnit.setup_class"><code class="name flex">
+<span>def <span class="ident">setup_class</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test setup that occurs once before all tests are run.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup_class(self):
+    &#34;&#34;&#34;
+    Test setup that occurs once before all tests are run.
+    &#34;&#34;&#34;
+    self.pastappointments = PastAppointments()</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestPastAppointmentsUnit.test_upload_csv_data_database_error"><code class="name flex">
+<span>def <span class="ident">test_upload_csv_data_database_error</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Unit
+Test Purpose: Tests that an error is thrown if a the database connection fails.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_upload_csv_data_database_error(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Unit
+    Test Purpose: Tests that an error is thrown if a the database connection fails.
+    &#34;&#34;&#34;
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+    mocker.patch(&#39;api.common.database_interaction.DataBase.insert_data_from_file&#39;,
+                 side_effect=RuntimeError(&#39;Database error&#39;))
+
+    with pytest.raises(RuntimeError):
+        self.pastappointments.upload_csv_data(upload_file_mock)</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestPastAppointmentsUnit.test_upload_csv_data_file_error"><code class="name flex">
+<span>def <span class="ident">test_upload_csv_data_file_error</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Unit
+Test Purpose: Tests that an error is thrown if a the file upload fails.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_upload_csv_data_file_error(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Unit
+    Test Purpose: Tests that an error is thrown if a the file upload fails.
+    &#34;&#34;&#34;
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+    mocker.patch(&#39;api.common.database_interaction.DataBase.insert_data_from_file&#39;,
+                 side_effect=RuntimeError(&#39;File error&#39;))
+
+    with pytest.raises(RuntimeError):
+        self.pastappointments.upload_csv_data(upload_file_mock)</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestPastAppointmentsUnit.test_upload_csv_data_successful"><code class="name flex">
+<span>def <span class="ident">test_upload_csv_data_successful</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Unit
+Test Purpose: Tests that a successful file upload.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_upload_csv_data_successful(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Unit
+    Test Purpose: Tests that a successful file upload.
+    &#34;&#34;&#34;
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+    mocker.patch(&#39;api.common.database_interaction.DataBase.insert_data_from_file&#39;)
+
+    assert self.pastappointments.upload_csv_data(upload_file_mock) is None</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="api.tests.test_upload.TestUploadModelAPI"><code class="flex name class">
+<span>class <span class="ident">TestUploadModelAPI</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>The <code><a title="api.tests.test_upload.TestUploadModelAPI" href="#api.tests.test_upload.TestUploadModelAPI">TestUploadModelAPI</a></code> class contains acceptance tests for /upload/model API functions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TestUploadModelAPI:
+    &#34;&#34;&#34;
+    The `TestUploadModelAPI` class contains acceptance tests for /upload/model API functions.
+    &#34;&#34;&#34;
+
+    def setup_class(self):
+        &#34;&#34;&#34;
+        Test setup that occurs once before all tests are run.
+        &#34;&#34;&#34;
+        self.test_client = create_app().test_client()
+        self.token = generate_token(&#39;username&#39;, 1)
+        self.endpoint = VERSION_PREFIX + &#39;/upload/model&#39;
+
+    def test_put_missing_inputs(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        input_mock = {}
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_clinic_id(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: &#39;&#34;1&#34;&#39;,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: False,
+        }
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_file(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        input_mock = {
+            &#39;clinic_id&#39;: &#39;&#34;1&#34;&#39;,
+            &#39;model_weights&#39;: &#34;not_a_file&#34;,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: False,
+        }
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_severity(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: &#39;&#34;1&#34;&#39;,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: False,
+        }
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_accuracy(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: &#39;&#34;0.95&#34;&#39;,
+            &#39;make_in_use&#39;: False,
+        }
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_make_in_use(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: &#39;&#34;yes&#34;&#39;,
+        }
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+        assert response.status_code == 422
+
+    def test_upload_success_not_make_active(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        mocker.patch(&#39;api.resources.upload.Model.save_weight_file_locally&#39;)
+        mocker.patch(&#39;api.resources.upload.Model.save_model_file_path_to_db&#39;)
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: False,
+        }
+
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+        assert response.status_code == 200
+
+    def test_upload_success_make_active(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        mocker.patch(&#39;api.resources.upload.Model.save_weight_file_locally&#39;)
+        mocker.patch(&#39;api.resources.upload.Model.save_model_file_path_to_db&#39;)
+        mocker.patch(&#39;api.resources.upload.Models.set_active_model&#39;)
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: True,
+        }
+
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+        assert response.status_code == 200
+
+    def test_upload_requires_header_with_token(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: False,
+        }
+        response = self.test_client.post(self.endpoint, data=input_mock)
+        assert response.status_code == 401
+
+    def test_upload_requires_valid_token(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;model_weights&#39;: upload_file_mock,
+            &#39;severity&#39;: 1,
+            &#39;accuracy&#39;: 0.95,
+            &#39;make_in_use&#39;: False,
+        }
+        response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: &#34;not_valid_token&#34;}, data=input_mock)
+        assert response.status_code == 401</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="api.tests.test_upload.TestUploadModelAPI.setup_class"><code class="name flex">
+<span>def <span class="ident">setup_class</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test setup that occurs once before all tests are run.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup_class(self):
+    &#34;&#34;&#34;
+    Test setup that occurs once before all tests are run.
+    &#34;&#34;&#34;
+    self.test_client = create_app().test_client()
+    self.token = generate_token(&#39;username&#39;, 1)
+    self.endpoint = VERSION_PREFIX + &#39;/upload/model&#39;</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_accuracy"><code class="name flex">
+<span>def <span class="ident">test_put_incorrect_input_type_accuracy</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_put_incorrect_input_type_accuracy(self):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement
+    &#34;&#34;&#34;
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+    input_mock = {
+        &#39;clinic_id&#39;: 1,
+        &#39;model_weights&#39;: upload_file_mock,
+        &#39;severity&#39;: 1,
+        &#39;accuracy&#39;: &#39;&#34;0.95&#34;&#39;,
+        &#39;make_in_use&#39;: False,
+    }
+    response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+    assert response.status_code == 422</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_clinic_id"><code class="name flex">
+<span>def <span class="ident">test_put_incorrect_input_type_clinic_id</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_put_incorrect_input_type_clinic_id(self):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement
+    &#34;&#34;&#34;
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+    input_mock = {
+        &#39;clinic_id&#39;: &#39;&#34;1&#34;&#39;,
+        &#39;model_weights&#39;: upload_file_mock,
+        &#39;severity&#39;: 1,
+        &#39;accuracy&#39;: 0.95,
+        &#39;make_in_use&#39;: False,
+    }
+    response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+    assert response.status_code == 422</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_file"><code class="name flex">
+<span>def <span class="ident">test_put_incorrect_input_type_file</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_put_incorrect_input_type_file(self):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement
+    &#34;&#34;&#34;
+    input_mock = {
+        &#39;clinic_id&#39;: &#39;&#34;1&#34;&#39;,
+        &#39;model_weights&#39;: &#34;not_a_file&#34;,
+        &#39;severity&#39;: 1,
+        &#39;accuracy&#39;: 0.95,
+        &#39;make_in_use&#39;: False,
+    }
+    response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+    assert response.status_code == 422</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_make_in_use"><code class="name flex">
+<span>def <span class="ident">test_put_incorrect_input_type_make_in_use</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_put_incorrect_input_type_make_in_use(self):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement
+    &#34;&#34;&#34;
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+    input_mock = {
+        &#39;clinic_id&#39;: 1,
+        &#39;model_weights&#39;: upload_file_mock,
+        &#39;severity&#39;: 1,
+        &#39;accuracy&#39;: 0.95,
+        &#39;make_in_use&#39;: &#39;&#34;yes&#34;&#39;,
+    }
+    response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+    assert response.status_code == 422</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_severity"><code class="name flex">
+<span>def <span class="ident">test_put_incorrect_input_type_severity</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_put_incorrect_input_type_severity(self):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement
+    &#34;&#34;&#34;
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+    input_mock = {
+        &#39;clinic_id&#39;: 1,
+        &#39;model_weights&#39;: upload_file_mock,
+        &#39;severity&#39;: &#39;&#34;1&#34;&#39;,
+        &#39;accuracy&#39;: 0.95,
+        &#39;make_in_use&#39;: False,
+    }
+    response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+    assert response.status_code == 422</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadModelAPI.test_put_missing_inputs"><code class="name flex">
+<span>def <span class="ident">test_put_missing_inputs</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_put_missing_inputs(self):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement
+    &#34;&#34;&#34;
+    input_mock = {}
+    response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+    assert response.status_code == 422</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadModelAPI.test_upload_requires_header_with_token"><code class="name flex">
+<span>def <span class="ident">test_upload_requires_header_with_token</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_upload_requires_header_with_token(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement
+    &#34;&#34;&#34;
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+    input_mock = {
+        &#39;clinic_id&#39;: 1,
+        &#39;model_weights&#39;: upload_file_mock,
+        &#39;severity&#39;: 1,
+        &#39;accuracy&#39;: 0.95,
+        &#39;make_in_use&#39;: False,
+    }
+    response = self.test_client.post(self.endpoint, data=input_mock)
+    assert response.status_code == 401</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadModelAPI.test_upload_requires_valid_token"><code class="name flex">
+<span>def <span class="ident">test_upload_requires_valid_token</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_upload_requires_valid_token(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement
+    &#34;&#34;&#34;
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+    input_mock = {
+        &#39;clinic_id&#39;: 1,
+        &#39;model_weights&#39;: upload_file_mock,
+        &#39;severity&#39;: 1,
+        &#39;accuracy&#39;: 0.95,
+        &#39;make_in_use&#39;: False,
+    }
+    response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: &#34;not_valid_token&#34;}, data=input_mock)
+    assert response.status_code == 401</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadModelAPI.test_upload_success_make_active"><code class="name flex">
+<span>def <span class="ident">test_upload_success_make_active</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_upload_success_make_active(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement
+    &#34;&#34;&#34;
+    mocker.patch(&#39;api.resources.upload.Model.save_weight_file_locally&#39;)
+    mocker.patch(&#39;api.resources.upload.Model.save_model_file_path_to_db&#39;)
+    mocker.patch(&#39;api.resources.upload.Models.set_active_model&#39;)
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+    input_mock = {
+        &#39;clinic_id&#39;: 1,
+        &#39;model_weights&#39;: upload_file_mock,
+        &#39;severity&#39;: 1,
+        &#39;accuracy&#39;: 0.95,
+        &#39;make_in_use&#39;: True,
+    }
+
+    response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+    assert response.status_code == 200</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadModelAPI.test_upload_success_not_make_active"><code class="name flex">
+<span>def <span class="ident">test_upload_success_not_make_active</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_upload_success_not_make_active(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement
+    &#34;&#34;&#34;
+    mocker.patch(&#39;api.resources.upload.Model.save_weight_file_locally&#39;)
+    mocker.patch(&#39;api.resources.upload.Model.save_model_file_path_to_db&#39;)
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;weights file contents&#34;), filename=&#34;w.h5&#34;)
+    input_mock = {
+        &#39;clinic_id&#39;: 1,
+        &#39;model_weights&#39;: upload_file_mock,
+        &#39;severity&#39;: 1,
+        &#39;accuracy&#39;: 0.95,
+        &#39;make_in_use&#39;: False,
+    }
+
+    response = self.test_client.post(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+    assert response.status_code == 200</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="api.tests.test_upload.TestUploadPastAppointmentsAPI"><code class="flex name class">
+<span>class <span class="ident">TestUploadPastAppointmentsAPI</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>The <code><a title="api.tests.test_upload.TestUploadPastAppointmentsAPI" href="#api.tests.test_upload.TestUploadPastAppointmentsAPI">TestUploadPastAppointmentsAPI</a></code> class contains acceptance tests for /upload/past-appointments
+API functions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TestUploadPastAppointmentsAPI:
+    &#34;&#34;&#34;
+    The `TestUploadPastAppointmentsAPI` class contains acceptance tests for /upload/past-appointments
+    API functions.
+    &#34;&#34;&#34;
+
+    def setup_class(self):
+        &#34;&#34;&#34;
+        Test setup that occurs once before all tests are run.
+        &#34;&#34;&#34;
+        self.test_client = create_app().test_client()
+        self.token = generate_token(&#39;username&#39;, 1)
+        self.endpoint = VERSION_PREFIX + &#39;/upload/past-appointments&#39;
+
+    def test_put_missing_inputs(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        &#34;&#34;&#34;
+
+        input_mock = {}
+        response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_clinic_id(self):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.txt&#34;, content_type=&#34;text/csv&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: &#39;&#34;1&#34;&#39;,
+            &#39;upload_data&#39;: upload_file_mock
+        }
+        response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+        assert response.status_code == 422
+
+    def test_put_incorrect_input_type_file(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        &#34;&#34;&#34;
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.txt&#34;, content_type=&#34;text/text&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;upload_data&#39;: upload_file_mock
+        }
+
+        response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+        assert response.status_code == 422
+
+    def test_upload_success(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        &#34;&#34;&#34;
+        mocker.patch(&#39;api.resources.upload.PastAppointments.upload_csv_data&#39;)
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;upload_data&#39;: upload_file_mock
+        }
+
+        response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+        assert response.status_code == 200
+
+    def test_upload_requires_header_with_token(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        &#34;&#34;&#34;
+        mocker.patch(&#39;api.resources.upload.PastAppointments.upload_csv_data&#39;)
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;upload_data&#39;: upload_file_mock
+        }
+        response = self.test_client.put(self.endpoint, data=input_mock)
+        assert response.status_code == 401
+
+    def test_upload_requires_valid_token(self, mocker):
+        &#34;&#34;&#34;
+        Test Type: Acceptance
+        Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+        &#34;&#34;&#34;
+        mocker.patch(&#39;api.resources.upload.PastAppointments.upload_csv_data&#39;)
+        upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+        input_mock = {
+            &#39;clinic_id&#39;: 1,
+            &#39;upload_data&#39;: upload_file_mock
+        }
+        response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: &#34;not_valid_token&#34;}, data=input_mock)
+        assert response.status_code == 401</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="api.tests.test_upload.TestUploadPastAppointmentsAPI.setup_class"><code class="name flex">
+<span>def <span class="ident">setup_class</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test setup that occurs once before all tests are run.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup_class(self):
+    &#34;&#34;&#34;
+    Test setup that occurs once before all tests are run.
+    &#34;&#34;&#34;
+    self.test_client = create_app().test_client()
+    self.token = generate_token(&#39;username&#39;, 1)
+    self.endpoint = VERSION_PREFIX + &#39;/upload/past-appointments&#39;</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadPastAppointmentsAPI.test_put_incorrect_input_type_clinic_id"><code class="name flex">
+<span>def <span class="ident">test_put_incorrect_input_type_clinic_id</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_put_incorrect_input_type_clinic_id(self):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+    &#34;&#34;&#34;
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.txt&#34;, content_type=&#34;text/csv&#34;)
+    input_mock = {
+        &#39;clinic_id&#39;: &#39;&#34;1&#34;&#39;,
+        &#39;upload_data&#39;: upload_file_mock
+    }
+    response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+    assert response.status_code == 422</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadPastAppointmentsAPI.test_put_incorrect_input_type_file"><code class="name flex">
+<span>def <span class="ident">test_put_incorrect_input_type_file</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_put_incorrect_input_type_file(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+    &#34;&#34;&#34;
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.txt&#34;, content_type=&#34;text/text&#34;)
+    input_mock = {
+        &#39;clinic_id&#39;: 1,
+        &#39;upload_data&#39;: upload_file_mock
+    }
+
+    response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+    assert response.status_code == 422</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadPastAppointmentsAPI.test_put_missing_inputs"><code class="name flex">
+<span>def <span class="ident">test_put_missing_inputs</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_put_missing_inputs(self):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+    &#34;&#34;&#34;
+
+    input_mock = {}
+    response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+    assert response.status_code == 422</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadPastAppointmentsAPI.test_upload_requires_header_with_token"><code class="name flex">
+<span>def <span class="ident">test_upload_requires_header_with_token</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_upload_requires_header_with_token(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+    &#34;&#34;&#34;
+    mocker.patch(&#39;api.resources.upload.PastAppointments.upload_csv_data&#39;)
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+    input_mock = {
+        &#39;clinic_id&#39;: 1,
+        &#39;upload_data&#39;: upload_file_mock
+    }
+    response = self.test_client.put(self.endpoint, data=input_mock)
+    assert response.status_code == 401</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadPastAppointmentsAPI.test_upload_requires_valid_token"><code class="name flex">
+<span>def <span class="ident">test_upload_requires_valid_token</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_upload_requires_valid_token(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+    &#34;&#34;&#34;
+    mocker.patch(&#39;api.resources.upload.PastAppointments.upload_csv_data&#39;)
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+    input_mock = {
+        &#39;clinic_id&#39;: 1,
+        &#39;upload_data&#39;: upload_file_mock
+    }
+    response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: &#34;not_valid_token&#34;}, data=input_mock)
+    assert response.status_code == 401</code></pre>
+</details>
+</dd>
+<dt id="api.tests.test_upload.TestUploadPastAppointmentsAPI.test_upload_success"><code class="name flex">
+<span>def <span class="ident">test_upload_success</span></span>(<span>self, mocker)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test Type: Acceptance
+Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_upload_success(self, mocker):
+    &#34;&#34;&#34;
+    Test Type: Acceptance
+    Test Purpose: Tests Requirement INT-7, DAT-1, DAT-4
+    &#34;&#34;&#34;
+    mocker.patch(&#39;api.resources.upload.PastAppointments.upload_csv_data&#39;)
+    upload_file_mock = FileStorage(io.BytesIO(b&#34;file contents&#34;), filename=&#34;data.csv&#34;, content_type=&#34;text/csv&#34;)
+    input_mock = {
+        &#39;clinic_id&#39;: 1,
+        &#39;upload_data&#39;: upload_file_mock
+    }
+
+    response = self.test_client.put(self.endpoint, headers={&#39;token&#39;: self.token}, data=input_mock)
+
+    assert response.status_code == 200</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="api.tests" href="index.html">api.tests</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="api.tests.test_upload.TestModelUnit" href="#api.tests.test_upload.TestModelUnit">TestModelUnit</a></code></h4>
+<ul class="">
+<li><code><a title="api.tests.test_upload.TestModelUnit.setup_class" href="#api.tests.test_upload.TestModelUnit.setup_class">setup_class</a></code></li>
+<li><code><a title="api.tests.test_upload.TestModelUnit.test_create_directory_if_exists" href="#api.tests.test_upload.TestModelUnit.test_create_directory_if_exists">test_create_directory_if_exists</a></code></li>
+<li><code><a title="api.tests.test_upload.TestModelUnit.test_create_directory_if_exists_with_contents" href="#api.tests.test_upload.TestModelUnit.test_create_directory_if_exists_with_contents">test_create_directory_if_exists_with_contents</a></code></li>
+<li><code><a title="api.tests.test_upload.TestModelUnit.test_create_directory_if_exists_without_modifying_existing_contents" href="#api.tests.test_upload.TestModelUnit.test_create_directory_if_exists_without_modifying_existing_contents">test_create_directory_if_exists_without_modifying_existing_contents</a></code></li>
+<li><code><a title="api.tests.test_upload.TestModelUnit.test_create_directory_if_not_exists" href="#api.tests.test_upload.TestModelUnit.test_create_directory_if_not_exists">test_create_directory_if_not_exists</a></code></li>
+<li><code><a title="api.tests.test_upload.TestModelUnit.test_save_model_file_path_to_db_database_error" href="#api.tests.test_upload.TestModelUnit.test_save_model_file_path_to_db_database_error">test_save_model_file_path_to_db_database_error</a></code></li>
+<li><code><a title="api.tests.test_upload.TestModelUnit.test_save_model_file_path_to_db_error" href="#api.tests.test_upload.TestModelUnit.test_save_model_file_path_to_db_error">test_save_model_file_path_to_db_error</a></code></li>
+<li><code><a title="api.tests.test_upload.TestModelUnit.test_save_model_file_path_to_db_success" href="#api.tests.test_upload.TestModelUnit.test_save_model_file_path_to_db_success">test_save_model_file_path_to_db_success</a></code></li>
+<li><code><a title="api.tests.test_upload.TestModelUnit.test_save_weight_file_locally_with_existing_dir" href="#api.tests.test_upload.TestModelUnit.test_save_weight_file_locally_with_existing_dir">test_save_weight_file_locally_with_existing_dir</a></code></li>
+<li><code><a title="api.tests.test_upload.TestModelUnit.test_save_weight_file_locally_with_existing_dir_and_contents" href="#api.tests.test_upload.TestModelUnit.test_save_weight_file_locally_with_existing_dir_and_contents">test_save_weight_file_locally_with_existing_dir_and_contents</a></code></li>
+<li><code><a title="api.tests.test_upload.TestModelUnit.test_save_weight_file_locally_without_existing_dir" href="#api.tests.test_upload.TestModelUnit.test_save_weight_file_locally_without_existing_dir">test_save_weight_file_locally_without_existing_dir</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="api.tests.test_upload.TestPastAppointmentsUnit" href="#api.tests.test_upload.TestPastAppointmentsUnit">TestPastAppointmentsUnit</a></code></h4>
+<ul class="">
+<li><code><a title="api.tests.test_upload.TestPastAppointmentsUnit.setup_class" href="#api.tests.test_upload.TestPastAppointmentsUnit.setup_class">setup_class</a></code></li>
+<li><code><a title="api.tests.test_upload.TestPastAppointmentsUnit.test_upload_csv_data_database_error" href="#api.tests.test_upload.TestPastAppointmentsUnit.test_upload_csv_data_database_error">test_upload_csv_data_database_error</a></code></li>
+<li><code><a title="api.tests.test_upload.TestPastAppointmentsUnit.test_upload_csv_data_file_error" href="#api.tests.test_upload.TestPastAppointmentsUnit.test_upload_csv_data_file_error">test_upload_csv_data_file_error</a></code></li>
+<li><code><a title="api.tests.test_upload.TestPastAppointmentsUnit.test_upload_csv_data_successful" href="#api.tests.test_upload.TestPastAppointmentsUnit.test_upload_csv_data_successful">test_upload_csv_data_successful</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="api.tests.test_upload.TestUploadModelAPI" href="#api.tests.test_upload.TestUploadModelAPI">TestUploadModelAPI</a></code></h4>
+<ul class="">
+<li><code><a title="api.tests.test_upload.TestUploadModelAPI.setup_class" href="#api.tests.test_upload.TestUploadModelAPI.setup_class">setup_class</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_accuracy" href="#api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_accuracy">test_put_incorrect_input_type_accuracy</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_clinic_id" href="#api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_clinic_id">test_put_incorrect_input_type_clinic_id</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_file" href="#api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_file">test_put_incorrect_input_type_file</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_make_in_use" href="#api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_make_in_use">test_put_incorrect_input_type_make_in_use</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_severity" href="#api.tests.test_upload.TestUploadModelAPI.test_put_incorrect_input_type_severity">test_put_incorrect_input_type_severity</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadModelAPI.test_put_missing_inputs" href="#api.tests.test_upload.TestUploadModelAPI.test_put_missing_inputs">test_put_missing_inputs</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadModelAPI.test_upload_requires_header_with_token" href="#api.tests.test_upload.TestUploadModelAPI.test_upload_requires_header_with_token">test_upload_requires_header_with_token</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadModelAPI.test_upload_requires_valid_token" href="#api.tests.test_upload.TestUploadModelAPI.test_upload_requires_valid_token">test_upload_requires_valid_token</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadModelAPI.test_upload_success_make_active" href="#api.tests.test_upload.TestUploadModelAPI.test_upload_success_make_active">test_upload_success_make_active</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadModelAPI.test_upload_success_not_make_active" href="#api.tests.test_upload.TestUploadModelAPI.test_upload_success_not_make_active">test_upload_success_not_make_active</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="api.tests.test_upload.TestUploadPastAppointmentsAPI" href="#api.tests.test_upload.TestUploadPastAppointmentsAPI">TestUploadPastAppointmentsAPI</a></code></h4>
+<ul class="">
+<li><code><a title="api.tests.test_upload.TestUploadPastAppointmentsAPI.setup_class" href="#api.tests.test_upload.TestUploadPastAppointmentsAPI.setup_class">setup_class</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadPastAppointmentsAPI.test_put_incorrect_input_type_clinic_id" href="#api.tests.test_upload.TestUploadPastAppointmentsAPI.test_put_incorrect_input_type_clinic_id">test_put_incorrect_input_type_clinic_id</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadPastAppointmentsAPI.test_put_incorrect_input_type_file" href="#api.tests.test_upload.TestUploadPastAppointmentsAPI.test_put_incorrect_input_type_file">test_put_incorrect_input_type_file</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadPastAppointmentsAPI.test_put_missing_inputs" href="#api.tests.test_upload.TestUploadPastAppointmentsAPI.test_put_missing_inputs">test_put_missing_inputs</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadPastAppointmentsAPI.test_upload_requires_header_with_token" href="#api.tests.test_upload.TestUploadPastAppointmentsAPI.test_upload_requires_header_with_token">test_upload_requires_header_with_token</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadPastAppointmentsAPI.test_upload_requires_valid_token" href="#api.tests.test_upload.TestUploadPastAppointmentsAPI.test_upload_requires_valid_token">test_upload_requires_valid_token</a></code></li>
+<li><code><a title="api.tests.test_upload.TestUploadPastAppointmentsAPI.test_upload_success" href="#api.tests.test_upload.TestUploadPastAppointmentsAPI.test_upload_success">test_upload_success</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

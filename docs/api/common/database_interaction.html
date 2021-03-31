@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
 <title>api.common.database_interaction API documentation</title>
-<meta name="description" content="database_interaction is aimed to limit code redundancy for PostgreSQL interaction." />
+<meta name="description" content="database_interaction is aimed to limit code redundancy for PostgreSQL." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,13 +22,13 @@
 <h1 class="title">Module <code>api.common.database_interaction</code></h1>
 </header>
 <section id="section-intro">
-<p>database_interaction is aimed to limit code redundancy for PostgreSQL interaction.</p>
+<p>database_interaction is aimed to limit code redundancy for PostgreSQL.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-database_interaction is aimed to limit code redundancy for PostgreSQL interaction.
+database_interaction is aimed to limit code redundancy for PostgreSQL.
 &#34;&#34;&#34;
 
 # External dependencies
@@ -40,8 +40,9 @@ class DataBase:
     DataBase is a class to simplify connections with the PostgreSQL database.
 
     Usage:
-        To create a new data base connection, create it with `DataBase(connection_data)` where
-        connection_data is a dictionary containing the following keys:
+        To create a new data base connection, create it with
+        `DataBase(connection_data)` where connection_data is a dictionary
+        containing the following keys:
 
     Args:
         database (str): The name of the database to connect to,
@@ -54,23 +55,8 @@ class DataBase:
     def __init__(self, connection_data):
         self.connection_data = connection_data
 
-    def _connect_to_db(self):
-        &#39;&#39;&#39;
-        Returns a database connection
-
-        Returns:
-            A database connection
-        &#39;&#39;&#39;
-        return psycopg2.connect(
-            database=self.connection_data[&#39;database&#39;],
-            user=self.connection_data[&#39;user&#39;],
-            password=self.connection_data[&#39;password&#39;],
-            host=self.connection_data[&#39;host&#39;],
-            port=self.connection_data[&#39;port&#39;]
-        )
-
     def select(self, select_string):
-        &#39;&#39;&#39;
+        &#34;&#34;&#34;
         Returns the query results from the database for the select_string.
 
         Args:
@@ -78,49 +64,73 @@ class DataBase:
 
         Returns:
             list: A list of tuples of query results from the database
-        &#39;&#39;&#39;
+        &#34;&#34;&#34;
         # Establish database connection
-        db = self._connect_to_db()
-        # Query for restults based on the query string (select_string) and store the results
-        cur = db.cursor()
-        cur.execute(select_string)
-        results = cur.fetchall()
+        with psycopg2.connect(**self.connection_data) as db:
+            # Establish a cursor to interact with the database
+            with db.cursor() as cur:
+                # Query for restults based on the query string (select_string)
+                cur.execute(select_string)
+                # Store the results
+                results = cur.fetchall()
         # Close the database connection
         db.close()
         return results
 
-    def insert(self, insert_string):
-        &#39;&#39;&#39;
+    def insert(self, insert_string, returning=False):
+        &#34;&#34;&#34;
         Insert data into the database
 
         Args:
             insert_string (str): A string representing the data to insert
-        &#39;&#39;&#39;
-        self._modify_data(insert_string)
+        &#34;&#34;&#34;
+        return self._modify_data(insert_string, returning)
 
-    def update(self, update_string):
-        &#39;&#39;&#39;
+    def update(self, update_string, returning=False):
+        &#34;&#34;&#34;
         Update data in the database
 
         Args:
             update_string (str): A string representing the data to update
-        &#39;&#39;&#39;
-        self._modify_data(update_string)
+        &#34;&#34;&#34;
+        return self._modify_data(update_string, returning)
 
-    def _modify_data(self, query_string):
-        &#39;&#39;&#39;
+    def _modify_data(self, query_string, returning=False):
+        &#34;&#34;&#34;
         Modify data in the database
 
         Args:
             query_string (str): A string representing the data to modify
-        &#39;&#39;&#39;
+        &#34;&#34;&#34;
         # Establish database connection
-        db = self._connect_to_db()
-        # Insert the desired data into the db
-        cur = db.cursor()
-        cur.execute(query_string)
-        db.commit()
-        # Close the database connectionz
+        with psycopg2.connect(**self.connection_data) as db:
+            # Establish a cursor to interact with the database
+            with db.cursor() as cur:
+                # Insert the desired data into the db
+                cur.execute(query_string)
+                db.commit()
+                if returning:
+                    val = cur.fetchone()[0]
+        # Close the database connection
+        db.close()
+        if returning:
+            return val
+
+    def insert_data_from_file(self, table, data_column_order, data_file, seperator):
+        &#34;&#34;&#34;
+        Insert a large amount of data into the database from a file
+
+        Args:
+            table (str): The table to insert the data into
+            data_header_order (tuple, str): A tuple representing which data attributes the data_file tuples have
+            data_file (file): A file with the data to upload to the database
+            seperator (str): the file character seperators
+        &#34;&#34;&#34;
+        # Establish database connection
+        with psycopg2.connect(**self.connection_data) as db:
+            # Establish a cursor to interact with the database
+            with db.cursor() as cur:
+                cur.copy_from(data_file, table, sep=seperator, columns=data_column_order)
         db.close()</code></pre>
 </details>
 </section>
@@ -140,8 +150,9 @@ class DataBase:
 <dd>
 <div class="desc"><p>DataBase is a class to simplify connections with the PostgreSQL database.</p>
 <h2 id="usage">Usage</h2>
-<p>To create a new data base connection, create it with <code><a title="api.common.database_interaction.DataBase" href="#api.common.database_interaction.DataBase">DataBase</a>(connection_data)</code> where
-connection_data is a dictionary containing the following keys:</p>
+<p>To create a new data base connection, create it with
+<code><a title="api.common.database_interaction.DataBase" href="#api.common.database_interaction.DataBase">DataBase</a>(connection_data)</code> where connection_data is a dictionary
+containing the following keys:</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>database</code></strong> :&ensp;<code>str</code></dt>
@@ -164,8 +175,9 @@ connection_data is a dictionary containing the following keys:</p>
     DataBase is a class to simplify connections with the PostgreSQL database.
 
     Usage:
-        To create a new data base connection, create it with `DataBase(connection_data)` where
-        connection_data is a dictionary containing the following keys:
+        To create a new data base connection, create it with
+        `DataBase(connection_data)` where connection_data is a dictionary
+        containing the following keys:
 
     Args:
         database (str): The name of the database to connect to,
@@ -178,23 +190,8 @@ connection_data is a dictionary containing the following keys:</p>
     def __init__(self, connection_data):
         self.connection_data = connection_data
 
-    def _connect_to_db(self):
-        &#39;&#39;&#39;
-        Returns a database connection
-
-        Returns:
-            A database connection
-        &#39;&#39;&#39;
-        return psycopg2.connect(
-            database=self.connection_data[&#39;database&#39;],
-            user=self.connection_data[&#39;user&#39;],
-            password=self.connection_data[&#39;password&#39;],
-            host=self.connection_data[&#39;host&#39;],
-            port=self.connection_data[&#39;port&#39;]
-        )
-
     def select(self, select_string):
-        &#39;&#39;&#39;
+        &#34;&#34;&#34;
         Returns the query results from the database for the select_string.
 
         Args:
@@ -202,55 +199,79 @@ connection_data is a dictionary containing the following keys:</p>
 
         Returns:
             list: A list of tuples of query results from the database
-        &#39;&#39;&#39;
+        &#34;&#34;&#34;
         # Establish database connection
-        db = self._connect_to_db()
-        # Query for restults based on the query string (select_string) and store the results
-        cur = db.cursor()
-        cur.execute(select_string)
-        results = cur.fetchall()
+        with psycopg2.connect(**self.connection_data) as db:
+            # Establish a cursor to interact with the database
+            with db.cursor() as cur:
+                # Query for restults based on the query string (select_string)
+                cur.execute(select_string)
+                # Store the results
+                results = cur.fetchall()
         # Close the database connection
         db.close()
         return results
 
-    def insert(self, insert_string):
-        &#39;&#39;&#39;
+    def insert(self, insert_string, returning=False):
+        &#34;&#34;&#34;
         Insert data into the database
 
         Args:
             insert_string (str): A string representing the data to insert
-        &#39;&#39;&#39;
-        self._modify_data(insert_string)
+        &#34;&#34;&#34;
+        return self._modify_data(insert_string, returning)
 
-    def update(self, update_string):
-        &#39;&#39;&#39;
+    def update(self, update_string, returning=False):
+        &#34;&#34;&#34;
         Update data in the database
 
         Args:
             update_string (str): A string representing the data to update
-        &#39;&#39;&#39;
-        self._modify_data(update_string)
+        &#34;&#34;&#34;
+        return self._modify_data(update_string, returning)
 
-    def _modify_data(self, query_string):
-        &#39;&#39;&#39;
+    def _modify_data(self, query_string, returning=False):
+        &#34;&#34;&#34;
         Modify data in the database
 
         Args:
             query_string (str): A string representing the data to modify
-        &#39;&#39;&#39;
+        &#34;&#34;&#34;
         # Establish database connection
-        db = self._connect_to_db()
-        # Insert the desired data into the db
-        cur = db.cursor()
-        cur.execute(query_string)
-        db.commit()
-        # Close the database connectionz
+        with psycopg2.connect(**self.connection_data) as db:
+            # Establish a cursor to interact with the database
+            with db.cursor() as cur:
+                # Insert the desired data into the db
+                cur.execute(query_string)
+                db.commit()
+                if returning:
+                    val = cur.fetchone()[0]
+        # Close the database connection
+        db.close()
+        if returning:
+            return val
+
+    def insert_data_from_file(self, table, data_column_order, data_file, seperator):
+        &#34;&#34;&#34;
+        Insert a large amount of data into the database from a file
+
+        Args:
+            table (str): The table to insert the data into
+            data_header_order (tuple, str): A tuple representing which data attributes the data_file tuples have
+            data_file (file): A file with the data to upload to the database
+            seperator (str): the file character seperators
+        &#34;&#34;&#34;
+        # Establish database connection
+        with psycopg2.connect(**self.connection_data) as db:
+            # Establish a cursor to interact with the database
+            with db.cursor() as cur:
+                cur.copy_from(data_file, table, sep=seperator, columns=data_column_order)
         db.close()</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
 <dt id="api.common.database_interaction.DataBase.insert"><code class="name flex">
-<span>def <span class="ident">insert</span></span>(<span>self, insert_string)</span>
+<span>def <span class="ident">insert</span></span>(<span>self, insert_string, returning=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Insert data into the database</p>
@@ -263,14 +284,52 @@ connection_data is a dictionary containing the following keys:</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def insert(self, insert_string):
-    &#39;&#39;&#39;
+<pre><code class="python">def insert(self, insert_string, returning=False):
+    &#34;&#34;&#34;
     Insert data into the database
 
     Args:
         insert_string (str): A string representing the data to insert
-    &#39;&#39;&#39;
-    self._modify_data(insert_string)</code></pre>
+    &#34;&#34;&#34;
+    return self._modify_data(insert_string, returning)</code></pre>
+</details>
+</dd>
+<dt id="api.common.database_interaction.DataBase.insert_data_from_file"><code class="name flex">
+<span>def <span class="ident">insert_data_from_file</span></span>(<span>self, table, data_column_order, data_file, seperator)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Insert a large amount of data into the database from a file</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>table</code></strong> :&ensp;<code>str</code></dt>
+<dd>The table to insert the data into</dd>
+<dt><strong><code>data_header_order</code></strong> :&ensp;<code>tuple, str</code></dt>
+<dd>A tuple representing which data attributes the data_file tuples have</dd>
+<dt><strong><code>data_file</code></strong> :&ensp;<code>file</code></dt>
+<dd>A file with the data to upload to the database</dd>
+<dt><strong><code>seperator</code></strong> :&ensp;<code>str</code></dt>
+<dd>the file character seperators</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def insert_data_from_file(self, table, data_column_order, data_file, seperator):
+    &#34;&#34;&#34;
+    Insert a large amount of data into the database from a file
+
+    Args:
+        table (str): The table to insert the data into
+        data_header_order (tuple, str): A tuple representing which data attributes the data_file tuples have
+        data_file (file): A file with the data to upload to the database
+        seperator (str): the file character seperators
+    &#34;&#34;&#34;
+    # Establish database connection
+    with psycopg2.connect(**self.connection_data) as db:
+        # Establish a cursor to interact with the database
+        with db.cursor() as cur:
+            cur.copy_from(data_file, table, sep=seperator, columns=data_column_order)
+    db.close()</code></pre>
 </details>
 </dd>
 <dt id="api.common.database_interaction.DataBase.select"><code class="name flex">
@@ -293,7 +352,7 @@ connection_data is a dictionary containing the following keys:</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def select(self, select_string):
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     Returns the query results from the database for the select_string.
 
     Args:
@@ -301,20 +360,22 @@ connection_data is a dictionary containing the following keys:</p>
 
     Returns:
         list: A list of tuples of query results from the database
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     # Establish database connection
-    db = self._connect_to_db()
-    # Query for restults based on the query string (select_string) and store the results
-    cur = db.cursor()
-    cur.execute(select_string)
-    results = cur.fetchall()
+    with psycopg2.connect(**self.connection_data) as db:
+        # Establish a cursor to interact with the database
+        with db.cursor() as cur:
+            # Query for restults based on the query string (select_string)
+            cur.execute(select_string)
+            # Store the results
+            results = cur.fetchall()
     # Close the database connection
     db.close()
     return results</code></pre>
 </details>
 </dd>
 <dt id="api.common.database_interaction.DataBase.update"><code class="name flex">
-<span>def <span class="ident">update</span></span>(<span>self, update_string)</span>
+<span>def <span class="ident">update</span></span>(<span>self, update_string, returning=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Update data in the database</p>
@@ -327,14 +388,14 @@ connection_data is a dictionary containing the following keys:</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def update(self, update_string):
-    &#39;&#39;&#39;
+<pre><code class="python">def update(self, update_string, returning=False):
+    &#34;&#34;&#34;
     Update data in the database
 
     Args:
         update_string (str): A string representing the data to update
-    &#39;&#39;&#39;
-    self._modify_data(update_string)</code></pre>
+    &#34;&#34;&#34;
+    return self._modify_data(update_string, returning)</code></pre>
 </details>
 </dd>
 </dl>
@@ -359,6 +420,7 @@ connection_data is a dictionary containing the following keys:</p>
 <h4><code><a title="api.common.database_interaction.DataBase" href="#api.common.database_interaction.DataBase">DataBase</a></code></h4>
 <ul class="">
 <li><code><a title="api.common.database_interaction.DataBase.insert" href="#api.common.database_interaction.DataBase.insert">insert</a></code></li>
+<li><code><a title="api.common.database_interaction.DataBase.insert_data_from_file" href="#api.common.database_interaction.DataBase.insert_data_from_file">insert_data_from_file</a></code></li>
 <li><code><a title="api.common.database_interaction.DataBase.select" href="#api.common.database_interaction.DataBase.select">select</a></code></li>
 <li><code><a title="api.common.database_interaction.DataBase.update" href="#api.common.database_interaction.DataBase.update">update</a></code></li>
 </ul>

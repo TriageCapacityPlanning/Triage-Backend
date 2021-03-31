@@ -1,4 +1,3 @@
-  
 """
 This module handles all required interaction with the `/models` endpoints
 """
@@ -10,9 +9,10 @@ from webargs import fields
 
 
 # Internal dependencies
-from api.resources.AuthResource import AuthResource, authenticate
+from api.resources.AuthResource import AuthResource
 from api.common.database_interaction import DataBase
 from api.common.config import database_config
+
 
 class Models(AuthResource):
     """
@@ -46,7 +46,7 @@ class Models(AuthResource):
         'model-id': fields.Int(required=True)
     }
     """
-    The required schema to hangle a patch request
+    The required schema to handle a patch request
     Args:
         clinic-id (int): The id of the clinic being referenced
         model-id (int): The desired new primary model's id
