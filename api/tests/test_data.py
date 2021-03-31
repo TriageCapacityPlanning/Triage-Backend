@@ -9,6 +9,7 @@ import json
 
 from api.tests.common import generate_token
 
+
 class TestDataAPI:
     """
     The `TestDataAPI` class contains acceptance tests the Data class.
@@ -42,8 +43,7 @@ class TestDataAPI:
         input_mock = {'interval': "1"}
 
         with pytest.raises(RuntimeError):
-            result = self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
-        
+            self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
 
     def test_get_success_empty(self, mocker):
         """
@@ -51,39 +51,39 @@ class TestDataAPI:
         Test Purpose: Tests Requirement DAT-2
         """
         mocker.patch('api.common.ClinicData.ClinicData.__init__', return_value=None)
-        
+
         return_data_mock = []
         mocker.patch('api.common.ClinicData.ClinicData.get_referral_data', return_value=return_data_mock)
 
         input_mock = {'interval': json.dumps(['2020-01-01', '2021-01-01'])}
         response = self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
-        
+
         assert response.status_code == 200
         assert json.loads(response.data) == []
-    
+
     def test_get_success_singleton(self, mocker):
         """
         Test Type: Acceptance
         Test Purpose: Tests Requirement DAT-2
         """
         mocker.patch('api.common.ClinicData.ClinicData.__init__', return_value=None)
-        
+
         return_data_mock = [[1, 1, '2020-01-01', '2020-01-14']]
         mocker.patch('api.common.ClinicData.ClinicData.get_referral_data', return_value=return_data_mock)
 
         input_mock = {'interval': json.dumps(['2020-01-01', '2021-01-01'])}
         response = self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
-        
+
         assert response.status_code == 200
         assert json.loads(response.data) == return_data_mock
 
-    def test_get_success_singleton(self, mocker):
+    def test_get_success_multi(self, mocker):
         """
         Test Type: Acceptance
         Test Purpose: Tests Requirement DAT-2
         """
         mocker.patch('api.common.ClinicData.ClinicData.__init__', return_value=None)
-        
+
         return_data_mock = [
             [1, 1, '2020-01-01', '2020-01-14'],
             [1, 1, '2020-05-01', '2020-05-14'],
@@ -93,6 +93,6 @@ class TestDataAPI:
 
         input_mock = {'interval': json.dumps(['2020-01-01', '2021-01-01'])}
         response = self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
-        
+
         assert response.status_code == 200
         assert json.loads(response.data) == return_data_mock

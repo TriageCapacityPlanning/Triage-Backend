@@ -8,6 +8,7 @@ import json
 from api.resources.predict import Predict
 from api.triage_api import create_app
 
+
 class TestPredictAPI:
     """
     The `TestPredictAPI` class contains acceptance tests for predict API functions.

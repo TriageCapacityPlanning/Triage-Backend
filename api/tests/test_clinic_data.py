@@ -27,7 +27,7 @@ class TestClinicData:
 
         mocker.patch('api.common.database_interaction.DataBase.select',
                      return_value=[])
-        
+
         with pytest.raises(RuntimeError):
             ClinicData(self.clinic_id_mock)
 
@@ -104,7 +104,7 @@ class TestClinicData:
         database_clinic_settings_response_mock = [[3, 1, 'Urgent', 2, 0.8]]
         mocker.patch('api.common.database_interaction.DataBase.select',
                      return_value=database_clinic_settings_response_mock)
-        
+
         clinic_data = ClinicData(self.clinic_id_mock)
 
         mocker.patch('api.common.database_interaction.DataBase.select',
@@ -121,7 +121,7 @@ class TestClinicData:
         database_clinic_settings_response_mock = [[3, 1, 'Urgent', 2, 0.8]]
         mocker.patch('api.common.database_interaction.DataBase.select',
                      return_value=database_clinic_settings_response_mock)
-        
+
         clinic_data = ClinicData(self.clinic_id_mock)
 
         database_referral_data_mock = [
@@ -142,7 +142,7 @@ class TestClinicData:
         database_clinic_settings_response_mock = [[3, 1, 'Urgent', 2, 0.8]]
         mocker.patch('api.common.database_interaction.DataBase.select',
                      return_value=database_clinic_settings_response_mock)
-        
+
         clinic_data = ClinicData(self.clinic_id_mock)
 
         database_referral_data_mock = [
@@ -169,7 +169,7 @@ class TestClinicData:
         database_clinic_settings_response_mock = [[3, 1, 'Urgent', 2, 0.8]]
         mocker.patch('api.common.database_interaction.DataBase.select',
                      return_value=database_clinic_settings_response_mock)
-        
+
         clinic_data = ClinicData(self.clinic_id_mock)
 
         triage_class_input = {
@@ -180,8 +180,7 @@ class TestClinicData:
             'proportion': 0.8
         }
 
-        mocker.patch('api.common.database_interaction.DataBase.insert',
-                    side_effect=RuntimeError('Database error'))
+        mocker.patch('api.common.database_interaction.DataBase.insert', side_effect=RuntimeError('Database error'))
 
         with pytest.raises(RuntimeError):
             clinic_data.update_triage_class(triage_class_input)
@@ -195,7 +194,7 @@ class TestClinicData:
         database_clinic_settings_response_mock = [[3, 1, 'Urgent', 2, 0.8]]
         mocker.patch('api.common.database_interaction.DataBase.select',
                      return_value=database_clinic_settings_response_mock)
-        
+
         clinic_data = ClinicData(self.clinic_id_mock)
 
         triage_class_input = {
@@ -207,8 +206,5 @@ class TestClinicData:
         }
 
         mocker.patch('api.common.database_interaction.DataBase.insert')
-
-        try:
-            clinic_data.update_triage_class(triage_class_input)
-        except:
-            raise pytest.fail('Did raise exception')
+        # Ensure that we do not get exception
+        clinic_data.update_triage_class(triage_class_input)

@@ -4,13 +4,11 @@ This module handles testing for the Auth class.
 
 from api.triage_api import create_app
 from api.common.config import VERSION_PREFIX
-import pytest
 import json
 import os
 import jwt
 import hashlib
 
-from api.tests.common import generate_token
 
 class TestAuthAPI:
     """
@@ -41,7 +39,7 @@ class TestAuthAPI:
         Test Purpose: Tests Requirement SEC-4
         """
 
-        input_mock = {'username': 1, 'password': 2 }
+        input_mock = {'username': 1, 'password': 2}
         response = self.test_client.post(self.endpoint, json=input_mock)
 
         assert response.status_code == 422
@@ -51,10 +49,10 @@ class TestAuthAPI:
         Test Type: Acceptance
         Test Purpose: Tests Requirement SEC-4
         """
-        mocker.patch('api.common.database_interaction.DataBase.select', 
+        mocker.patch('api.common.database_interaction.DataBase.select',
                      return_value=[(1, True, hashlib.sha512('passwordsalt'.encode()).hexdigest(), 'salt')])
 
-        input_mock = {'username': 'username', 'password': 'password' }
+        input_mock = {'username': 'username', 'password': 'password'}
         response = self.test_client.post(self.endpoint, json=input_mock)
 
         assert response.status_code == 200
@@ -66,11 +64,11 @@ class TestAuthAPI:
             'clinic': 1,
             'admin': True
         }
-        
+
         assert 'token' in response_data
         assert response_data['clinic_id'] == expected_token_data['clinic']
         assert response_data['admin'] == expected_token_data['admin']
-        
+
         data = jwt.decode(response_data['token'], os.environ['API_SECRET'], algorithms=["HS256"])
         assert data['user'] == expected_token_data['user']
         assert data['clinic'] == expected_token_data['clinic']

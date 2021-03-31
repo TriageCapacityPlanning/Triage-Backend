@@ -7,6 +7,7 @@ import pytest
 from datetime import datetime
 from api.common.controller.TriageController import TriageController
 
+
 class TestTriageController:
     """
     The `TestTriageController` class contains tests for the TriageController.
@@ -245,5 +246,5 @@ class TestTriageController:
         Test Type: Acceptance
         Test Purpose: Tests Requirement INT-6 / SIM-1
         """
-        
+
         assert False

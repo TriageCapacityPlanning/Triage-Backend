@@ -2,6 +2,7 @@ import jwt
 import os
 import datetime
 
+
 def generate_token(username, user_clinic):
     return jwt.encode({
                 'user': username,

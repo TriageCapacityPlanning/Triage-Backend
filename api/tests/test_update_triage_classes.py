@@ -2,13 +2,13 @@
 This module handles testing for the UpdateTriageClasses class.
 """
 
-from api.resources.update_triage_classes import UpdateTriageClasses
 from api.triage_api import create_app
 from api.common.config import VERSION_PREFIX
 import pytest
 import json
 
 from api.tests.common import generate_token
+
 
 class TestUpdateTriageClassesAPI:
     """
@@ -40,9 +40,9 @@ class TestUpdateTriageClassesAPI:
         Test Purpose: Tests Requirement INT-6
         """
 
-        input_mock = {'clinic_id': True }
+        input_mock = {'clinic_id': True}
         with pytest.raises(ValueError):
-            response = self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
+            self.test_client.get(self.endpoint, headers={'token': self.token}, query_string=input_mock)
 
     def test_get_triage_classes_success_singleton(self, mocker):
         """
