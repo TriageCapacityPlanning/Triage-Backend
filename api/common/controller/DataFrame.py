@@ -3,17 +3,16 @@ The DataFrame is used to generate varying sets of referal predictions for the pu
 """
 
 # External dependencies
-import random
 import numpy as np
 import math
-from datetime import datetime
+
 
 class DataFrame:
     """
     DataFrame is a class to generate data for simulating patient referals.
     Usage:
         To create a new data frame, create it with `DataFrame(intervals, predictions, padding_length)`.
-    
+
     Args:
         intervals (list): List of interval start and end dates.
         predictions (list): List of predictions and padding data.
@@ -39,23 +38,23 @@ class DataFrame:
 
         # Return the length of a given interval
         return (self.intervals[interval][1] - self.intervals[interval][0]) + 1
-    
+
     def get_interval_sample(self, interval):
         """Returns a sample prediction for referal count of patients.
         Parameters:
             `interval` (int): The index of the desired interval.
         Returns:
-            Returns a list (of length equal to the number of weeks in the given interval) where each 
+            Returns a list (of length equal to the number of weeks in the given interval) where each
             entry is an integer signifying the number of patient referrals predicted to arrive.
         """
         # Check validity of input interval index.
         if interval not in range(0, len(self.intervals)):
             raise ValueError("Invalid interval %s.", interval)
-        
+
         # Get start and end of interval
         start = self.intervals[interval][0]
         end = self.intervals[interval][1] + 1
-        
+
         # Generate and return sample
         res = [np.round(max(0, np.random.normal(p[0], math.sqrt(p[1])))) for p in self.predictions[start:end]]
         return res

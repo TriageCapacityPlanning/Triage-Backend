@@ -3,15 +3,15 @@ This module handles all required interaction with the `/classes` endpoint
 """
 
 # External dependencies
-from api.resources.AuthResource import AuthResource, authenticate
+from api.resources.AuthResource import AuthResource
 from flask import request
 from webargs.flaskparser import parser
 from webargs import fields
 
 # Internal dependencies
-from api.common.database_interaction import DataBase
 from api.common.config import database_config
 from api.common.ClinicData import ClinicData
+
 
 class UpdateTriageClasses(AuthResource):
     """

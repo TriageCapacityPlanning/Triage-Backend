@@ -9,10 +9,10 @@ from webargs import fields
 import ast
 
 # Internal dependencies
-from api.resources.AuthResource import AuthResource, authenticate
+from api.resources.AuthResource import AuthResource
 from api.common.controller.TriageController import TriageController
-from api.common.database_interaction import DataBase
 from api.common.config import database_config
+
 
 class Predict(AuthResource):
     """
@@ -69,7 +69,8 @@ class Predict(AuthResource):
             }
             ```
 
-            The keys of the predictions dict are the triage class names and the values are lists of dicts of the following format:
+            The keys of the predictions dict are the triage class names and the values are lists of dicts of
+            the following format:
             ```
             {
                 'start' (str) Start date of the interval
@@ -84,7 +85,7 @@ class Predict(AuthResource):
                             location='querystring')
         args['intervals'] = ast.literal_eval(args['intervals'])
 
-        triage_controller = TriageController(args['clinic-id'], 
+        triage_controller = TriageController(args['clinic-id'],
                                              args['intervals'],
                                              args['confidence'],
                                              args['num-sim-runs'])

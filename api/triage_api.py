@@ -44,9 +44,9 @@ def create_app():
     try:
         from api.resources.predict import Predict
         api.add_resource(Predict, VERSION_PREFIX + '/predict')
-    except:
+    except ImportError:
         print("Could not import predict")
-        
+
     api.add_resource(Models, *[VERSION_PREFIX + '/models', VERSION_PREFIX + '/models/use'])
     api.add_resource(UpdateTriageClasses, VERSION_PREFIX + '/classes')
     api.add_resource(Upload.PastAppointments, VERSION_PREFIX + '/upload/past-appointments')

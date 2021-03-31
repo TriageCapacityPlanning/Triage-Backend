@@ -4,16 +4,15 @@ The TriageController is used to initiate prediction and simulation upon API requ
 
 # External dependencies.
 from datetime import datetime, timedelta
-from collections import Counter, deque
+from collections import deque
 import numpy as np
 import triage_ml
-import json
 
 # Internal dependencies
 from api.common.database_interaction import DataBase
 from api.common.ClinicData import ClinicData
 from api.common.controller.DataFrame import DataFrame
-from sim.resources.minintervalschedule import gen_min_interval_slots, SimulationResults
+from sim.resources.minintervalschedule import gen_min_interval_slots
 from api.common.config import database_config
 
 DATE_FORMAT = '%Y-%m-%d'
@@ -65,7 +64,8 @@ class TriageController:
     def predict(self):
         """Returns the prediction / simulation results.
         Returns:
-            Simulation results as a dictionary with triage class as the key, and a list of dictionaries of the following form as the value:
+            Simulation results as a dictionary with triage class as the key, and a list of dictionaries of
+            the following form as the value:
             ```
             {
                 'start' (str) Start date of the interval
@@ -102,17 +102,17 @@ class TriageController:
             padding_data = self.__sort_padding_data(clinic_data.get_referral_data(triage_class['severity'], padding_interval),
                                                     padding_interval[0],
                                                     self.PADDING_LENGTH)
-            
+
             # Predict future referral arrivals.
             padding_data_ml = np.array(padding_data)[:, np.newaxis]
             predictions = model.predict(
                 [padding_data_ml[np.newaxis, :], dates[0]], dates)
             predictions = [np.array(p)[0] for p in predictions]
-            
+
             # Setup DataFrame for simulation.
             prediction_dataframe = DataFrame(
                 [[p, 0] for p in padding_data] + predictions, self.intervals, self.PADDING_LENGTH)
-            
+
             # Run simulation.
             sim_results = gen_min_interval_slots(queue=deque(),
                                                  data_frame=prediction_dataframe,
@@ -137,7 +137,7 @@ class TriageController:
 
             # Append results for triage class to total results.
             results[triage_class['name']] = sim_result_formatted
-        
+
         return results
 
     def encode_date(self, date):
@@ -219,12 +219,9 @@ class TriageController:
             `start_date` (datetime):Start date of the padding.
             `weeks` (int): Number of weeks in the padding.
         Returns:
-            Returns a list where each entry is the number of referrals that 
+            Returns a list where each entry is the number of referrals that
             arrived in a given week of the padding data.
         """
-        result = []
-        end_date = start_date + timedelta(weeks=1)
-
         partitioned_data = {}
         for referral in referral_data:
             week = int(

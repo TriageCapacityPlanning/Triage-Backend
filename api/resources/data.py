@@ -9,7 +9,7 @@ from webargs import fields
 import ast
 
 # Internal dependencies
-from api.resources.AuthResource import AuthResource, authenticate
+from api.resources.AuthResource import AuthResource
 from api.common.ClinicData import ClinicData
 
 
@@ -44,7 +44,7 @@ class Data(AuthResource):
     def get(self, clinic_id, triage_class):
         """
         Handles a get request for the data endpoints.
-        
+
         Args:
             Requires api query string arguments, see `Data.url_arg_schema_get`, in the get request
             Requires api path arguments, see `Data.path_arg_schema_get`, in the get request

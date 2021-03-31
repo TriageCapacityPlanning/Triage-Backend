@@ -46,7 +46,7 @@ class Models(AuthResource):
         'model-id': fields.Int(required=True)
     }
     """
-    The required schema to hangle a patch request
+    The required schema to handle a patch request
     Args:
         clinic-id (int): The id of the clinic being referenced
         model-id (int): The desired new primary model's id
