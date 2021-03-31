@@ -19,37 +19,17 @@ rm -r docs/api # Remove the previous docs
 pdoc --html --output-dir docs api # Generate the api documentation into the docs folder
 ```
 
-## Data Bases w/ Docker
-To run the docker container that is already prepared, navigate to this cloned repository and run the following:
+Note: This requires a local installation of the Triage-ML-Training python module. Follow the instructions [here](https://github.com/TriageCapacityPlanning/Triage-ML-Training#local-installation-not-recommended) to do so.
 
+## Usage
+
+### Backend Docker Container (Recommended)
+To run the entire backend, it is recommended to deploy all modules in docker containers. To do so, run the following command in the root directory of the repository:
 ```bash
-PSQL_LOCAL_PATH="${HOME}/docker/volumes/postgres"
-mkdir -p $PSQL_LOCAL_PATH
-export TRIAGE_DB_USERNAME="admin"
-export TRIAGE_DB_PASSWORD="docker"
-export TRIAGE_DB="triage"
-docker run --rm --name triage-db -e POSTGRES_PASSWORD=${TRIAGE_DB_PASSWORD} -e POSTGRES_USER=${TRIAGE_DB_USERNAME} -e POSTGRES_DB=${TRIAGE_DB} -d -p 5432:5432 -v ${PSQL_LOCAL_PATH}:/var/lib/postgresql/data postgres:13-alpine 
+docker-compose up
 ```
 
-This will run the db in an container named triage-db on port 5432. You can change the path portion of the command (`$HOME/docker/volumes/postgres`) to a local directory to keep the changes you make locally for the next run or omit the -v flag/argument altogether.
-
-In this container, the following are the necessary credential values are set on lines 2-4 of the above commands.
-
-We can connect to the db via the command line with:
-
-```bash
-psql -h localhost -U ${TRIAGE_DB_USERNAME} -d ${TRIAGE_DB}
-```
-
-Then entering the password in the table above.
-
-The db is nor running on port 5432 with empty tables.
-
-This satisfies the following from the Design Specification:
-- [Database Module](https://github.com/TriageCapacityPlanning/Triage/wiki/Design#database-module)
-
-## Triage API
-### Usage
+### Run API Locally (Not recommended)
 To run the API begin by installing the required python dependencies by navigating to the `api` folder and running:
 
 ```bash
@@ -62,6 +42,11 @@ python ./triage_api.py
 ```
 
 The API will run on localhost (port 5000) by default.
+
+Note: This requires a local installation of the Triage-ML-Training python module. Follow the instructions [here](https://github.com/TriageCapacityPlanning/Triage-ML-Training#local-installation-not-recommended) to do so.
+Note: This also requires the DB docker container from above to be running. This will also require the `host` value in `api/common/config.py` to be set to `localhost`.
+
+## Triage API
 
 ### Endpoints
 Currently the following endpoints are implemented:
