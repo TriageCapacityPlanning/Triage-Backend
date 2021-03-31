@@ -119,7 +119,6 @@ class Model(AuthResource):
     def post(self):
         args = parser.parse(self.arg_schema_post, request, location='json_or_form')
         data_file = request.files['model_weights']
-        print(data_file)
         if not data_file:
             raise FileError("Missing upload file.")
         file_path = self.save_weight_file_locally(data_file, args['clinic_id'], args['severity'])

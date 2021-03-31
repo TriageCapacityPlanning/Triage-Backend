@@ -4,6 +4,8 @@ This module handles testing for the Upload class.
 
 import io
 import os
+import uuid
+import psycopg2
 
 import pytest
 from api.resources.upload import PastAppointments, Model
@@ -344,11 +346,128 @@ class TestModelUnit:
         Test setup that occurs once before all tests are run.
         """
         self.model = Model()
+        self.upload_storage_path = './test-upload-storage/'
 
     @staticmethod
     def _write_file_at_path_with_contents(file_path, contents):
+        """
+        Create a sample file with some contents for testing purposes.
+        """
         with open(file_path, 'w') as f:
             f.write(contents)
+
+    def test_save_model_file_path_to_db_success(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that the operation returns the expected result from the db.
+        """
+        id = 5
+        mocker.patch('api.common.database_interaction.DataBase.insert', return_value=id)
+
+        assert self.model.save_model_file_path_to_db('sample/file/path', 1, 1, 0.95, False) == id
+
+    def test_save_model_file_path_to_db_database_error(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Tests a database error when saving a model file path.
+        """
+        mocker.patch('api.common.database_interaction.DataBase.insert', side_effect=psycopg2.ProgrammingError)
+
+        with pytest.raises(psycopg2.ProgrammingError):
+            self.model.save_model_file_path_to_db('sample/file/path', 1, 1, 0.95, False)
+
+    def test_save_model_file_path_to_db_error(self):
+        pass
+
+    def test_save_weight_file_locally_without_existing_dir(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that a weights file is saved if the directory does not already exist.
+        """
+        # Test setup
+        files_dir = "./testing-files/"
+        file_contents = b"sample contents"
+        clinic_id, severity = 1, 1
+        mock_uuid = mocker.patch('uuid.uuid4', return_value=uuid.UUID("6b8873dc-ac4a-4ac0-8f16-28af79761008"))
+        file_name = mock_uuid().hex
+        mocker.patch('api.resources.upload.FILE_STORAGE_PATH', files_dir)
+        data_file = FileStorage(io.BytesIO(file_contents), filename="test.h5")
+        # Testing
+        self.model.save_weight_file_locally(data_file, clinic_id, severity)
+        assert os.path.exists('%s' % files_dir)
+        assert os.path.exists('%s%s' % (files_dir, clinic_id))
+        assert os.path.exists('%s%s/%s' % (files_dir, clinic_id, severity))
+        assert os.path.exists('%s%s/%s/%s.h5' % (files_dir, clinic_id, severity, file_name))
+        with open('%s%s/%s/%s.h5' % (files_dir, clinic_id, severity, file_name), 'r') as f:
+            assert f.read() == file_contents.decode()
+        # Test clean up
+        os.remove('%s%s/%s/%s.h5' % (files_dir, clinic_id, severity, file_name))
+        os.rmdir('%s%s/%s' % (files_dir, clinic_id, severity))
+        os.rmdir('%s%s' % (files_dir, clinic_id))
+        os.rmdir('%s' % files_dir)
+
+    def test_save_weight_file_locally_with_existing_dir(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that a weights file is saved if the directory already exists.
+        """
+        # Test setup
+        files_dir = "./testing-files/"
+        file_contents = b"sample contents"
+        clinic_id, severity = 1, 1
+        os.makedirs('%s%s/%s' % (files_dir, clinic_id, severity), exist_ok=False)
+        mock_uuid = mocker.patch('uuid.uuid4', return_value=uuid.UUID("6b8873dc-ac4a-4ac0-8f16-28af79761008"))
+        file_name = mock_uuid().hex
+        mocker.patch('api.resources.upload.FILE_STORAGE_PATH', files_dir)
+        data_file = FileStorage(io.BytesIO(file_contents), filename="test.h5")
+        # Testing
+        self.model.save_weight_file_locally(data_file, clinic_id, severity)
+        assert os.path.exists('%s' % files_dir)
+        assert os.path.exists('%s%s' % (files_dir, clinic_id))
+        assert os.path.exists('%s%s/%s' % (files_dir, clinic_id, severity))
+        assert os.path.exists('%s%s/%s/%s.h5' % (files_dir, clinic_id, severity, file_name))
+        with open('%s%s/%s/%s.h5' % (files_dir, clinic_id, severity, file_name), 'r') as f:
+            assert f.read() == file_contents.decode()
+        # Test clean up
+        os.remove('%s%s/%s/%s.h5' % (files_dir, clinic_id, severity, file_name))
+        os.rmdir('%s%s/%s' % (files_dir, clinic_id, severity))
+        os.rmdir('%s%s' % (files_dir, clinic_id))
+        os.rmdir('%s' % files_dir)
+
+    def test_save_weight_file_locally_with_existing_dir_and_contents(self, mocker):
+        """
+        Test Type: Unit
+        Test Purpose: Tests that a weights file is saved if the directory already exists with contents and the contents of
+                      the other file remain unchanged. (prevent a sideeffect)
+        """
+        # Test setup
+        files_dir = "./testing-files/"
+        file_contents = b"sample contents"
+        other_contents = 'other stuff'
+        clinic_id, severity = 1, 1
+        other_file_full_path = '%s%s/%s/other.txt' % (files_dir, clinic_id, severity)
+        os.makedirs('%s%s/%s' % (files_dir, clinic_id, severity), exist_ok=False)
+        self._write_file_at_path_with_contents(other_file_full_path, other_contents)
+        mock_uuid = mocker.patch('uuid.uuid4', return_value=uuid.UUID("6b8873dc-ac4a-4ac0-8f16-28af79761008"))
+        file_name = mock_uuid().hex
+        mocker.patch('api.resources.upload.FILE_STORAGE_PATH', files_dir)
+        data_file = FileStorage(io.BytesIO(file_contents), filename="test.h5")
+        # Testing
+        self.model.save_weight_file_locally(data_file, clinic_id, severity)
+        assert os.path.exists('%s' % files_dir)
+        assert os.path.exists('%s%s' % (files_dir, clinic_id))
+        assert os.path.exists('%s%s/%s' % (files_dir, clinic_id, severity))
+        assert os.path.exists('%s%s/%s/%s.h5' % (files_dir, clinic_id, severity, file_name))
+        with open('%s%s/%s/%s.h5' % (files_dir, clinic_id, severity, file_name), 'r') as f:
+            assert f.read() == file_contents.decode()
+        with open(other_file_full_path, 'r') as f:
+            assert f.read() == other_contents
+        # Test clean up
+        os.remove('%s%s/%s/%s.h5' % (files_dir, clinic_id, severity, file_name))
+        os.remove(other_file_full_path)
+        os.rmdir('%s%s/%s' % (files_dir, clinic_id, severity))
+        os.rmdir('%s%s' % (files_dir, clinic_id))
+        os.rmdir('%s' % files_dir)
 
     def test_create_directory_if_not_exists(self):
         """
@@ -366,8 +485,10 @@ class TestModelUnit:
         Test Type: Unit
         Test Purpose: Tests that a directory is made if it doesn't already exist.
         """
+        # Test setup
         test_dir = './testing-dir'
         os.makedirs(test_dir, exist_ok=False)
+        # Testing
         self.model.create_directory_if_not_exists(test_dir)
         assert os.path.exists('./testing-dir')
         # Test clean up
@@ -378,8 +499,10 @@ class TestModelUnit:
         Test Type: Unit
         Test Purpose: Tests that a directory is made if it already exists with contents.
         """
+        # Test setup
         test_dir = './testing-dir'
         os.makedirs(test_dir, exist_ok=False)
+        # Testing
         self.model.create_directory_if_not_exists(test_dir)
         assert os.path.exists('./testing-dir')
         # Test clean up
@@ -391,16 +514,18 @@ class TestModelUnit:
         Test Purpose: Tests that a directory is made if it already exists with contents and
                       those contents are unchanged.
         """
+        # Test setup
         test_dir = './testing-dir'
         test_file = './testing-dir/test-file'
         sample_contents = 'sample contents'
         os.makedirs(test_dir, exist_ok=False)
         self._write_file_at_path_with_contents(test_file, sample_contents)
+        # Testing
         self.model.create_directory_if_not_exists(test_dir)
         assert os.path.exists('./testing-dir')
         assert os.path.exists(test_file)
         with open(test_file, 'r') as f:
-            assert f.readline() == sample_contents
+            assert f.read() == sample_contents
         # Test clean up
         os.remove(test_file)
         os.rmdir(test_dir)
