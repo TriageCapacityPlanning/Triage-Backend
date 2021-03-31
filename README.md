@@ -4,6 +4,21 @@
 
 You can view the documentation for the various portions of the api by opening the docs in `docs/api/index.html`
 
+### Generating Updated Documentation
+
+To generate updated documentation, the pdoc package is required. It can be installed by executing:
+
+```bash
+pip install pdoc3
+```
+
+To generate the docs, from the root of the repository run the following commands:
+
+```bash
+rm -r docs/api # Remove the previous docs
+pdoc --html --output-dir docs api # Generate the api documentation into the docs folder
+```
+
 ## Data Bases w/ Docker
 To run the docker container that is already prepared, navigate to this cloned repository and run the following:
 
